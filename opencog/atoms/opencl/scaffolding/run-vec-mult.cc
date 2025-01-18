@@ -82,8 +82,8 @@ int main(int argc, char* argv[])
 	std::string dname = ocldev.getInfo<CL_DEVICE_NAME>();
 	printf("Will use: %s\n", dname.c_str());
 
-	cl::Context ctxt;
+	cl::Context ctxt(ocldev);
 	cl::Program prog;
-	build_kernel(ocldev, "vec-mult.cl", ctxt, prog);
+	build_kernel(ctxt, "vec-mult.cl", prog);
 	run_vec_mult(ocldev, ctxt, prog);
 }

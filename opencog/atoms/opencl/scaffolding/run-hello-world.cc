@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
 	std::string dname = ocldev.getInfo<CL_DEVICE_NAME>();
 	printf("Will use: %s\n", dname.c_str());
 
-	cl::Context ctxt;
+	cl::Context ctxt(ocldev);
 	cl::Program prog;
-	build_kernel(ocldev, "hello-world.cl", ctxt, prog);
+	build_kernel(ctxt, "hello-world.cl", prog);
 	run_hello(ocldev, ctxt, prog);
 }

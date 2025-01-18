@@ -103,8 +103,8 @@ cl::Device find_device(const char* platsubstr, const char* devsubstr)
 
 /// Read source text file and build program.
 /// Set return context and program as return results.
-void build_kernel(cl::Device ocldev, const char* srcfile,
-                  cl::Context& ctxt, cl::Program& prog)
+void build_kernel(cl::Context& context, const char* srcfile,
+                  cl::Program& prog)
 {
 	// Copy in source code. Must be a better way!?
 	fprintf(stderr, "Reading sourcefile %s\n", srcfile);
@@ -123,7 +123,6 @@ void build_kernel(cl::Device ocldev, const char* srcfile,
 	cl::Program::Sources sources;
 	sources.push_back(src);
 
-	cl::Context context(ocldev);
 	cl::Program program(context, sources);
 
 	// Compile
@@ -137,12 +136,13 @@ void build_kernel(cl::Device ocldev, const char* srcfile,
 	catch (const cl::Error& e)
 	{
 		printf("Compile failed! %s\n", e.what());
+#if 0
 		printf("Log >>%s<<\n",
 			program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(ocldev).c_str());
+#endif
 		exit(1);
 	}
 
-	ctxt = context;
 	prog = program;
 }
 
@@ -150,8 +150,8 @@ void build_kernel(cl::Device ocldev, const char* srcfile,
 
 /// Read SPV binary file and wrap it into a program.
 /// Set return context and program as return results.
-void load_kernel(cl::Device ocldev, const char* spvfile,
-                 cl::Context& ctxt, cl::Program& prog)
+void load_kernel(cl::Context &context, const char* spvfile,
+                 cl::Program& prog)
 {
 	// Copy in SPV file. Must be a better way!?
 	fprintf(stderr, "Reading SPV file %s\n", spvfile);
@@ -165,10 +165,8 @@ void load_kernel(cl::Device ocldev, const char* spvfile,
 		exit(1);
 	}
 
-	cl::Context context(ocldev);
 	cl::Program program(context, spv);
 
-	ctxt = context;
 	prog = program;
 }
 
