@@ -50,5 +50,5 @@ bool OpenclFloatValue::operator==(const Value& other) const
 // ==============================================================
 
 // Adds factory when the library is loaded.
-DEFINE_VALUE_FACTORY(FLOAT_VALUE,
+DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VALUE,
                      createOpenclFloatValue, std::vector<double>)

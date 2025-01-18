@@ -24,7 +24,7 @@
 #define _OPENCOG_OPENCL_FLOAT_VALUE_H
 
 #include <vector>
-#include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/StreamValue.h>
 #include <opencog/atoms/opencl/types/opencl_types.h>
 
 namespace opencog
@@ -38,16 +38,18 @@ namespace opencog
  * OpenclFloatValues hold an ordered vector of doubles.
  */
 class OpenclFloatValue
-	: public FloatValue
+	: public StreamValue
 {
 protected:
 	virtual void update() const {}
 
-	OpenclFloatValue(Type t) : FloatValue(t) {}
+	OpenclFloatValue(Type t) : StreamValue(t) {}
+	OpenclFloatValue(Type t, const std::vector<double>& v) : StreamValue(t, v) {}
 public:
+	OpenclFloatValue()
+		: StreamValue(OPENCL_FLOAT_VALUE) {}
 	OpenclFloatValue(const std::vector<double>& v)
-		: FloatValue(OPENCL_FLOAT_VALUE, v) {}
-	OpenclFloatValue(Type t, const std::vector<double>& v) : FloatValue(t, v) {}
+		: StreamValue(OPENCL_FLOAT_VALUE, v) {}
 
 	virtual ~OpenclFloatValue() {}
 
