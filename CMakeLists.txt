@@ -273,7 +273,8 @@ FIND_PACKAGE(Doxygen)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("Atomese-OpenCL" "Atomese OpenCL GPU interfaces" HAVE_ATOMSPACE AND HAVE_OPENCL)
+SUMMARY_ADD("Atomese-OpenCL" "Atomese OpenCL GPU interfaces"
+   HAVE_ATOMSPACE AND HAVE_OPENCL AND HAVE_CLANG AND HAVE_LLVM_SPIRV)
 # SUMMARY_ADD("CUDA platform" "CUDA platform" HAVE_CUDA)
 # SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
