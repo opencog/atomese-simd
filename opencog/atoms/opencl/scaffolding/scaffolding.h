@@ -24,8 +24,12 @@ void report_hardware(void);
 /// substrings in the platform and device name.
 cl::Device find_device(const char* platsubstr, const char* devsubstr);
 
-/// Build kernel froum source file, return context.
+/// Build kernel from source file, return context.
 void build_kernel(cl::Device ocldev, const char* srcfile,
                   cl::Context& ctxt, cl::Program& prog);
+
+/// Load pre-build kernel from SPV file, return context.
+void load_kernel(cl::Device ocldev, const char* spvfile,
+                 cl::Context& ctxt, cl::Program& prog);
 
 #endif /* __ATOMESE_OPENCL_SCAFFOLDING_H__ */

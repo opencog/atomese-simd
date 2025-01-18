@@ -13,7 +13,9 @@ TARGET_LINK_LIBRARIES(run-hello-world OpenCL::OpenCL)
 TARGET_LINK_LIBRARIES(run-vec-mult OpenCL::OpenCL)
 TARGET_LINK_LIBRARIES(run-flow-vec OpenCL::OpenCL)
 
-# Perform an "offline build" of the demo sources
+# Perform an "offline build" of the demo sources.
+# See https://github.com/KhronosGroup/OpenCL-Guide/blob/main/chapters/os_tooling.md
+# for detailed documentation.
 ADD_CUSTOM_COMMAND(
 	OUTPUT vec-mult.bc
 	COMMAND ${CLANG}

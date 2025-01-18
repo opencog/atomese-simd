@@ -102,7 +102,7 @@ cl::Device find_device(const char* platsubstr, const char* devsubstr)
 /* ================================================================ */
 
 /// Read source text file and build program.
-/// Set return context and program as return restuls.
+/// Set return context and program as return results.
 void build_kernel(cl::Device ocldev, const char* srcfile,
                   cl::Context& ctxt, cl::Program& prog)
 {
@@ -141,6 +141,32 @@ void build_kernel(cl::Device ocldev, const char* srcfile,
 			program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(ocldev).c_str());
 		exit(1);
 	}
+
+	ctxt = context;
+	prog = program;
+}
+
+/* ================================================================ */
+
+/// Read SPV binary file and wrap it into a program.
+/// Set return context and program as return results.
+void load_kernel(cl::Device ocldev, const char* spvfile,
+                 cl::Context& ctxt, cl::Program& prog)
+{
+	// Copy in SPV file. Must be a better way!?
+	fprintf(stderr, "Reading SPV file %s\n", spvfile);
+	std::ifstream spvfm(spvfile);
+	std::vector<char> spv(std::istreambuf_iterator<char>(spvfm),
+		(std::istreambuf_iterator<char>()));
+
+	if (0 == spv.size())
+	{
+		fprintf(stderr, "Error: Could not find file %s\n", spvfile);
+		exit(1);
+	}
+
+	cl::Context context(ocldev);
+	cl::Program program(context, spv);
 
 	ctxt = context;
 	prog = program;
