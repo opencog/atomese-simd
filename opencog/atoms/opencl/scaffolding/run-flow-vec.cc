@@ -134,5 +134,6 @@ int main(int argc, char* argv[])
 	cl::Context ctxt(ocldev);
 	cl::Program prog;
 	build_kernel(ctxt, "vec-mult.cl", prog);
+	// load_kernel(ctxt, "vec-mult.spv", prog);
 	run_flow(ocldev, ctxt, prog);
 }

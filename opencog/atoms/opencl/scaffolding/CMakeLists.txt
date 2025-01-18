@@ -14,19 +14,23 @@ TARGET_LINK_LIBRARIES(run-vec-mult OpenCL::OpenCL)
 TARGET_LINK_LIBRARIES(run-flow-vec OpenCL::OpenCL)
 
 # Perform an "offline build" of the demo sources.
+# Do this only if clang and llvm-spirv are installed.
+# This is optional for the demos. Requires OpenCL version 2.0
 # See https://github.com/KhronosGroup/OpenCL-Guide/blob/main/chapters/os_tooling.md
 # for detailed documentation.
-ADD_CUSTOM_COMMAND(
-	OUTPUT vec-mult.bc
-	COMMAND ${CLANG}
-	ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/vec-mult.cl -target spir -O0 -emit-llvm -o vec-mult.bc
-	DEPENDS vec-mult.cl)
+IF (HAVE_CLANG AND HAVE_LLVM_SPIRV)
+	ADD_CUSTOM_COMMAND(
+		OUTPUT vec-mult.bc
+		COMMAND ${CLANG}
+		ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/vec-mult.cl -target spir -O0 -emit-llvm -o vec-mult.bc
+		DEPENDS vec-mult.cl)
 
-ADD_CUSTOM_COMMAND(
-	OUTPUT vec-mult.spv
-	COMMAND ${LLVM_SPIRV}
-	ARGS ${CMAKE_CURRENT_BINARY_DIR}/vec-mult.bc -o vec-mult.spv
-	DEPENDS vec-mult.bc)
+	ADD_CUSTOM_COMMAND(
+		OUTPUT vec-mult.spv
+		COMMAND ${LLVM_SPIRV}
+		ARGS ${CMAKE_CURRENT_BINARY_DIR}/vec-mult.bc -o vec-mult.spv
+		DEPENDS vec-mult.bc)
 
-ADD_CUSTOM_TARGET(vec_mult_lib DEPENDS vec-mult.spv)
-ADD_DEPENDENCIES(run-flow-vec vec_mult_lib)
+	ADD_CUSTOM_TARGET(vec_mult_lib DEPENDS vec-mult.spv)
+	ADD_DEPENDENCIES(run-flow-vec vec_mult_lib)
+ENDIF (HAVE_CLANG AND HAVE_LLVM_SPIRV)

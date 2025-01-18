@@ -115,7 +115,7 @@ ENDIF (OPENCL_FOUND)
 
 FIND_PROGRAM(CLANG clang)
 IF (CLANG STREQUAL "CLANG-NOTFOUND")
-	MESSAGE(FATAL_ERROR "Clang missing: it is needed!")
+	MESSAGE(STATUS "clang not found; offline compile will not be done.")
 ELSE (CLANG STREQUAL "CLANG-NOTFOUND")
 	MESSAGE(STATUS "clang found: ${CLANG}")
 	ADD_DEFINITIONS(-DHAVE_CLANG)
@@ -126,7 +126,7 @@ ENDIF (CLANG STREQUAL "CLANG-NOTFOUND")
 # Debian stable has llvm-spriv-15 available
 FIND_PROGRAM(LLVM_SPIRV llvm-spirv-14)
 IF (LLVM_SPIRV STREQUAL "LLVM_SPIRV-NOTFOUND")
-	MESSAGE(FATAL_ERROR "llvm-spirv missing: it is needed!")
+	MESSAGE(STATUS "llvm-spirv not found; offline compile will not be done.")
 ELSE (LLVM_SPIRV STREQUAL "LLVM_SPIRV-NOTFOUND")
 	MESSAGE(STATUS "llvm-spirv found: ${LLVM_SPIRV}")
 	ADD_DEFINITIONS(-DHAVE_LLVM_SPIRV)
@@ -274,7 +274,9 @@ FIND_PACKAGE(Doxygen)
 # Show a summary of what we found, what we will do.
 
 SUMMARY_ADD("Atomese-OpenCL" "Atomese OpenCL GPU interfaces"
-   HAVE_ATOMSPACE AND HAVE_OPENCL AND HAVE_CLANG AND HAVE_LLVM_SPIRV)
+   HAVE_ATOMSPACE AND HAVE_OPENCL)
+SUMMARY_ADD("Offline compile" "OpenCL offline compile of kernels"
+   HAVE_CLANG AND HAVE_LLVM_SPIRV)
 # SUMMARY_ADD("CUDA platform" "CUDA platform" HAVE_CUDA)
 # SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
