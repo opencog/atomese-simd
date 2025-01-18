@@ -9,13 +9,12 @@
 #include "scaffolding.h"
 
 // Wrapper: remote service, provided by GPU located at the far end of a
-// channel. This implements vector multiply.
-class MultiplyService
+// channel. Accepts two vectors as input, returns one as output.
+class VectorService
 {
 protected:
 	cl::Context _context;
 	cl::CommandQueue _queue;
-	cl::Program _program;
 	cl::Kernel _kernel;
 
 	size_t _vec_dim;
@@ -24,15 +23,14 @@ protected:
 	cl::Buffer _outvec;
 
 public:
-	MultiplyService(cl::Context context, cl::CommandQueue q)
+	VectorService(cl::Context context, cl::CommandQueue q)
 	{
 		_context = context;
 		_queue = q;
 	}
 
-	void setup(cl::Program program, size_t vec_dim)
+	void setup(cl::Program program, const char* name, size_t vec_dim)
 	{
-		_program = program;
 		_vec_dim = vec_dim;
 
 		size_t vec_bytes = _vec_dim * sizeof(double);
@@ -42,7 +40,7 @@ public:
 		_outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 
 		// The program to run on the GPU, and the arguments it takes.
-		_kernel = cl::Kernel(_program, "vec_mult");
+		_kernel = cl::Kernel(program, name);
 		_kernel.setArg(0, _outvec);
 		_kernel.setArg(1, _invec_a);
 		_kernel.setArg(2, _invec_b);
@@ -93,11 +91,11 @@ void run_flow (cl::Device ocldev,
 {
 	cl::CommandQueue queue(context, ocldev);
 
-	MultiplyService msrv(context, queue);
+	VectorService vsrv(context, queue);
 
 	// size_t vec_dim = 64;
 	size_t vec_dim = 10;
-	msrv.setup(program, vec_dim);
+	vsrv.setup(program, "vec_mult", vec_dim);
 
 	// Set up vectors
 	std::vector<double> a(vec_dim);
@@ -112,8 +110,8 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
-	msrv.launch(a, b);
-	msrv.get_results(prod);
+	vsrv.launch(a, b);
+	vsrv.get_results(prod);
 
 	// Product will be even numbers.
 	for (size_t i=0; i<vec_dim; i++)
@@ -123,8 +121,8 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
-	msrv.launch(a, b);
-	msrv.get_results(prod);
+	vsrv.launch(a, b);
+	vsrv.get_results(prod);
 }
 
 int main(int argc, char* argv[])
