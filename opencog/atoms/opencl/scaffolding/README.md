@@ -14,6 +14,7 @@ Hardware support:
 
 Command line tools:
 * `clinfo` to print OpenCL hardware
+* `radeontop` to show GPU utilization
 
 Hello-world examples from the inter-tubes:
 

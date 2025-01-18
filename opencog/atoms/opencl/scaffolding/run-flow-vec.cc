@@ -8,55 +8,73 @@
 
 #include "scaffolding.h"
 
-// Wire user data into GPU
-void run_vec_mult(cl::Context context,
-                  cl::Program program,
-                  cl::CommandQueue queue,
-                  size_t vec_dim,
-                  std::vector<double>& a,
-                  std::vector<double>& b,
-                  std::vector<double>& prod)
+// Wrapper: remote service, provided by GPU located at the far end of a
+// channel. This implements vector multiply.
+class MultiplyService
 {
-	size_t vec_bytes = vec_dim * sizeof(double);
+protected:
+	cl::Context _context;
+	cl::CommandQueue _queue;
+	cl::Program _program;
+	cl::Kernel _kernel;
 
-	cl::Buffer veca(context,
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, a.data());
+	size_t _vec_dim;
+	cl::Buffer _invec_a;
+	cl::Buffer _invec_b;
+	cl::Buffer _outvec;
 
-a[3]= 555;
+public:
+	MultiplyService(cl::Context context, cl::CommandQueue q)
+	{
+		_context = context;
+		_queue = q;
+	}
 
-	cl::Buffer vecb(context,
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, b.data());
+	void setup(cl::Context context, cl::Program program, size_t vec_dim)
+	{
+		_program = program;
+		_vec_dim = vec_dim;
 
-	cl::Buffer vecprod(context,
-		CL_MEM_READ_WRITE, vec_bytes);
+		size_t vec_bytes = _vec_dim * sizeof(double);
 
-	// The program to run on the GPU, and the arguments it takes.
-	// Must be rebound, every time argument data changes!?
-	cl::Kernel kernel(program, "vec_mult");
-	kernel.setArg(0, vecprod);
-	kernel.setArg(1, veca);
-	kernel.setArg(2, vecb);
-	kernel.setArg(3, vec_dim);
+		_invec_a = cl::Buffer(_context, CL_MEM_READ_ONLY, vec_bytes);
+		_invec_b = cl::Buffer(_context, CL_MEM_READ_ONLY, vec_bytes);
+		_outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 
-	// Actually run the code
-	cl::Event event_handler;
-	queue.enqueueNDRangeKernel(kernel,
-		cl::NullRange,
-		cl::NDRange(vec_dim),
-		cl::NullRange,
-		nullptr, &event_handler);
+		// The program to run on the GPU, and the arguments it takes.
+		_kernel = cl::Kernel(_program, "vec_mult");
+		_kernel.setArg(0, _outvec);
+		_kernel.setArg(1, _invec_a);
+		_kernel.setArg(2, _invec_b);
+		_kernel.setArg(3, _vec_dim);
+	}
 
-	event_handler.wait();
-	fprintf(stderr, "Done waiting on exec\n");
+	void launch()
+	{
+		// Actually run the code
+		cl::Event event_handler;
+		_queue.enqueueNDRangeKernel(_kernel,
+			cl::NullRange,
+			cl::NDRange(vec_dim),
+			cl::NullRange,
+			nullptr, &event_handler);
 
-	queue.enqueueReadBuffer(vecprod, CL_TRUE, 0, vec_bytes, prod.data(),
-		nullptr, &event_handler);
-	event_handler.wait();
+		event_handler.wait();
+		fprintf(stderr, "Done waiting on exec\n");
+	}
 
-	printf("The results:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("result[%ld] = %f\n", i, prod[i]);
-}
+	void get_results(std::vector<double>& results)
+	{
+		size_t vec_bytes = _vec_dim * sizeof(double);
+		_queue.enqueueReadBuffer(_outvec, CL_TRUE, 0,
+			vec_bytes, results.data(), nullptr, &event_handler);
+		event_handler.wait();
+
+		printf("The results:\n");
+		for (size_t i=0; i<_vec_dim; i++)
+			printf("result[%ld] = %f\n", i, results[i]);
+	}
+};
 
 void run_flow (cl::Device ocldev,
                cl::Context context,
@@ -78,6 +96,10 @@ void run_flow (cl::Device ocldev,
 	}
 
 	cl::CommandQueue queue(context, ocldev);
+
+	MultiplyService msrv(context, queue);
+	msrv.setup(program, vec_dim);
+
 	run_vec_mult(context, program, queue,
 	          vec_dim, a, b, prod);
 
