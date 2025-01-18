@@ -84,7 +84,7 @@ Everything exciting is in the
 
 Notable content:
 
-* The [scaffolding](opencog/atoms/opencl/scaffolding) directory
+* The [scaffolding](opencog/opencl/scaffolding) directory
   contains some bring-up code and several hello-world examples.
 * [Design Notes](opencog/atoms/opencl/Design.md) contains some
   raw ideas on how the system should be designed.
@@ -108,18 +108,18 @@ Steps:
   This uses the same build style as all other OpenCog projects.
 
 Make sure the software isn't insane, by running
-`opencog/atoms/opencl/scaffolding/show-ocl-hw` executable from the
+`opencog/opencl/scaffolding/show-ocl-hw` executable from the
 `build` directory. It will print a short hardware listing that
 is a subset of what the `clinfo` command lists. If it doesn't
 work, that is probably because it's too stupid to find your hardware.
 Read the source, Luke.
 
 Make sure you can talk to the hardware, by running the
-`opencog/atoms/opencl/scaffolding/run-hello-world` executable from
+`opencog/opencl/scaffolding/run-hello-world` executable from
 the `build` directory. It should print `>>This is only a test<<` if
 the code ran on the GPUs.  It will work only if there is a copy of
 `hello.cl` in whatever directory that you are running `run-hello-world`
 from.
 
-The `opencog/atoms/opencl/scaffolding/run-vec-mult` executable is
+The `opencog/opencl/scaffolding/run-vec-mult` executable is
 similar to above; it performs a simple vector multiply.
