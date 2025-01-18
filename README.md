@@ -2,7 +2,7 @@
 Atomse OpenCL Interfaces
 ========================
 Experimental effort to enable I/O between Atomese and OpenCL devices
-(and, in particular, GPUs).
+(narrowly, to GPUs; broadly, to DL/NN architectures.)
 
 [Atomese](https://wiki.opencog.org/w/Atomese), the interface language for
 the OpenCog [AtomSpace](https://github.com/opencog/atomspace) hypergraph
@@ -30,18 +30,25 @@ subsystems. These include:
   an experimental effort to understand the generic mathematical theory
   of interfacing Atomese to arbitrary unknown sensory devices, and to
   able to use them to obtain streams of data. This includes the
-  abstract defintion of a "motor", which is a device that can cause
+  abstract definition of a "motor", which is a device that can cause
   changes to the external world (such as movement or manipulation of
   objects).
 * The [Motor](https://github.com/opencog/motor) system, which attempts
   to define a simpler, more practical and mundane way of using Atomese
   to work with external devices.
-* An obsolete gateway to ROS, the Robot Operating System.
+* Obsolete gateways to ROS, the Robot Operating System, to Minecraft
+  (via MineRL & Malmo), to Unity, the game engine, and many more.
 
 Interfacing to GPU subsystems, such as CUDA or OpenCL, or any of a large
 variety of systems built on these, such as TensorFlow, offer a
 non-trivial exercise for testing and guiding the Atomese sensori-motor
 interfaces.
+
+At the narrowest level, the interfaces here simply move vectors to and
+from GPUs and invoke GPU kernels to perform processing on them. More
+broadly, the interfaces here explore some of the more complex APIs
+commonly used by major systems to communicate data across channels and
+process it on remote servers (such as GPUs).
 
 The effort here attempts to find a balance between abstract
 mathematical theory and a practical, usable interface. The generic
@@ -56,6 +63,12 @@ a sensori-motor system, beyond some hacked-up robots and in-game avatars
 created for you by *human* engineers. Perhaps with a proper theory, some
 of the hackiness can be refined.
 
+The need for a general sensori-motor theory is underscored by the
+failure of earlier OpenCog projects that attempted create "embodied
+OpenCog agents". These are the systems listed above: interfaces into
+ROS, Unity and Minecraft, to name some of the more advanced efforts.
+These were all sensori-motor "hack jobs", built without giving any
+thought of what it means "to perceive and move".
 
 Status
 -----
