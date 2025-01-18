@@ -49,10 +49,19 @@ public:
 		_kernel.setArg(3, _vec_dim);
 	}
 
-	void launch()
+	void launch(std::vector<double>& a, std::vector<double>& b)
 	{
-		// Actually run the code
+		size_t vec_bytes = _vec_dim * sizeof(double);
 		cl::Event event_handler;
+
+		// Copyin data
+		_queue.enqueueWriteBuffer(_invec_a, CL_TRUE, 0,
+			vec_bytes, a.data, nullptr, &event_handler);
+
+		_queue.enqueueWriteBuffer(_invec_b, CL_TRUE, 0,
+			vec_bytes, b.data, nullptr, &event_handler);
+
+		// Actually run the code
 		_queue.enqueueNDRangeKernel(_kernel,
 			cl::NullRange,
 			cl::NDRange(vec_dim),
@@ -66,6 +75,8 @@ public:
 	void get_results(std::vector<double>& results)
 	{
 		size_t vec_bytes = _vec_dim * sizeof(double);
+		cl::Event event_handler;
+
 		_queue.enqueueReadBuffer(_outvec, CL_TRUE, 0,
 			vec_bytes, results.data(), nullptr, &event_handler);
 		event_handler.wait();
@@ -80,6 +91,11 @@ void run_flow (cl::Device ocldev,
                cl::Context context,
                cl::Program program)
 {
+	cl::CommandQueue queue(context, ocldev);
+
+	MultiplyService msrv(context, queue);
+	msrv.setup(program, vec_dim);
+
 	// Set up vectors
 	// size_t vec_dim = 64;
 	size_t vec_dim = 10;
@@ -95,13 +111,8 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
-	cl::CommandQueue queue(context, ocldev);
-
-	MultiplyService msrv(context, queue);
-	msrv.setup(program, vec_dim);
-
-	run_vec_mult(context, program, queue,
-	          vec_dim, a, b, prod);
+	msrv.launch(a, b);
+	msrc.get_results(prod);
 
 	// Product will be even numbers.
 	for (size_t i=0; i<vec_dim; i++)
@@ -111,8 +122,8 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
-	run_vec_mult(context, program, queue,
-	          vec_dim, a, b, prod);
+	msrv.launch(a, b);
+	msrc.get_results(prod);
 }
 
 int main(int argc, char* argv[])
