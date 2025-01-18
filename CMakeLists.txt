@@ -1,5 +1,5 @@
 #
-# Master AtomSpace RocksDB Backend CMake file.
+# Master Atomese OpenCL GPU Bridge CMake file.
 #
 # General organization:
 # -- check for different compilers, OS'es
@@ -18,7 +18,7 @@ IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0045 NEW)
 ENDIF (COMMAND CMAKE_POLICY)
 
-PROJECT(atomspace-rocks)
+PROJECT(atomese-gpu-opencl)
 
 # ----------------------------------------------------------
 # User-modifiable options. Feel free to change these!
@@ -111,6 +111,25 @@ include(OpenCogFindGuile)
 include(OpenCogFindPython)
 
 # ----------------------------------------------------------
+# Find OpenCL (optional; for experimental prototyping.)
+FIND_PACKAGE(OpenCL)
+IF (OPENCL_FOUND)
+	MESSAGE(STATUS "OpenCL found.")
+	ADD_DEFINITIONS(-DHAVE_OPENCL)
+	SET(HAVE_OPENCL 1)
+ENDIF (OPENCL_FOUND)
+
+# ----------------------------------------------------------
+# Find CUDA (optional; for experimental prototyping.)
+INCLUDE(CheckLanguage)
+CHECK_LANGUAGE(CUDA)
+IF (CMAKE_CUDA_COMPILER)
+	MESSAGE(STATUS "CUDA found.")
+	ADD_DEFINITIONS(-DHAVE_CUDA)
+	SET(HAVE_CUDA 1)
+ENDIF (CMAKE_CUDA_COMPILER)
+
+# ----------------------------------------------------------
 # Optional, currently needed only to hush up DRD in util/Logger.cc
 FIND_PACKAGE(VALGRIND)
 IF (VALGRIND_FOUND)
@@ -144,7 +163,7 @@ INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogCython.cmake")
 # ==========================================================
 # Decide what to build, based on the packages found.
 
-ADD_SUBDIRECTORY(lib)
+# ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(opencog)
 
 IF (CXXTEST_FOUND)
@@ -175,20 +194,6 @@ IF (CXXTEST_FOUND)
 			COMMENT "Running tests..."
 		)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-
-	ADD_CUSTOM_TARGET(test_mono
-		DEPENDS tests
-		WORKING_DIRECTORY tests/persist/monospace
-		COMMAND ${CMAKE_CTEST_COMMAND} $(ARGS)
-		COMMENT "Running Monospace tests..."
-	)
-
-	ADD_CUSTOM_TARGET(test_multi
-		DEPENDS tests
-		WORKING_DIRECTORY tests/persist/rocks
-		COMMAND ${CMAKE_CTEST_COMMAND} $(ARGS)
-		COMMENT "Running Multispace tests..."
-	)
 
 ENDIF (CXXTEST_FOUND)
 
@@ -254,8 +259,9 @@ FIND_PACKAGE(Doxygen)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend" HAVE_ATOMSPACE AND HAVE_ROCKSDB)
-SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
+SUMMARY_ADD("Atomese-OpenCL" "Atomese OpenCL GPU interfaces" HAVE_ATOMSPACE AND HAVE_OPENCL)
+# SUMMARY_ADD("CUDA platform" "CUDA platform" HAVE_CUDA)
+# SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 
