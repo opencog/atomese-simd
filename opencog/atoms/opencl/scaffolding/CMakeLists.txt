@@ -16,9 +16,15 @@ TARGET_LINK_LIBRARIES(run-flow-vec OpenCL::OpenCL)
 # Perform an "offline build" of the demo sources
 ADD_CUSTOM_COMMAND(
 	OUTPUT vec-mult.bc
-	COMMAND clang
+	COMMAND ${CLANG}
 	ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/vec-mult.cl -target spir -O0 -emit-llvm -o vec-mult.bc
 	DEPENDS vec-mult.cl)
 
-ADD_CUSTOM_TARGET(vec_mult_lib DEPENDS vec-mult.bc)
+ADD_CUSTOM_COMMAND(
+	OUTPUT vec-mult.spv
+	COMMAND ${LLVM_SPIRV}
+	ARGS ${CMAKE_CURRENT_BINARY_DIR}/vec-mult.bc -o vec-mult.spv
+	DEPENDS vec-mult.bc)
+
+ADD_CUSTOM_TARGET(vec_mult_lib DEPENDS vec-mult.spv)
 ADD_DEPENDENCIES(run-flow-vec vec_mult_lib)
