@@ -211,11 +211,53 @@ Design Requirements
 -------------------
 For a prototype proof-of-concept demo, what's actually needed?
 
-* *Basic vector I/O to GPU's.*
+* **Basic vector I/O to GPU's.**
   Minimal function is to move data to GPU's, call kernel, get data back.
 
-* *Multi-step dataflow wiring.*
+* **Multi-step dataflow wiring.**
   Define sophisticated data flow wiring. Similar to TensorFlow (???)
 
+* **AtomSpace on GPU.**
+  Run AtomSpace on GPU. Use `StorageNode` API to talk to it.
+
+For boostrapping, lets stick to the basics.
+
 ### Basic vector I/O
-Ability to stream data data to GPU. Once-shot is a special case.
+Ability to stream data data to GPU. One-shot is a special case.
+Pseudocode:
+```
+   ; Location of kernel code as path in local filesystem.
+   ; OpenCLNode isA SensoryNode
+   (OpenCLNode "opencl://host/file/path/kernel.cl")
+   (OpenCLNode "opencl://host/file/path/kernel.clcpp")
+   (OpenCLNode "opencl://host/file/path/kernel.spv")
+
+   ; Apply standard Open to SensoryNode
+   ; Returns stream handle, which must be stored at some anchor.
+   (Open
+      (Type 'FloatValue)
+      ((OpenCL "opencl://host/file/path/kernel.cl"))
+
+   ; Write two vectors to GPU. Apply 'vect_mult' kernel function to
+   ; the vectors. The 'List' will typically be a 'ListValue'.
+   (WriteLink
+      (ValueOf anchor)
+      (List
+         (Predicate "vect_mult")
+         (Number "1 2 3 4")
+         (Number "2 2 2 2")))
+
+   ; Place output stream at well-known location
+   (cog-set-value!
+      (Anchor "some anchor point")
+      (Predicate "some key")
+      (FloatValue "0 0 0"))
+
+   ; Copy results from GPU to AtomSpace.
+   (ReadLink
+      (ValueOf anchor)
+      (ValueOf (Anchor "some anchor point") (Predicate "some key")))
+
+   ; TODO RUleLink + FilterLink that provides an all-in-one wrapper for
+   ; above. See sensory examples for example.
+```

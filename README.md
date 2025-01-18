@@ -86,6 +86,8 @@ Notable content:
 
 * The [scaffolding](opencog/atoms/opencl/scaffolding) directory
   contains some bring-up code and several hello-world examples.
+* [Design Notes](opencog/atoms/opencl/Design.md) contains some
+  raw ideas on how the system should be designed.
 * The [types](opencog/atoms/opencl/types) directory contains
   definitions for some OpenCL Atom types.
 * The [stream](opencog/atoms/opencl/stream) directory contains
