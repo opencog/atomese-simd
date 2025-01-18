@@ -38,8 +38,7 @@ void run_vec_mult(cl::Device ocldev, cl::Context context, cl::Program program)
 		CL_MEM_READ_WRITE, vec_bytes);
 
 	// The program to run on the GPU, and the arguments it takes.
-	int err;
-	cl::Kernel kernel(program, "vec_mult", &err);
+	cl::Kernel kernel(program, "vec_mult");
 	kernel.setArg(0, vecprod);
 	kernel.setArg(1, veca);
 	kernel.setArg(2, vecb);

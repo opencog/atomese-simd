@@ -9,42 +9,37 @@
 #include "scaffolding.h"
 
 // Wire user data into GPU
-cl::Kernel setup_vec_mult(cl::Context context,
-                          cl::Program program,
-                          size_t vec_dim,
-                          std::vector<double>& a,
-                          std::vector<double>& b,
-                          std::vector<double>& prod,
-                          cl::Buffer& vec_results)
+void run_vec_mult(cl::Context context,
+                  cl::Program program,
+                  cl::CommandQueue queue,
+                  size_t vec_dim,
+                  std::vector<double>& a,
+                  std::vector<double>& b,
+                  std::vector<double>& prod)
 {
 	size_t vec_bytes = vec_dim * sizeof(double);
 
 	// Buffers holding data that will go to the GPU's.
 	// Buffer size is static.
-	static cl::Buffer veca(context,
+	// Must be rebuilt whenever the data changes! (?)
+	cl::Buffer veca(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, a.data());
 
-	static cl::Buffer vecb(context,
+	cl::Buffer vecb(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, b.data());
 
-	static cl::Buffer vecprod(context,
+	cl::Buffer vecprod(context,
 		CL_MEM_READ_WRITE, vec_bytes);
 
 	// The program to run on the GPU, and the arguments it takes.
+	// Must be rebound, every time argument data changes!?
 	cl::Kernel kernel(program, "vec_mult");
 	kernel.setArg(0, vecprod);
 	kernel.setArg(1, veca);
 	kernel.setArg(2, vecb);
 	kernel.setArg(3, vec_dim);
 
-	vec_results = vecprod;
-	return kernel;
-}
-
-// Launch
-void queue_data(cl::Kernel kernel, cl::CommandQueue queue,
-                 size_t vec_dim)
-{
+	// Actually run the code
 	cl::Event event_handler;
 	queue.enqueueNDRangeKernel(kernel,
 		cl::NullRange,
@@ -54,16 +49,7 @@ void queue_data(cl::Kernel kernel, cl::CommandQueue queue,
 
 	event_handler.wait();
 	fprintf(stderr, "Done waiting on exec\n");
-}
 
-// Read
-void get_results(cl::CommandQueue queue,
-                size_t vec_dim,
-                std::vector<double>& prod,
-                cl::Buffer vecprod)
-{
-	cl::Event event_handler;
-	size_t vec_bytes = vec_dim * sizeof(double);
 	queue.enqueueReadBuffer(vecprod, CL_TRUE, 0, vec_bytes, prod.data(),
 		nullptr, &event_handler);
 	event_handler.wait();
@@ -92,14 +78,9 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
-	cl::Buffer results;
-	cl::Kernel kern = setup_vec_mult(context, program,
-	          vec_dim, a, b, prod, results);
-
 	cl::CommandQueue queue(context, ocldev);
-
-	queue_data(kern, queue, vec_dim);
-	get_results(queue, vec_dim, prod, results);
+	run_vec_mult(context, program, queue,
+	          vec_dim, a, b, prod);
 
 	// Product will be even numbers.
 	for (size_t i=0; i<vec_dim; i++)
@@ -109,8 +90,8 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
-	queue_data(kern, queue, vec_dim);
-	get_results(queue, vec_dim, prod, results);
+	run_vec_mult(context, program, queue,
+	          vec_dim, a, b, prod);
 }
 
 int main(int argc, char* argv[])
