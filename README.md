@@ -9,7 +9,7 @@ the OpenCog [AtomSpace](https://github.com/opencog/atomspace) hypergraph
 database, has a variety of different ways of talking to external
 subsystems. These include:
 
-* [GroundedProcedureNode](https://wiki.opencog.org/w/GroundedProcedureNode)
+* [GroundedSchemaNode](https://wiki.opencog.org/w/GroundedSchemaNode)
   allows external python, scheme and shared-library functions to be
   called, passing arguments encoded as Atoms.
 * [StorageNode](https://wiki.opencog.org/w/StorageNode) allows Atoms to
@@ -59,20 +59,24 @@ of the hackiness can be refined.
 
 Status
 -----
-***Version 0.0.2.***
+***Version 0.0.2.*** --
 Some prototyping, some demos, some unfinished ideas for design &
 implementation. Nothing connects with Atomese, yet.
 
 Overview
 --------
-Directory layout:
+The directory layout follows the conventional AtomSpace standards.
+Everything exciting is in the
+[opencog/atoms/opencl](opencog/atoms/opencl) directory.
 
-* The [scaffolding](scaffolding) directory contains some bring-up code
-  and hello-world examples.
-* The [opencl-types](opencl-types) directory contains definitions for
-  some OpenCL Atom types.
-* The [stream](stream) directory contains implementations for those
-  Atom types.
+Notable content:
+
+* The [scaffolding](opencog/atoms/opencl/scaffolding) directory
+  contains some bring-up code and several hello-world examples.
+* The [types](opencog/atoms/opencl/types) directory contains
+  definitions for some OpenCL Atom types.
+* The [stream](opencog/atoms/opencl/stream) directory contains
+  implementations for those Atom types.
 
 
 HOWTO
@@ -80,21 +84,25 @@ HOWTO
 Steps:
 * Get some OpenCL GPU hardware, such as a Radeon graphics card.
 * Install `clinfo` and `mesa-opencl-icd` and `opencl-headers`
-  Maybe more, for your hardware.
+  Maybe more; depends on your distro and hardware.
 * Maybe also: `ocl-icd-opencl-dev` and `opencl-clhpp-headers` ?
 * `sudo usermod -a -G video <user_id>`
+* Build and install cogutils, the AtomSpace, and the code here.
+  This uses the same build style as all other OpenCog projects.
 
 Make sure the software isn't insane, by running
-`opencog/opencl/scaffolding/show-ocl-hw` executable from the `build`
-directory. It will print a short-form hardware listing that should
-match what the `clinfo` command lists. If it doesn't, something is
-wrong with the code here.
+`opencog/atoms/opencl/scaffolding/show-ocl-hw` executable from the
+`build` directory. It will print a short hardware listing that
+is a subset of what the `clinfo` command lists. If it doesn't
+work, that is probably because it's too stupid to find your hardware.
+Read the source, Luke.
 
 Make sure you can talk to the hardware, by running the
-`opencog/opencl/scaffolding/run-hello-world` executable from the `build`
-directory. It should print `>>This is only a test<<` if the code ran
-on the GPUs.  It will work only if there is a copy of `hello.cl` in
-whatever directory that you are running `run-hello-world` from.
+`opencog/atoms/opencl/scaffolding/run-hello-world` executable from
+the `build` directory. It should print `>>This is only a test<<` if
+the code ran on the GPUs.  It will work only if there is a copy of
+`hello.cl` in whatever directory that you are running `run-hello-world`
+from.
 
-The `opencog/opencl/scaffolding/run-vec-mult` executable is similar
-to above; it performs a simple vector multiply.
+The `opencog/atoms/opencl/scaffolding/run-vec-mult` executable is
+similar to above; it performs a simple vector multiply.
