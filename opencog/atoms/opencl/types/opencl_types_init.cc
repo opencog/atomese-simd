@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/opencl-types/opencl_types_init.cc
+ * opencog/atoms/opencl/types/opencl_types_init.cc
  *
  * Copyright (C) 2014,2020 Linas Vepstas
  * All Rights Reserved
@@ -20,9 +20,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "opencog/atoms/opencl/opencl-types/opencl_types.definitions"
+#include "opencog/atoms/opencl/types/opencl_types.definitions"
 
-#define INHERITANCE_FILE "opencog/atoms/opencl/opencl-types/opencl_types.inheritance"
+#define INHERITANCE_FILE "opencog/atoms/opencl/types/opencl_types.inheritance"
 #define INITNAME opencl_types_init
 
 #include <opencog/atoms/atom_types/atom_types.cc>

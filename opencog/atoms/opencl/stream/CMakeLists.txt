@@ -1,4 +1,6 @@
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+
+# Auto-generated types files are in the build directory.
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (opencl-atoms
 	OpenclFloatValue.cc

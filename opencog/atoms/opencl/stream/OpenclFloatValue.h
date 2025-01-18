@@ -1,5 +1,5 @@
 /*
- * opencog/opencl/stream/OpenclFloatValue.h
+ * opencog/atoms/opencl/stream/OpenclFloatValue.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -25,7 +25,7 @@
 
 #include <vector>
 #include <opencog/atoms/value/FloatValue.h>
-#include <opencog/opencl/opencl-types/opencl_types.h>
+#include <opencog/atoms/opencl/types/opencl_types.h>
 
 namespace opencog
 {
