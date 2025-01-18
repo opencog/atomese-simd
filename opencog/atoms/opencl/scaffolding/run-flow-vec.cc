@@ -14,7 +14,8 @@ cl::Kernel setup_vec_mult(cl::Context context,
                           size_t vec_dim,
                           std::vector<double>& a,
                           std::vector<double>& b,
-                          std::vector<double>& prod)
+                          std::vector<double>& prod,
+                          cl::Buffer& vec_results)
 {
 	size_t vec_bytes = vec_dim * sizeof(double);
 
@@ -37,12 +38,13 @@ cl::Kernel setup_vec_mult(cl::Context context,
 	kernel.setArg(2, vecb);
 	kernel.setArg(3, vec_dim);
 
+	vec_results = vecprod;
 	return kernel;
 }
 
 // Launch
-void stream_data(cl::Kernel kernel, cl::CommandQueue queue,
-                 size_t vec_dim, size_t vec_bytes)
+void queue_data(cl::Kernel kernel, cl::CommandQueue queue,
+                 size_t vec_dim)
 {
 	cl::Event event_handler;
 	queue.enqueueNDRangeKernel(kernel,
@@ -53,13 +55,20 @@ void stream_data(cl::Kernel kernel, cl::CommandQueue queue,
 
 	event_handler.wait();
 	fprintf(stderr, "Done waiting on exec\n");
+}
 
-#if FOO
+// Read
+void get_results(cl::CommandQueue queue,
+                size_t vec_dim,
+                std::vector<double>& prod,
+                cl::Buffer vecprod)
+{
+	cl::Event event_handler;
+	size_t vec_bytes = vec_dim * sizeof(double);
 	queue.enqueueReadBuffer(vecprod, CL_TRUE, 0, vec_bytes, prod.data(),
 		nullptr, &event_handler);
 	event_handler.wait();
 	fprintf(stderr, "Done waiting on result read\n");
-#endif
 }
 
 void run_flow (cl::Device ocldev,
@@ -80,13 +89,14 @@ void run_flow (cl::Device ocldev,
 		prod[i] = 0.0;
 	}
 
+	cl::Buffer results;
 	cl::Kernel kern = setup_vec_mult(context, program,
-	          vec_dim, a, b, prod);
+	          vec_dim, a, b, prod, results);
 
 	cl::CommandQueue queue(context, ocldev);
 
-	size_t vec_bytes = vec_dim * sizeof(double);
-	stream_data(kern, queue, vec_dim, vec_bytes);
+	queue_data(kern, queue, vec_dim);
+	get_results(queue, vec_dim, prod, results);
 
 	printf("The triangle numbers are:\n");
 	for (size_t i=0; i<vec_dim; i++)
