@@ -9,11 +9,11 @@ the OpenCog [AtomSpace](https://github.com/opencog/atomspace) hypergraph
 database, has a variety of different ways of talking to external
 subsystems. These include:
 
-* [GroundedSchemaNode](https://wiki.opencog.org/w/GroundedSchemaNode)
+* The [GroundedSchemaNode](https://wiki.opencog.org/w/GroundedSchemaNode)
   allows external python, scheme and shared-library functions to be
   called, passing arguments encoded as Atoms.
-* [StorageNode](https://wiki.opencog.org/w/StorageNode) allows Atoms to
-  be sent to and received from various locations, including internet
+* The [StorageNode](https://wiki.opencog.org/w/StorageNode) allows Atoms
+  to be sent to and received from various locations, including Internet
   hosts (using
   [CogStorageNode](https://wiki.opencog.org/w/CogStorageNode)), disk
   drives (using
