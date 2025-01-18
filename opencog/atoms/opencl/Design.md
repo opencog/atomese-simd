@@ -251,7 +251,7 @@ Pseudocode:
    (cog-set-value!
       (Anchor "some anchor point")
       (Predicate "some key")
-      (FloatValue "0 0 0"))
+      (StreamValue "0 0 0"))
 
    ; Copy results from GPU to AtomSpace.
    (ReadLink

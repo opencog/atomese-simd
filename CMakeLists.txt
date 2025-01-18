@@ -87,6 +87,15 @@ ELSE (ATOMSPACE_FOUND)
 	MESSAGE(FATAL_ERROR "AtomSpace missing: it is needed!")
 ENDIF (ATOMSPACE_FOUND)
 
+# Sensory
+FIND_PACKAGE(Sensory CONFIG REQUIRED)
+IF (SENSORY_FOUND)
+	MESSAGE(STATUS "Sensory found.")
+	ADD_DEFINITIONS(-DHAVE_SENSORY)
+	SET(HAVE_SENSORY 1)
+ELSE (SENSORY_FOUND)
+	MESSAGE(FATAL_ERROR "Sensory missing: it is needed!")
+ENDIF (SENSORY_FOUND)
 
 # ----------------------------------------------------------
 # Needed for unit tests
@@ -113,6 +122,9 @@ ELSE (OPENCL_FOUND)
 	MESSAGE(FATAL_ERROR "OpenCL missing: it is needed!")
 ENDIF (OPENCL_FOUND)
 
+# ----------------------------------------------------------
+# Clang and llvm-spirv. Optional; for doing "offline" compiling
+# of OpenCL kernels.
 FIND_PROGRAM(CLANG clang)
 IF (CLANG STREQUAL "CLANG-NOTFOUND")
 	MESSAGE(STATUS "clang not found; offline compile will not be done.")
@@ -142,21 +154,6 @@ IF (CMAKE_CUDA_COMPILER)
 	ADD_DEFINITIONS(-DHAVE_CUDA)
 	SET(HAVE_CUDA 1)
 ENDIF (CMAKE_CUDA_COMPILER)
-
-# ----------------------------------------------------------
-# Optional, currently needed only to hush up DRD in util/Logger.cc
-FIND_PACKAGE(VALGRIND)
-IF (VALGRIND_FOUND)
-	MESSAGE(STATUS "VALGRIND was found.")
-	IF (VALGRIND_INCLUDE_DIR)
-		MESSAGE(STATUS "VALGRIND devel headers found.")
-		ADD_DEFINITIONS(-DHAVE_VALGRIND)
-	ELSE (VALGRIND_INCLUDE_DIR)
-		MESSAGE(STATUS "VALGRIND devel headers NOT FOUND: needed for thread debugging.")
-	ENDIF (VALGRIND_INCLUDE_DIR)
-ELSE (VALGRIND_FOUND)
-	MESSAGE(STATUS "VALGRIND missing: needed for thread debugging.")
-ENDIF (VALGRIND_FOUND)
 
 # ===================================================================
 # Include configuration.
@@ -274,7 +271,7 @@ FIND_PACKAGE(Doxygen)
 # Show a summary of what we found, what we will do.
 
 SUMMARY_ADD("Atomese-OpenCL" "Atomese OpenCL GPU interfaces"
-   HAVE_ATOMSPACE AND HAVE_OPENCL)
+   HAVE_ATOMSPACE AND HAVE_SENSORY AND HAVE_OPENCL)
 SUMMARY_ADD("Offline compile" "OpenCL offline compile of kernels"
    HAVE_CLANG AND HAVE_LLVM_SPIRV)
 # SUMMARY_ADD("CUDA platform" "CUDA platform" HAVE_CUDA)
