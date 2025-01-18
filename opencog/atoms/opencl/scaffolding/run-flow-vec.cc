@@ -19,11 +19,10 @@ void run_vec_mult(cl::Context context,
 {
 	size_t vec_bytes = vec_dim * sizeof(double);
 
-	// Buffers holding data that will go to the GPU's.
-	// Buffer size is static.
-	// Must be rebuilt whenever the data changes! (?)
 	cl::Buffer veca(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, a.data());
+
+a[3]= 555;
 
 	cl::Buffer vecb(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, b.data());

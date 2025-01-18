@@ -27,9 +27,15 @@ void run_vec_mult(cl::Device ocldev, cl::Context context, cl::Program program)
 
 	size_t vec_bytes = vec_dim * sizeof(double);
 
-	// Buffers holding data that will go to the GPU's
+	// Buffers holding data that will go to the GPU's.
+	// Data is copied in; changes after this point have no effect.
+	// The SVM (Shared Virtual Memory) extension avoids copyin,
+	// but SVM requires OpenCL 2.0 for support.
 	cl::Buffer veca(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, a.data());
+
+	// Example: this change has no effect:
+	a[3] = 5555.0;
 
 	cl::Buffer vecb(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, b.data());

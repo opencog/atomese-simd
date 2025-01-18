@@ -34,8 +34,8 @@ void report_hardware(void)
 		printf("\tVersion: %s\n", pvers.c_str());
 
 		std::vector<cl::Device> devices;
-		// plat.getDevices(CL_DEVICE_TYPE_ALL, &devices);
-		plat.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+		plat.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+		// plat.getDevices(CL_DEVICE_TYPE_GPU, &devices);
 
 		printf("\tThis platform has %ld GPU devices:\n", devices.size());
 
@@ -55,6 +55,8 @@ void report_hardware(void)
 			for (unsigned int i=1; i<wdim; i++)
 				printf(" x %ld", dimensions[i]);
 			printf("\n");
+			unsigned int svmcaps = dev.getInfo<CL_DEVICE_SVM_CAPABILITIES>();
+			printf("\t\tSVM Caps bitflag: %x\n", svmcaps);
 
 			printf("\n");
 		}

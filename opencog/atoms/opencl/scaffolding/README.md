@@ -8,6 +8,10 @@ look for GPU's that have "AMD" in the name. Change as needed.
 Notes and Resources
 -------------------
 
+Hardware support:
+* https://www.x.org/wiki/RadeonFeature/
+* https://www.amd.com/en/developer.html
+
 Command line tools:
 * `clinfo` to print OpenCL hardware
 
