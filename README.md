@@ -4,24 +4,24 @@ Atomse OpenCL Interfaces
 Experimental effort to enable I/O between Atomese and OpenCL devices
 (and, in particular, GPUs).
 
-[Atomese](https://opencog.org/wiki/Atomese), the interface language for
+[Atomese](https://wiki.opencog.org/w/Atomese), the interface language for
 the OpenCog [AtomSpace](https://github.com/opencog/atomspace) hypergraph
 database, has a variety of different ways of talking to external
 subsystems. These include:
 
-* [GroundedProcedureNode](https://opencog.org/wiki/GroundedProcedureNode)
+* [GroundedProcedureNode](https://wiki.opencog.org/w/GroundedProcedureNode)
   allows external python, scheme and shared-library functions to be
   called, passing arguments encoded as Atoms.
-* [StorageNode](https://opencog.org/wiki/StorageNode) allows Atoms to
+* [StorageNode](https://wiki.opencog.org/w/StorageNode) allows Atoms to
   be sent to and received from various locations, including internet
   hosts (using
-  [CogStorageNode](https://opencog.org/wiki/CogStorageNode)), disk
+  [CogStorageNode](https://wiki.opencog.org/w/CogStorageNode)), disk
   drives (using
-  [RocksStorageNode](https://opencog.org/wiki/RocksStorageNode)),
+  [RocksStorageNode](https://wiki.opencog.org/w/RocksStorageNode)),
   databases (using
-  [PostgresStorageNode](https://opencog.org/wiki/PostgresStorageNode)),
+  [PostgresStorageNode](https://wiki.opencog.org/w/PostgresStorageNode)),
   files (using
-  [FileStorageNode](https://opencog.org/wiki/FileStorageNode))
+  [FileStorageNode](https://wiki.opencog.org/w/FileStorageNode))
   and more.
 * The [SQL Bridge](https://github.com/opencog/sql-bridge) allows
   SQL Tables to be mapped into AtomSpace structures, so that updates
