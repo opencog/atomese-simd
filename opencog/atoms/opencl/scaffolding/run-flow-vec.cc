@@ -21,13 +21,13 @@ cl::Kernel setup_vec_mult(cl::Context context,
 
 	// Buffers holding data that will go to the GPU's
 	// Buffer size is static.
-	cl::Buffer veca(context,
+	static cl::Buffer veca(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, a.data());
 
-	cl::Buffer vecb(context,
+	static cl::Buffer vecb(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, b.data());
 
-	cl::Buffer vecprod(context,
+	static cl::Buffer vecprod(context,
 		CL_MEM_READ_WRITE, vec_bytes);
 
 	// The program to run on the GPU, and the arguments it takes.
