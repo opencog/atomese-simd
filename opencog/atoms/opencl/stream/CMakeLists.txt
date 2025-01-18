@@ -19,5 +19,5 @@ INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
 
 INSTALL (FILES
 	OpenclFloatValue.h
-	DESTINATION "include/opencog/opencl/stream"
+	DESTINATION "include/opencog/atoms/opencl/"
 )
