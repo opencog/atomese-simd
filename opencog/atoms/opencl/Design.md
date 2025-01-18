@@ -17,14 +17,14 @@ Notes about OpenCL interfaces and how they impact Atomese design.
   This queue takes both a `cl::Context` and also a `cl::Device`
   in it ctor. Kernels are executed async.
 
-* Programs written in `*.cl` or `*.clcpp` are "offline compiled" and
-  placed into an `*.spv` binary file.
+* Programs written in `*.cl` or `*.clcpp` can be "offline compiled" and
+  placed into an `*.spv` binary file. Requires OpenCL version 2.0.
 
 Design alternatives
 -------------------
 Different ideas for communicating with GPUs.
 
-* Use `GroundedProceedureNode`s to wrap kernels. Old-style, yucky.
+* Use `GroundedSchemaNode`s to wrap kernels. Old-style, yucky.
   Why yucky? Because its stateless: besides the string name of the
   node, nothing is stored in the atom. There's no open/close phasing.
   Its just a function call. Maps poorly onto stateful I/O.
@@ -65,18 +65,28 @@ have psuedocode like so:
    }
 
    select_recipient() {
-      Create a cl::Event as the commo handle, retain pointe to it.
-      Use the externally supplied cl::Program, retain pointer to it.
+      Use the externally supplied cl::Program, kernel name string,
+      number of inputs, outputs, and size.
+      Create kernel, retain pointer to it.
+      Call cl::Kernel::setArgs() to wire up the kernel.
    }
 
-   write() {
-      Using the selected recipient, create a cl:Kernel.
-      Call cl::Kernel::setArgs() in th kernel to establish the connection.
-      Call cl::CommandQueue::enqueueNDRangeKernel() to perform send
+   send() {
+      Using the selected recipient,
+      Call cl::CommandQueue::enqueueWriteBuffer() to send data.
+		Wait on cl::Event
    )
 
-   read() {
+   exec() {
+      Using the selected recipient,
+      Call cl::CommandQueue::enqueueNDRangeKernel() to run kernel.
+		Wait on cl::Event
+   )
+
+   recv() {
       Using the selected recipient, wait on cl::Event
+      Call cl::CommandQueue::enqueueReadBuffer() to get data.
+		Wait on cl::Event
    }
 ```
 Caveat: the above is already an oversimplification of the OpenCL
@@ -86,11 +96,22 @@ requires a vector of `cl::Device` in it's ctor. And devices need
 moment.
 
 The above API is more complex than open/close/read/write. There are
-three choices:
-* Codify the above as "sufficiently generic", claiming that e.g. CUDA
-  would also fit into this model.
+four choices:
+* Collapse the first three steps into a generic `open()`.
+  Collapse the send and exec steps into a generic `write()`.
+* The multi-stage open-near, open-far, select-recipient is fairly
+  generic for network communications. e.g. for tcp/ip, open-near
+  corresponds to opening local socket (initializing ethernet adapter)
+  open-far corresponds to the remote socket, and select-recipient
+  corresponds to selecting the port number.
+  This multi-stage open-and-contact-recipient can be codified as
+  "sufficiently generic", claiming that e.g. CUDA would also fit
+  into this model.
 * Recognize the above as a cascade of opens(), each requiring the prior
-  so that it resembles the peeling back of an onion.
+  so that it resembles the peeling back of an onion. That is, provide
+  three distinct objects, each having a single `open()` on it, and
+  requiring these to be chained, in order to open channel to far point
+  station.
 * Recognize that the peeling-of-an-onion model is too 'linear', and that
   there is a network of interactions between the various `cl::` classes.
   That network is not a line, but a DAG. Encode the DAG as Atomese.
@@ -99,12 +120,13 @@ three choices:
   Atomese DAG in the same way that the OpenCL API expects the
   connections.
 
-I like this third option. But how would it work, in practice?
+The first option seems easiest. The fourth option seems most generic.
+How would this work, in practice?
 
 Wiring Diagrams
 ---------------
 Four choices for wiring diagrams:
-* `EvaluationLink` -- function-call-like
+* `ExecutionLink` -- function-call-like
 * `RuleLink` -- inference-like
 * `FilterLink` -- electronics-circuit-like
 * `Section` -- grammatical/sheaf-like
@@ -112,8 +134,8 @@ Four choices for wiring diagrams:
 Pros and cons:
 
 ### EvaluationLink
-Olde-school. Uses  `PredicateNode` for the function name, and a list
-of inputs, but no defined outputs. Can be given a TV to indicate
+Olde-school. Uses  `GroundedSchemaNode` for the function name, and a
+list of inputs, but no defined outputs. Can be given a TV to indicate
 probability, but no clear-cut interpretation of the function arguments.
 Replaced by `EdgeLink` for performance/size.
 
