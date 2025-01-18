@@ -68,7 +68,7 @@ void get_results(cl::CommandQueue queue,
 		nullptr, &event_handler);
 	event_handler.wait();
 
-	printf("The resuls:\n");
+	printf("The results:\n");
 	for (size_t i=0; i<vec_dim; i++)
 		printf("result[%ld] = %f\n", i, prod[i]);
 }
@@ -101,7 +101,7 @@ void run_flow (cl::Device ocldev,
 	queue_data(kern, queue, vec_dim);
 	get_results(queue, vec_dim, prod, results);
 
-	// Product will be triangle numbers.
+	// Product will be even numbers.
 	for (size_t i=0; i<vec_dim; i++)
 	{
 		a[i] = 2.0;
