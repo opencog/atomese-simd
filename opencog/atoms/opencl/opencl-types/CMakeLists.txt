@@ -19,6 +19,9 @@ ADD_LIBRARY(opencl-types SHARED
 	opencl_types_init.cc
 )
 
+# Without this, parallel make will race and crap up the generated files.
+ADD_DEPENDENCIES(opencl-types opencl_types)
+
 TARGET_LINK_LIBRARIES(opencl-types
 	${ATOMSPACE_atomtypes_LIBRARY}
 )
