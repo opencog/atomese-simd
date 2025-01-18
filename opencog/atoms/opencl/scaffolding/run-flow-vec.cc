@@ -19,7 +19,7 @@ cl::Kernel setup_vec_mult(cl::Context context,
 {
 	size_t vec_bytes = vec_dim * sizeof(double);
 
-	// Buffers holding data that will go to the GPU's
+	// Buffers holding data that will go to the GPU's.
 	// Buffer size is static.
 	static cl::Buffer veca(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, vec_bytes, a.data());
@@ -67,7 +67,10 @@ void get_results(cl::CommandQueue queue,
 	queue.enqueueReadBuffer(vecprod, CL_TRUE, 0, vec_bytes, prod.data(),
 		nullptr, &event_handler);
 	event_handler.wait();
-	fprintf(stderr, "Done waiting on result read\n");
+
+	printf("The resuls:\n");
+	for (size_t i=0; i<vec_dim; i++)
+		printf("result[%ld] = %f\n", i, prod[i]);
 }
 
 void run_flow (cl::Device ocldev,
@@ -75,7 +78,8 @@ void run_flow (cl::Device ocldev,
                cl::Program program)
 {
 	// Set up vectors
-	size_t vec_dim = 64;
+	// size_t vec_dim = 64;
+	size_t vec_dim = 10;
 	std::vector<double> a(vec_dim);
 	std::vector<double> b(vec_dim);
 	std::vector<double> prod(vec_dim);
@@ -97,11 +101,16 @@ void run_flow (cl::Device ocldev,
 	queue_data(kern, queue, vec_dim);
 	get_results(queue, vec_dim, prod, results);
 
-	printf("The triangle numbers are:\n");
+	// Product will be triangle numbers.
 	for (size_t i=0; i<vec_dim; i++)
 	{
-		printf("%ld * %ld / 2 = %f\n", i, i+1, prod[i]);
+		a[i] = 2.0;
+		b[i] = (double) i;
+		prod[i] = 0.0;
 	}
+
+	queue_data(kern, queue, vec_dim);
+	get_results(queue, vec_dim, prod, results);
 }
 
 int main(int argc, char* argv[])
