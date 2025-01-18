@@ -87,14 +87,6 @@ ELSE (ATOMSPACE_FOUND)
 	MESSAGE(FATAL_ERROR "AtomSpace missing: it is needed!")
 ENDIF (ATOMSPACE_FOUND)
 
-# RocksDB
-FIND_PACKAGE(RocksDB)
-IF (ROCKSDB_FOUND)
-	MESSAGE(STATUS "RocksDB found.")
-	SET(HAVE_ROCKSDB 1)
-ELSE (ROCKSDB_FOUND)
-	MESSAGE(STATUS "RocksDB was not found.")
-ENDIF (ROCKSDB_FOUND)
 
 # ----------------------------------------------------------
 # Needed for unit tests
@@ -111,13 +103,35 @@ include(OpenCogFindGuile)
 include(OpenCogFindPython)
 
 # ----------------------------------------------------------
-# Find OpenCL (optional; for experimental prototyping.)
+# Find OpenCL. Mandatory.
 FIND_PACKAGE(OpenCL)
 IF (OPENCL_FOUND)
 	MESSAGE(STATUS "OpenCL found.")
 	ADD_DEFINITIONS(-DHAVE_OPENCL)
 	SET(HAVE_OPENCL 1)
+ELSE (OPENCL_FOUND)
+	MESSAGE(FATAL_ERROR "OpenCL missing: it is needed!")
 ENDIF (OPENCL_FOUND)
+
+FIND_PROGRAM(CLANG clang)
+IF (CLANG STREQUAL "CLANG-NOTFOUND")
+	MESSAGE(FATAL_ERROR "Clang missing: it is needed!")
+ELSE (CLANG STREQUAL "CLANG-NOTFOUND")
+	MESSAGE(STATUS "clang found: ${CLANG}")
+	ADD_DEFINITIONS(-DHAVE_CLANG)
+	SET(HAVE_CLANG 1)
+ENDIF (CLANG STREQUAL "CLANG-NOTFOUND")
+
+# TODO: also accept newer versions of llvm-spirv
+# Debian stable has llvm-spriv-15 available
+FIND_PROGRAM(LLVM_SPIRV llvm-spirv-14)
+IF (LLVM_SPIRV STREQUAL "LLVM_SPIRV-NOTFOUND")
+	MESSAGE(FATAL_ERROR "llvm-spirv missing: it is needed!")
+ELSE (LLVM_SPIRV STREQUAL "LLVM_SPIRV-NOTFOUND")
+	MESSAGE(STATUS "llvm-spirv found: ${LLVM_SPIRV}")
+	ADD_DEFINITIONS(-DHAVE_LLVM_SPIRV)
+	SET(HAVE_LLVM_SPIRV 1)
+ENDIF (LLVM_SPIRV STREQUAL "LLVM_SPIRV-NOTFOUND")
 
 # ----------------------------------------------------------
 # Find CUDA (optional; for experimental prototyping.)

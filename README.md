@@ -99,6 +99,7 @@ Steps:
 * Install `clinfo` and `mesa-opencl-icd` and `opencl-headers`
   Maybe more; depends on your distro and hardware.
 * Maybe also: `ocl-icd-opencl-dev` and `opencl-clhpp-headers` ?
+* Install `clang-14` and `llvm-spirv-14`
 * `sudo usermod -a -G video <user_id>`
 * Build and install cogutils, the AtomSpace, and the code here.
   This uses the same build style as all other OpenCog projects.

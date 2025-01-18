@@ -12,3 +12,5 @@ TARGET_LINK_LIBRARIES(show-ocl-hw OpenCL::OpenCL)
 TARGET_LINK_LIBRARIES(run-hello-world OpenCL::OpenCL)
 TARGET_LINK_LIBRARIES(run-vec-mult OpenCL::OpenCL)
 TARGET_LINK_LIBRARIES(run-flow-vec OpenCL::OpenCL)
+
+# Build

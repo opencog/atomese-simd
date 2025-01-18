@@ -16,6 +16,14 @@ Command line tools:
 * `clinfo` to print OpenCL hardware
 * `radeontop` to show GPU utilization
 
+Overview of OpenCL:
+* https://www.khronos.org/opencl/resources
+* https://en.wikipedia.org/wiki/OpenCL
+
+HOWTO:
+* How Does OpenCL Work?
+  https://github.com/KhronosGroup/OpenCL-Guide/blob/main/chapters/how_does_opencl_work.md
+
 Hello-world examples from the inter-tubes:
 
 * Hello-world OpenCL demo from 2019:
@@ -28,10 +36,6 @@ Hello-world examples from the inter-tubes:
 
 * Tutorial from 2010, still seems mostly correct
   https://www.codeproject.com/articles/92788/introductory-tutorial-to-opencl
-
-Overivew of OpenCL:
-* https://www.khronos.org/opencl/resources
-* https://en.wikipedia.org/wiki/OpenCL
 
 Languages:
 * The OpenCL kernel language is based on C99, compiled by clang.

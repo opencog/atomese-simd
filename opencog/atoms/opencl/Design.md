@@ -2,13 +2,13 @@ Design Notes
 ============
 Notes about OpenCL interfaces and how they impact Atomese design.
 
-* Vectors will need a corresponding (private) `cl::Buffer` object
-  (per vector).  The `cl::Buffer()` ctor requires a `cl::Context`.
-  Some `cl::Buffer` ctors don't require a context; these all use
-  the default context instead (seems like a bad idea, for us...)
+* SVM "Shared Virtual Memory" shares vector data between GPU and
+  CPU, avoiding explicit copy semantics.  The ctors need `cl::Context`.
+  Older hardware doesn't support SVM.
 
-* Alternative is to use SVM "Shared Virtual Memory", The ctors
-  also need `cl::Context` and if not supplied, uses the default.
+* Non-SVM vector I/O is done with a `cl::Buffer` object (per vector).
+  Explicit copyin/copyout is needed for each access.
+  The `cl::Buffer()` ctor requires a `cl::Context`.
 
 * The kernel itself needs only a `cl::Program` which holds the
   actual kernel code.
@@ -17,8 +17,8 @@ Notes about OpenCL interfaces and how they impact Atomese design.
   This queue takes both a `cl::Context` and also a `cl::Device`
   in it ctor. Kernels are executed async.
 
-* Obtaining results from the exec needs a `cl::Event`, created when
-  the kernel is enqueued.
+* Programs written in `*.cl` or `*.clcpp` are "offline compiled" and
+  placed into an `*.spv` binary file.
 
 Design alternatives
 -------------------
