@@ -249,7 +249,6 @@ ValuePtr OpenclStream::describe(AtomSpace* as, bool silent)
 
 void OpenclStream::update() const
 {
-printf("duuude updy dupty sat on a wall\n");
 	std::vector<double> result(_vec_dim);
 	size_t vec_bytes = _vec_dim * sizeof(double);
 
@@ -272,7 +271,6 @@ ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
 
 void OpenclStream::prt_value(const ValuePtr& kvec)
 {
-printf("duuude yo %s\n", kvec->to_string().c_str());
 	if (0 == kvec->size())
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
@@ -333,7 +331,6 @@ printf("duuude yo %s\n", kvec->to_string().c_str());
 		nullptr, &event_handler);
 
 	event_handler.wait();
-printf("duuude done wait\n");
 }
 
 // ==============================================================
