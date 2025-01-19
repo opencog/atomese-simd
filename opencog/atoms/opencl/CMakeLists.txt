@@ -19,5 +19,6 @@ INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
 
 INSTALL (FILES
 	OpenclFloatVector.h
+	OpenclStream.h
 	DESTINATION "include/opencog/atoms/opencl/"
 )
