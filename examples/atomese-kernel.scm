@@ -37,11 +37,10 @@
 		(SensoryNode clurl)))
 
 ; ---------------------------------------------------------------
-; Define some Atomese to open connection, and place it where can
-; be found later.  Start
+; Define Atomese, that, when executed, will open a connection to the
+; GPU's, and then anchor that channel to a "well-known acnhor point".
 (define do-open-device
-	(SetValue
-		(Anchor "some gpus") (Predicate "some gpu channel")
+	(SetValue (Anchor "some gpus") (Predicate "some gpu channel")
 		(Open
 			(Type 'OpenclStream)
 			(SensoryNode clurl))))
@@ -49,13 +48,16 @@
 ; Go ahead and open it.
 (cog-execute! do-open-device)
 
+; Define some short-hand for the anchor-point.
+(define gpu-location
+	(ValueOf (Anchor "some gpus") (Predicate "some gpu channel")))
+
 ; ---------------------------------------------------------------
 ; Now that it's open, define a simple stream that will write the name
 ; of a kernel and some vector data to the GPU/machine. This just defines
 ; what to do; nothing is done until this is executed.
 (define kernel-runner
-	(Write
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+	(Write gpu-location
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5)
@@ -66,19 +68,16 @@
 
 ; Get the result
 (format #t "Result from running kernel is ~A\n"
-	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+	(cog-execute! gpu-location))
 
 ; Do it again ... Nothing changed.
 (format #t "Once again ...its ~A\n"
-	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+	(cog-execute! gpu-location))
 
 ; ---------------------------------------------------------------
 ; Run it again, with different data.
 (cog-execute!
-	(Write
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+	(Write gpu-location
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -86,15 +85,13 @@
 
 ; Get the result
 (format #t "And now, with different data ... ~A\n"
-	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+	(cog-execute! gpu-location))
 
 ; ---------------------------------------------------------------
 ; Run it again, with a different kernel (addition this time, not
 ; multiplication.)
 (cog-execute!
-	(Write
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+	(Write gpu-location
 		(List
 			(Predicate "vec_add") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -102,8 +99,7 @@
 
 ; Get the result
 (format #t "Addding, instead of multiplying ... ~A\n"
-	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+	(cog-execute! gpu-location))
 
 ; ---------------------------------------------------------------
 ; Instead of using NumberNodes, use FloatValues.
@@ -124,20 +120,17 @@
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
-	(Write
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+	(Write gpu-location
 		(ValueOf (Anchor "some data") (Predicate "some stream"))))
 
 ; Run it once ...
 (cog-execute! vector-stream)
 (format #t "Float stream results ... ~A\n"
-	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+	(cog-execute! gpu-location))
 
 ; Run it again ...
 (cog-execute! vector-stream)
 (format #t "Float stream results ... ~A\n"
-	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+	(cog-execute! gpu-location))
 
 ; --------- The End! That's All, Folks! --------------
