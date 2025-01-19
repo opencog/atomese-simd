@@ -13,6 +13,7 @@ ADD_DEPENDENCIES(opencl opencl_atom_types)
 TARGET_LINK_LIBRARIES(opencl
 	opencl-types
 	${SENSORY_LIBRARIES}
+	${ATOMSPACE_LIBRARIES}
 )
 
 INSTALL (TARGETS opencl EXPORT AtomSpaceTargets

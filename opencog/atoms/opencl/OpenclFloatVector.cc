@@ -23,8 +23,23 @@
 #include <opencog/util/exceptions.h>
 #include <opencog/atoms/value/ValueFactory.h>
 #include <opencog/atoms/opencl/OpenclFloatVector.h>
+#include <opencog/opencl/types/atom_types.h>
 
 using namespace opencog;
+
+OpenclFloatVector::OpenclFloatVector(void) :
+	StreamValue(OPENCL_FLOAT_VECTOR)
+{
+}
+
+OpenclFloatVector::OpenclFloatVector(const std::vector<double>& v) :
+	StreamValue(OPENCL_FLOAT_VECTOR, v)
+{
+}
+
+void OpenclFloatVector::update(void) const
+{
+}
 
 // ==============================================================
 

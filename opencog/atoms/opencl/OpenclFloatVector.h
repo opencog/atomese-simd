@@ -25,7 +25,6 @@
 
 #include <vector>
 #include <opencog/atoms/value/StreamValue.h>
-#include <opencog/opencl/types/atom_types.h>
 
 namespace opencog
 {
@@ -41,15 +40,13 @@ class OpenclFloatVector
 	: public StreamValue
 {
 protected:
-	virtual void update() const {}
+	virtual void update() const;
 
 	OpenclFloatVector(Type t) : StreamValue(t) {}
 	OpenclFloatVector(Type t, const std::vector<double>& v) : StreamValue(t, v) {}
 public:
-	OpenclFloatVector()
-		: StreamValue(OPENCL_FLOAT_VECTOR) {}
-	OpenclFloatVector(const std::vector<double>& v)
-		: StreamValue(OPENCL_FLOAT_VECTOR, v) {}
+	OpenclFloatVector(void);
+	OpenclFloatVector(const std::vector<double>&);
 
 	virtual ~OpenclFloatVector() {}
 
@@ -57,7 +54,7 @@ public:
 	size_t size() const { return _value.size(); }
 
 	/** Returns true if two values are equal. */
-	virtual bool operator==(const Value&) const;
+	// virtual bool operator==(const Value&) const;
 };
 
 typedef std::shared_ptr<const OpenclFloatVector> OpenclFloatVectorPtr;
