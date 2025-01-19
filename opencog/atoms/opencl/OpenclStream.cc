@@ -29,14 +29,25 @@
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>
+#include <opencog/sensory/types/atom_types.h>
 #include "OpenclStream.h"
 
 using namespace opencog;
 
-OpenclStream::OpenclStream(void)
+OpenclStream::OpenclStream(const std::string& str)
 	: OutputStream(OPENCL_STREAM)
 {
-	init();
+	init(str);
+}
+
+OpenclStream::OpenclStream(const Handle& senso)
+	: OutputStream(OPENCL_STREAM)
+{
+	if (SENSORY_NODE != senso->get_type())
+		throw RuntimeException(TRACE_INFO,
+			"Expecting SensoryNode, got %s\n", senso->to_string().c_str());
+
+	init(senso->get_name());
 }
 
 OpenclStream::~OpenclStream()
@@ -50,9 +61,23 @@ void OpenclStream::halt(void) const
 	_value.clear();
 }
 
-void OpenclStream::init(void)
+/// Attempt to open connection to OpenCL device
+void OpenclStream::init(const std::string& url)
 {
 	do_describe();
+	if (0 != url.compare(0, 9, "opencl://"))
+		throw RuntimeException(TRACE_INFO,
+			"Unsupported URL \"%s\"\n"
+			"\tExpecting 'opencl://platform:device/file/path/kernel.cl'",
+			url.c_str());
+
+	// Make a copy, for debuggingg purposes.
+	_uri = url;
+
+	// Ignore the first 8 chars "opencl://"
+	std::string rest = url.substr(8);
+
+printf("duuude got %s\n", rest.c_str());
 }
 
 // ==============================================================
@@ -109,7 +134,8 @@ ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
 // ==============================================================
 
 // Adds factory when library is loaded.
-DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream)
+DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream, std::string)
+DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream, Handle)
 
 // ====================================================================
 

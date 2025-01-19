@@ -43,8 +43,8 @@ void report_hardware(void)
 		{
 			std::string dname = dev.getInfo<CL_DEVICE_NAME>();
 			std::string dvers = dev.getInfo<CL_DEVICE_VERSION>();
-			printf("\t\tDevice %s\n", dname.c_str());
-			printf("\t\tVersion %s\n", dvers.c_str());
+			printf("\t\tDevice: %s\n", dname.c_str());
+			printf("\t\tVersion: %s\n", dvers.c_str());
 
 			unsigned int wdim = dev.getInfo<CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS>();
 			printf("\t\tWork item dimensions: %d\n", wdim);

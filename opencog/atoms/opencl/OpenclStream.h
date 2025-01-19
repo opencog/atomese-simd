@@ -40,15 +40,18 @@ class OpenclStream
 {
 protected:
 	OpenclStream(Type);
-	void init(void);
+	void init(const std::string& url);
 	void halt(void) const;
 	virtual void update() const;
 
 	Handle _description;
 	void do_describe(void);
 
+	std::string _uri;
+
 public:
-	OpenclStream(void);
+	OpenclStream(const Handle&);
+	OpenclStream(const std::string&);
 	virtual ~OpenclStream();
 
 	virtual ValuePtr describe(AtomSpace*, bool);
