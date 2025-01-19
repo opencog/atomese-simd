@@ -29,6 +29,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
+#include <opencog/atoms/core/NumberNode.h>
 #include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
@@ -197,6 +198,7 @@ void OpenclStream::init(const std::string& url)
 	// Try to create the OpenCL device
 	find_device();
 	_context = cl::Context(_device);
+	_queue = cl::CommandQueue(_context, _device);
 
 	// Tryt ot load source or spv file
 	pos = _uri.find_last_of('.');
@@ -266,6 +268,7 @@ printf("duuude yo %s\n", kvec->to_string().c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
+	// Unpack kernel name and kernel arguments
 	std::string kern_name;
 	Type tc = kvec->get_type();
 	if (LIST_LINK == tc)
@@ -282,28 +285,46 @@ printf("duuude yo %s\n", kvec->to_string().c_str());
 		for (size_t i=1; i<oset.size(); i++)
 			if (oset[i]->size() < _vec_dim) _vec_dim = oset[i]->size();
 
-printf("duude shortest=%lu\n", _vec_dim);
 		// XXX Assume floating point vectors FIXME
 		size_t vec_bytes = _vec_dim * sizeof(double);
 		for (size_t i=1; i<oset.size(); i++)
 		{
+			NumberNodePtr np(NumberNodeCast(oset[i]));
 			_invec.emplace_back(
-				cl::Buffer(_context, CL_MEM_READ_ONLY, vec_bytes));
+				cl::Buffer(_context,
+					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+					vec_bytes,
+					(void*) np->value().data()));
 		}
 	}
-printf("duuude yah %s\n", kern_name.c_str());
 
 	// XXX TODO this will throw exception if user mistyped the
 	// kernel name. We should catch this and print a freindlier
 	// error message.
 	_kernel = cl::Kernel(_program, kern_name.c_str());
 
-	// XXX Hardwared assumption about argument order.
+	// XXX Hardwired assumption about argument order.
+	// FXIME... but how ???
 	size_t vec_bytes = _vec_dim * sizeof(double);
 	_outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 	_kernel.setArg(0, _outvec);
 	for (size_t i=1; i<kvec->size(); i++)
 		_kernel.setArg(i, _invec[i-1]);
+
+	// XXX This is the wrong thing to do in the long run.
+	_kernel.setArg(kvec->size(), _vec_dim);
+
+	// ------------------------------------------------------
+	// Launch
+	cl::Event event_handler;
+	_queue.enqueueNDRangeKernel(_kernel,
+		cl::NullRange,
+		cl::NDRange(_vec_dim),
+		cl::NullRange,
+		nullptr, &event_handler);
+
+	event_handler.wait();
+printf("duuude done wait\n");
 }
 
 // ==============================================================

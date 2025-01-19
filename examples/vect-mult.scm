@@ -47,7 +47,7 @@
 		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))
 		(List
 			(Predicate "vec_mult") ; must be name of kernel
-			(Number 1 2 3 4)
-			(Number 2 2 2 2))))
+			(Number 1 2 3 4 5)
+			(Number 2 2 2 2 2 2 3 42 999))))
 
 (cog-execute! do-mult-vecs)

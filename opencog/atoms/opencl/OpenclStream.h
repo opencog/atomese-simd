@@ -68,6 +68,7 @@ protected:
 	void load_kernel(void);
 	cl::Context _context;
 	cl::Program _program;
+	cl::CommandQueue _queue;
 
 	// kernel I/O. Using cl:Buffer for now.
 	// Need to create a derived class that will use SVM
