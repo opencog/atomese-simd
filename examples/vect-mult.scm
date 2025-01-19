@@ -9,4 +9,4 @@
 (cog-execute!
 	(Open
 		(Type 'OpenclStream)
-		(SensoryNode "opencl:///AMD/foo.cl")))
+		(SensoryNode "opencl://Clover:AMD/foo.cl")))

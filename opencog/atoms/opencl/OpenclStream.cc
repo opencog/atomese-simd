@@ -61,26 +61,43 @@ void OpenclStream::halt(void) const
 	_value.clear();
 }
 
+#define BAD_URL \
+	throw RuntimeException(TRACE_INFO, \
+		"Unsupported URL \"%s\"\n" \
+		"\tExpecting 'opencl://platform:device/file/path/kernel.cl'", \
+		url.c_str());
+
 /// Attempt to open connection to OpenCL device
 void OpenclStream::init(const std::string& url)
 {
 	do_describe();
-	if (0 != url.compare(0, 9, "opencl://"))
-		throw RuntimeException(TRACE_INFO,
-			"Unsupported URL \"%s\"\n"
-			"\tExpecting 'opencl://platform:device/file/path/kernel.cl'",
-			url.c_str());
+	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
 
 	// Make a copy, for debuggingg purposes.
 	_uri = url;
 
 	// Ignore the first 9 chars "opencl://"
 	size_t pos = 9;
-	size_t platend = url.find('/', pos);
+	size_t platend = url.find(':', pos);
+	if (std::string::npos == platend) BAD_URL;
 	if (pos < platend)
-		_platform = url.substr(pos, platend);
+	{
+		_platform = url.substr(pos, platend-pos);
+		pos = platend;
+	}
+	pos ++;
 
-printf("duuude got %s %lu\n", _platform.c_str(), platend);
+	size_t devend = url.find('/', pos);
+	if (std::string::npos == devend) BAD_URL;
+	if (pos < devend)
+	{
+		_device = url.substr(pos, devend-pos);
+		pos = devend;
+	}
+	_filepath = url.substr(pos);
+
+printf("duuude got >>%s<< >>%s<< >>%s<<\n", _platform.c_str(), _device.c_str(),
+_filepath.c_str());
 }
 
 // ==============================================================
