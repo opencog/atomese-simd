@@ -305,6 +305,9 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 					(void*) np->value().data()));
 		}
 	}
+	else
+		throw RuntimeException(TRACE_INFO,
+			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
 	// XXX TODO this will throw exception if user mistyped the
 	// kernel name. We should catch this and print a freindlier

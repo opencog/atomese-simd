@@ -27,6 +27,7 @@
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")
 (define clurl "opencl://:/tmp/vec-kernel.cl")
 
+; ---------------------------------------------------------------
 ; Brute-force open. This checks the open function works.
 ; Optional; don't need to do this, except to manually check
 ; things out.
@@ -35,6 +36,7 @@
 		(Type 'OpenclStream)
 		(SensoryNode clurl)))
 
+; ---------------------------------------------------------------
 ; Define some Atomese to open connection, and place it where can
 ; be found later.
 (define do-open-device
@@ -47,6 +49,7 @@
 ; Go ahead and open it.
 (cog-execute! do-open-device)
 
+; ---------------------------------------------------------------
 ; Now that it's open, define a simple stream that will write the name
 ; of a kernel and some vector data to the GPU/machine. This just defines
 ; what to do; nothing is done until this is executed.
@@ -71,6 +74,7 @@
 	(cog-execute!
 		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
 
+; ---------------------------------------------------------------
 ; Run it again, with different data.
 (cog-execute!
 	(Write
@@ -84,7 +88,8 @@
 (format #t "And now, with different data ... ~A\n"
 	(cog-execute!
 		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
-;
+
+; ---------------------------------------------------------------
 ; Run it again, with a different kernel (addition this time, not
 ; multiplication.)
 (cog-execute!
@@ -99,5 +104,23 @@
 (format #t "Addding, instead of multiplying ... ~A\n"
 	(cog-execute!
 		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
-;
+
+; ---------------------------------------------------------------
+; Instead of using NumberNodes, use FloatValues.
+(cog-set-value!
+	(Anchor "some data") (Predicate "some stream")
+	(LinkValue
+		(Predicate "vec_add")
+		(FloatValue 0 0 0 0 0 0 0 0)
+		(FloatValue 1 2 3 4 5)))
+
+(cog-execute!
+	(Write
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+		(ValueOf (Anchor "some data") (Predicate "some stream"))))
+
+(format #t "Float stream results ... ~A\n"
+	(cog-execute!
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+
 ; --------- The End! That's All, Folks! --------------
