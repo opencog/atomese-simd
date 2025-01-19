@@ -27,16 +27,19 @@
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-mult.cl")
 (define clurl "opencl://:/tmp/vec-mult.cl")
 
-; Brute-force open. This checks the basic functions.
+; Brute-force open. This checks the open function works.
+; Optional; don't need to do this, except to manually check
+; things out.
 (cog-execute!
 	(Open
 		(Type 'OpenclStream)
 		(SensoryNode clurl)))
 
-; Atomese to open connection and place it where we can find it.
+; Define some Atomese to open connection, and place it where can
+; be found later.
 (define do-open-device
 	(SetValue
-		(Anchor "some gpus") (Predicate "gpu channel")
+		(Anchor "some gpus") (Predicate "some gpu channel")
 		(Open
 			(Type 'OpenclStream)
 			(SensoryNode clurl))))
@@ -47,23 +50,39 @@
 ; Now that it's open, define a simple stream that will write the name
 ; of a kernel and some vector data to the GPU/machine. This just defines
 ; what to do; nothing is done until this is executed.
-(define do-mult-vecs
+(define kernel-runner
 	(Write
-		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5)
 			(Number 2 2 2 2 2 2 3 42 999))))
 
-; Perform the actual multiply
-(cog-execute! do-mult-vecs)
+; Run the kernel.
+(cog-execute! kernel-runner)
 
 ; Get the result
 (format #t "Result from running kernel is ~A\n"
 	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))))
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
 
-; Do it again ...
+; Do it again ... Nothing changed.
 (format #t "Once again ...its ~A\n"
 	(cog-execute!
-		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))))
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+
+; Run it again, with different data.
+(cog-execute!
+	(Write
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+		(List
+			(Predicate "vec_mult") ; Must be name of kernel
+			(Number 1 2 3 4 5 6 7 8 9 10 11)
+			(Number 2 3 4 5 6 5 4 3 2 1 0))))
+
+; Get the result
+(format #t "And now, with different data ... ~A\n"
+	(cog-execute!
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+;
+; --------- The End! That's All, Folks! --------------

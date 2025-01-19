@@ -72,9 +72,11 @@ thought of what it means "to perceive and move".
 
 Status
 -----
-***Version 0.0.2.*** --
-Some prototyping, some demos, some unfinished ideas for design &
-implementation. Nothing connects with Atomese, yet.
+***Version 0.0.4.*** --
+Basic proof-of-concept, showing Atomese sending vector data to a GPU,
+applying a kernel to it, and then getting back the result. This is
+a super-minimal demo, but it does show Atomese connecting up and
+running stuff on a GPU.
 
 Overview
 --------
@@ -84,6 +86,8 @@ Everything exciting is in the
 
 Notable content:
 
+* The [examples](examples) directory contains a working example
+  of Atomese interacting with a GPU.
 * The [scaffolding](opencog/opencl/scaffolding) directory
   contains some bring-up code and several hello-world examples.
 * [Design Notes](Design.md) contains some
