@@ -2,7 +2,7 @@
 ADD_SUBDIRECTORY (scaffolding)
 ADD_SUBDIRECTORY (types)
 
-# add_guile_extension(SCM_CONFIG opencl "opencog-ext-path-opencl")
+add_guile_extension(SCM_CONFIG opencl "opencog-ext-path-opencl")
 
 add_guile_module(FILES
 	opencl.scm

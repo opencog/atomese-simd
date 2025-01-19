@@ -18,7 +18,7 @@ IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0045 NEW)
 ENDIF (COMMAND CMAKE_POLICY)
 
-PROJECT(atomese-gpu-opencl)
+PROJECT(opencl)
 
 # ----------------------------------------------------------
 # User-modifiable options. Feel free to change these!
