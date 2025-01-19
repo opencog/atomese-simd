@@ -276,10 +276,34 @@ printf("duuude yo %s\n", kvec->to_string().c_str());
 				"Expecting Atom with kernel name, got %s\n",
 				oset[0]->to_string().c_str());
 		kern_name = oset[0]->get_name();
+
+		// Find the shortest vector
+		_vec_dim = UINT_MAX;
+		for (size_t i=1; i<oset.size(); i++)
+			if (oset[i]->size() < _vec_dim) _vec_dim = oset[i]->size();
+
+printf("duude shortest=%lu\n", _vec_dim);
+		// XXX Assume floating point vectors FIXME
+		size_t vec_bytes = _vec_dim * sizeof(double);
+		for (size_t i=1; i<oset.size(); i++)
+		{
+			_invec.emplace_back(
+				cl::Buffer(_context, CL_MEM_READ_ONLY, vec_bytes));
+		}
 	}
 printf("duuude yah %s\n", kern_name.c_str());
 
+	// XXX TODO this will throw exception if user mistyped the
+	// kernel name. We should catch this and print a freindlier
+	// error message.
 	_kernel = cl::Kernel(_program, kern_name.c_str());
+
+	// XXX Hardwared assumption about argument order.
+	size_t vec_bytes = _vec_dim * sizeof(double);
+	_outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
+	_kernel.setArg(0, _outvec);
+	for (size_t i=1; i<kvec->size(); i++)
+		_kernel.setArg(i, _invec[i-1]);
 }
 
 // ==============================================================

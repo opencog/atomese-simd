@@ -73,6 +73,7 @@ protected:
 	// Need to create a derived class that will use SVM
 	size_t _vec_dim;
 	std::vector<cl::Buffer> _invec;
+	cl::Buffer _outvec;  // XXX FIXME assume only one output
 	cl::Kernel _kernel;
 
 	void prt_value(const ValuePtr&);
