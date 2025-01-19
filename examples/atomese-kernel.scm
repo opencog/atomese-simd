@@ -85,4 +85,19 @@
 	(cog-execute!
 		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
 ;
+; Run it again, with a different kernel (addition this time, not
+; multiplication.)
+(cog-execute!
+	(Write
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
+		(List
+			(Predicate "vec_add") ; Must be name of kernel
+			(Number 1 2 3 4 5 6 7 8 9 10 11)
+			(Number 2 3 4 5 6 5 4 3 2 1 0))))
+
+; Get the result
+(format #t "Addding, instead of multiplying ... ~A\n"
+	(cog-execute!
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+;
 ; --------- The End! That's All, Folks! --------------
