@@ -2,13 +2,24 @@
 ; atomese-kernel.scm
 ;
 ; Basic OpenGL GPU vector multiplication demo.
+;
 ; Uses the Atomese "sensory" style API to open a channel to the
-; OpenCL processing unit, and send data there.
+; OpenCL processing unit, and then send kernels and data there.
 ;
 ; Before running the demo, copy `vec-kernel.cl` in this directory to
-; the `/tmp` directory, or alter the URL below.
+; the `/tmp` directory; alternately, change the URL below.
 ;
-; To run the demo, say `guile -s atomese-kernel.scm`
+; To run the demo, say `guile -s atomese-kernel.scm`. Alternately,
+; cut-n-paste from this file to a guile command line.
+;
+: The demo has four parts:
+; * Creating and opening a channel to the OpenCL device.
+; * Sending a kernel along with NumberNode vector data the device.
+; * Sending FloatValue data. Unlike NumberNodes, FloatValues are NOT
+;   stored in the AtomSpace. This means they don't take up storage
+;   space. This also means they are a bit harder to use, since they're
+;   ephemeral, and disappear if not attached to an anchor point.
+; * A demo of a feedback loop, implementing an accumulator.
 ;
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
@@ -98,15 +109,15 @@
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
 ; Get the result
-(format #t "Addding, instead of multiplying ... ~A\n"
+(format #t "Adding, instead of multiplying ... ~A\n"
 	(cog-execute! gpu-location))
 
 ; ---------------------------------------------------------------
 ; Instead of using NumberNodes, use FloatValues.
 ; Both types can hold vectors of floats. NumberNodes are stored in
 ; the AtomSpace (and thus clog things up), while FloatValues are not.
-; Which is great, as usally there are lots of them.
-; The trade-off is that the Values have to be put somwhere where they
+; Which is great, as usually there are lots of them.
+; The trade-off is that the Values have to be put somewhere where they
 ; can be found. i.e. anchired "some where".
 ;
 ; (RandomStream N) creates a vector of N random numbers. These numbers
@@ -142,7 +153,7 @@
 ; pulled out (back into system memory, into an Atomese FloatValue)
 ; which is then used for the next round.
 
-; Initialze the accumulator to all-zeros, and anchor it where
+; Initialize the accumulator to all-zeros, and anchor it where
 ; it can be found.
 (cog-set-value!
 	(Anchor "some data") (Predicate "accumulator")

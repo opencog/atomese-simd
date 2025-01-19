@@ -152,7 +152,7 @@ Originally intended to be a base class for rewriting (for PLN).
 * No explicit connection/glueing semantics.
 
 `RuleLink`s specify term rewrites. Ideal for forward-chained rewriting.
-With great difficulty, can be backwards-chained. That this was a diffculty
+With great difficulty, can be backwards-chained. That this was a difficulty
 was exposed by PLN development.
 
 ### FilterLink
@@ -172,7 +172,7 @@ at well-known locations (typically, under some key on some
 `AnchorNode`.)
 
 This makes processing with FilterNodes resemble an electronics circuit
-diagram. Each "dot" in the cirucit is some Atom-with-Key location, that
+diagram. Each "dot" in the circuit is some Atom-with-Key location, that
 must be explicitly specified. Each circuit element, spanning two or more
 dots, is a `FilterLink` + `RuleLink` combo. The connection to a "dot"
 is done with a `ValueOfLink` that explicitly names the dot.
@@ -220,7 +220,7 @@ For a prototype proof-of-concept demo, what's actually needed?
 * **AtomSpace on GPU.**
   Run AtomSpace on GPU. Use `StorageNode` API to talk to it.
 
-For boostrapping, lets stick to the basics.
+For bootstrapping, lets stick to the basics.
 
 ### Basic vector I/O
 Ability to stream data data to GPU. One-shot is a special case.

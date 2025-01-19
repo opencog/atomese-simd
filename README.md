@@ -72,17 +72,17 @@ thought of what it means "to perceive and move".
 
 Status
 -----
-***Version 0.0.4.*** --
-Basic proof-of-concept, showing Atomese sending vector data to a GPU,
-applying a kernel to it, and then getting back the result. This is
-a super-minimal demo, but it does show Atomese connecting up and
-running stuff on a GPU.
+***Version 0.0.5.*** --
+Basic proof-of-concept, showing how to use Atomese to open a connection
+to an OpenCL compute device (i.e. a GPU), load and invoke compute
+kernels, and have those kernels work with floating-point vector data
+residing in the AtomSpace.
+
+The demo is minimal, but it works.
 
 Overview
 --------
 The directory layout follows the conventional AtomSpace standards.
-Everything exciting is in the
-[opencog/atoms/opencl](opencog/atoms/opencl) directory.
 
 Notable content:
 
@@ -91,7 +91,7 @@ Notable content:
 * The [scaffolding](opencog/opencl/scaffolding) directory
   contains some bring-up code and several hello-world examples.
 * [Design Notes](Design.md) contains some
-  raw ideas on how the system should be designed.
+  raw ideas on how the system should be (and was) designed.
 * The [types](opencog/opencl/types) directory contains
   definitions for some OpenCL Atom types.
 * The [atoms](opencog/atoms/opencl) directory contains
@@ -113,13 +113,13 @@ Steps:
 * Build and install the code in this repo.
   `mkdir build; cd build; cmake ..; make; sudo make install`
 * Look over the examples. Run them
-  `cd examples; guile -s vect-mult.scm`
+  `cd examples; guile -s atomese-kernel.scm`
 
 The `scaffolding` directory contains code that is "pure" OpenCL,
 and does not have any Atomese in it. It just provides some basic
 OpenCL examples.
 
-Make sure the software isn't insane, by running
+Make sure the software isn't insane, by running the
 `opencog/opencl/scaffolding/show-ocl-hw` executable from the
 `build` directory. It will print a short hardware listing that
 is a subset of what the `clinfo` command lists. If it doesn't
@@ -137,4 +137,4 @@ The `opencog/opencl/scaffolding/run-vec-mult` executable is
 similar to above; it performs a simple vector multiply.
 
 The `run-flow-vec` executable is a rework of above, to more clearly
-define/prototype the distinct steps needed to flow data.
+define and prototype the distinct steps needed to flow data.

@@ -202,7 +202,7 @@ void OpenclStream::init(const std::string& url)
 	_context = cl::Context(_device);
 	_queue = cl::CommandQueue(_context, _device);
 
-	// Tryt ot load source or spv file
+	// Try to load source or spv file
 	pos = _uri.find_last_of('.');
 	if (std::string::npos == pos) BAD_URL;
 

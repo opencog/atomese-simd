@@ -49,7 +49,7 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
                 -DPROJECT_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
 # ===============================================================
-# Check for existance of various required, optional packages.
+# Check for existence of various required, optional packages.
 # Listed in alphabetical order, more or less.
 # CogUtil must come first, because it supplies various FindXXX macros.
 
@@ -75,7 +75,7 @@ include(OpenCogInstallOptions)
 include(Summary)
 
 # ===================================================================
-# Check for existance of various required, optional packages.
+# Check for existence of various required, optional packages.
 
 # AtomSpace
 FIND_PACKAGE(AtomSpace 5.0.3 CONFIG REQUIRED)
