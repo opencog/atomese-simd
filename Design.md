@@ -236,7 +236,7 @@ Pseudocode:
    ; Returns stream handle, which must be stored at some anchor.
    (Open
       (Type 'OpenclStream)
-      ((Sensory "opencl://host/file/path/kernel.cl"))
+      ((Sensory "opencl://Clover:AMD/tmp/vec-mult.cl"))
 
    ; Write two vectors to GPU. Apply 'vect_mult' kernel function to
    ; the vectors. The 'List' will typically be a 'ListValue'.
@@ -244,8 +244,8 @@ Pseudocode:
       (ValueOf anchor)
       (List
          (Predicate "vect_mult")
-         (Number "1 2 3 4")
-         (Number "2 2 2 2")))
+         (Number 1 2 3 4)
+         (Number 2 2 2 2)))
 
    ; Place output stream at well-known location
    (cog-set-value!

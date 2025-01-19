@@ -30,3 +30,24 @@
 	(Open
 		(Type 'OpenclStream)
 		(SensoryNode clurl)))
+
+; Atomese to open connection and place it where we can find it.
+(define do-open-device
+	(SetValue
+		(Anchor "some gpus") (Predicate "gpu channel")
+		(Open
+			(Type 'OpenclStream)
+			(SensoryNode clurl))))
+
+; Go ahead and open it.
+(cog-execute! do-open-device)
+
+(define do-mult-vecs
+	(Write
+		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))
+		(List
+			(Predicate "vect_mult") ; must be name of kernel
+			(Number 1 2 3 4)
+			(Number 2 2 2 2))))
+
+(cog-execute! do-mult-vecs)
