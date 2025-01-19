@@ -6,6 +6,11 @@
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
 
+; View debug messages
+(use-modules (opencog logger))
+(cog-logger-set-stdout! #t)
+
+
 (cog-execute!
 	(Open
 		(Type 'OpenclStream)

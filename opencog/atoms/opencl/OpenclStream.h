@@ -60,6 +60,11 @@ protected:
 	cl::Platform _platform;
 	cl::Device _device;
 
+	void build_kernel(void);
+	void load_kernel(void);
+	cl::Context _context;
+	cl::Program _program;
+
 public:
 	OpenclStream(const Handle&);
 	OpenclStream(const std::string&);

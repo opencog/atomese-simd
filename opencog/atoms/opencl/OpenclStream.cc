@@ -20,6 +20,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <iostream>
+#include <fstream>
+
 #include <opencog/util/exceptions.h>
 #include <opencog/util/Logger.h>
 #include <opencog/util/oc_assert.h>
@@ -88,8 +91,67 @@ void OpenclStream::find_device(void)
 
 			logger().info("OpenclStream: Using platform '%s' and device '%s'\n",
 				pname.c_str(), dname.c_str());
+
+			return;
 		}
 	}
+
+	throw RuntimeException(TRACE_INFO,
+		"Unable to find platform:device in URL \"%s\"\n",
+		_uri.c_str());
+}
+
+// ==============================================================
+
+void OpenclStream::build_kernel(void)
+{
+	// Copy in source code. Must be a better way!?
+	std::ifstream srcfm(_filepath);
+	std::string src(std::istreambuf_iterator<char>(srcfm),
+		(std::istreambuf_iterator<char>()));
+
+	if (0 == src.size())
+		throw RuntimeException(TRACE_INFO,
+			"Unable to find source file in URL \"%s\"\n",
+			_uri.c_str());
+
+	cl::Program::Sources sources;
+	sources.push_back(src);
+
+	_program = cl::Program(_context, sources);
+
+	// Compile
+	try
+	{
+		// Specifying flags causes exception.
+		// program.build("-cl-std=CL1.2");
+		_program.build("");
+	}
+	catch (const cl::Error& e)
+	{
+		logger().error("OpenclStream failed compile >>%s<<\n",
+			_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
+		throw RuntimeException(TRACE_INFO,
+			"Unable to compile source file in URL \"%s\"\n",
+				_uri.c_str());
+	}
+}
+
+// ==============================================================
+
+void OpenclStream::load_kernel(void)
+{
+	// Copy in SPV file. Must be a better way!?
+	std::ifstream spvfm(_filepath);
+	std::string spv(std::istreambuf_iterator<char>(spvfm),
+		(std::istreambuf_iterator<char>()));
+
+	if (0 == spv.size())
+		throw RuntimeException(TRACE_INFO,
+			"Unable to find SPV file in URL \"%s\"\n",
+			_uri.c_str());
+
+	_program = cl::Program(_context, spv);
 }
 
 // ==============================================================
@@ -98,7 +160,7 @@ void OpenclStream::find_device(void)
 	throw RuntimeException(TRACE_INFO, \
 		"Unsupported URL \"%s\"\n" \
 		"\tExpecting 'opencl://platform:device/file/path/kernel.cl'", \
-		url.c_str());
+		_uri.c_str());
 
 /// Attempt to open connection to OpenCL device
 void OpenclStream::init(const std::string& url)
@@ -129,10 +191,9 @@ void OpenclStream::init(const std::string& url)
 	}
 	_filepath = url.substr(pos);
 
-printf("duuude got >>%s<< >>%s<< >>%s<<\n", _splat.c_str(), _sdev.c_str(),
-_filepath.c_str());
-
 	find_device();
+	_context = cl::Context(_device);
+
 }
 
 // ==============================================================
