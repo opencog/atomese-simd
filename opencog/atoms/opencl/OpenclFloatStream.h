@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/stream/OpenclFloatValue.h
+ * opencog/atoms/opencl/stream/OpenclFloatStream.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,8 +20,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_FLOAT_VALUE_H
-#define _OPENCOG_OPENCL_FLOAT_VALUE_H
+#ifndef _OPENCOG_OPENCL_FLOAT_STREAM_H
+#define _OPENCOG_OPENCL_FLOAT_STREAM_H
 
 #include <vector>
 #include <opencog/atoms/value/StreamValue.h>
@@ -35,23 +35,23 @@ namespace opencog
  */
 
 /**
- * OpenclFloatValues hold an ordered vector of doubles.
+ * OpenclFloatStreams hold an ordered vector of doubles.
  */
-class OpenclFloatValue
+class OpenclFloatStream
 	: public StreamValue
 {
 protected:
 	virtual void update() const {}
 
-	OpenclFloatValue(Type t) : StreamValue(t) {}
-	OpenclFloatValue(Type t, const std::vector<double>& v) : StreamValue(t, v) {}
+	OpenclFloatStream(Type t) : StreamValue(t) {}
+	OpenclFloatStream(Type t, const std::vector<double>& v) : StreamValue(t, v) {}
 public:
-	OpenclFloatValue()
-		: StreamValue(OPENCL_FLOAT_VALUE) {}
-	OpenclFloatValue(const std::vector<double>& v)
-		: StreamValue(OPENCL_FLOAT_VALUE, v) {}
+	OpenclFloatStream()
+		: StreamValue(OPENCL_FLOAT_STREAM) {}
+	OpenclFloatStream(const std::vector<double>& v)
+		: StreamValue(OPENCL_FLOAT_STREAM, v) {}
 
-	virtual ~OpenclFloatValue() {}
+	virtual ~OpenclFloatStream() {}
 
 	const std::vector<double>& value() const { update(); return _value; }
 	size_t size() const { return _value.size(); }
@@ -60,21 +60,21 @@ public:
 	virtual bool operator==(const Value&) const;
 };
 
-typedef std::shared_ptr<const OpenclFloatValue> OpenclFloatValuePtr;
-static inline OpenclFloatValuePtr OpenclFloatValueCast(const ValuePtr& a)
-	{ return std::dynamic_pointer_cast<const OpenclFloatValue>(a); }
+typedef std::shared_ptr<const OpenclFloatStream> OpenclFloatStreamPtr;
+static inline OpenclFloatStreamPtr OpenclFloatStreamCast(const ValuePtr& a)
+	{ return std::dynamic_pointer_cast<const OpenclFloatStream>(a); }
 
-static inline const ValuePtr ValueCast(const OpenclFloatValuePtr& fv)
+static inline const ValuePtr ValueCast(const OpenclFloatStreamPtr& fv)
 {
 	return std::shared_ptr<Value>(fv, (Value*) fv.get());
 }
 
 template<typename ... Type>
-static inline std::shared_ptr<OpenclFloatValue> createOpenclFloatValue(Type&&... args) {
-	return std::make_shared<OpenclFloatValue>(std::forward<Type>(args)...);
+static inline std::shared_ptr<OpenclFloatStream> createOpenclFloatStream(Type&&... args) {
+	return std::make_shared<OpenclFloatStream>(std::forward<Type>(args)...);
 }
 
 /** @}*/
 } // namespace opencog
 
-#endif // _OPENCOG_OPENCL_FLOAT_VALUE_H
+#endif // _OPENCOG_OPENCL_FLOAT_STREAM_H

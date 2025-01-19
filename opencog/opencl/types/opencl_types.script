@@ -5,7 +5,7 @@
 //
 // Experimental.
 //
-OPENCL_FLOAT_VALUE <- STREAM_VALUE
+OPENCL_FLOAT_STREAM <- STREAM_VALUE
 
 // Provide the basic Sensory API
 // OPENCL_NODE <- SENSORY_NODE
