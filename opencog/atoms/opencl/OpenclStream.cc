@@ -313,6 +313,8 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
+	_vec_dim = UINT_MAX;
+	std::vector<std::vector<double>> flts;
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
@@ -322,23 +324,12 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 				oset[0]->to_string().c_str());
 		kern_name = oset[0]->get_name();
 
-		// Find the shortest vector
-		_vec_dim = UINT_MAX;
+		// Find the shortest vector. Sadly, this requires a vector-copy.
 		for (size_t i=1; i<oset.size(); i++)
-			if (oset[i]->size() < _vec_dim) _vec_dim = oset[i]->size();
+			flts.emplace_back(get_floats(as, silent, oset[i]));
 
 		// XXX Assume floating point vectors FIXME
 		_out_type = NUMBER_NODE;
-		_invec.clear();
-		size_t vec_bytes = _vec_dim * sizeof(double);
-		for (size_t i=1; i<oset.size(); i++)
-		{
-			_invec.emplace_back(
-				cl::Buffer(_context,
-					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-					vec_bytes,
-					(void*) get_floats(as, silent, oset[i]).data()));
-		}
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -353,27 +344,28 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 				"Expecting Value with kernel name, got %s\n",
 				vsq[0]->to_string().c_str());
 
-		// Find the shortest vector
-		_vec_dim = UINT_MAX;
+		// Find the shortest vector. Sadly, this requires a vector-copy.
 		for (size_t i=1; i<vsq.size(); i++)
-			if (vsq[i]->size() < _vec_dim) _vec_dim = vsq[i]->size();
+			flts.emplace_back(get_floats(as, silent, vsq[i]));
 
 		// XXX Assume floating point vectors FIXME
 		_out_type = FLOAT_VALUE;
-		_invec.clear();
-		size_t vec_bytes = _vec_dim * sizeof(double);
-		for (size_t i=1; i<vsq.size(); i++)
-		{
-			_invec.emplace_back(
-				cl::Buffer(_context,
-					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-					vec_bytes,
-					(void*) get_floats(as, silent, vsq[i]).data()));
-		}
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
+
+	// Copy vectors into cl::Buffer
+	_invec.clear();
+	size_t vec_bytes = _vec_dim * sizeof(double);
+	for (const std::vector<double>& flt : flts)
+	{
+		_invec.emplace_back(
+			cl::Buffer(_context,
+				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				vec_bytes,
+				(void*) flt.data()));
+	}
 
 	// XXX TODO this will throw exception if user mistyped the
 	// kernel name. We should catch this and print a freindlier
@@ -382,7 +374,6 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 
 	// XXX Hardwired assumption about argument order.
 	// FXIME... but how ???
-	size_t vec_bytes = _vec_dim * sizeof(double);
 	_outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 	_kernel.setArg(0, _outvec);
 	for (size_t i=1; i<kvec->size(); i++)
