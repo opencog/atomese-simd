@@ -78,6 +78,7 @@ protected:
 	cl::Kernel _kernel;
 
 	Type _out_type;
+	std::vector<double> get_floats(ValuePtr);
 
 	void prt_value(const ValuePtr&);
 

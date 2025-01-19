@@ -133,4 +133,27 @@
 (format #t "Float stream results ... ~A\n"
 	(cog-execute! gpu-location))
 
+; ---------------------------------------------------------------
+; Like above, but accumulator
+
+(cog-set-value!
+	(Anchor "some data") (Predicate "accumulator")
+	(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0))
+
+(cog-set-value!
+	(Anchor "some data") (Predicate "accum task")
+	(LinkValue
+		(Predicate "vec_add")
+		(ValueOf (Anchor "some data") (Predicate "accumulator"))
+		(RandomStream 3)))
+
+(define accum-stream
+	(Write gpu-location
+		(ValueOf (Anchor "some data") (Predicate "accum task"))))
+
+; Run it once ...
+(cog-execute! accum-stream)
+(format #t "Accum stream results ... ~A\n"
+	(cog-execute! gpu-location))
+
 ; --------- The End! That's All, Folks! --------------
