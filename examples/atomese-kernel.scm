@@ -109,7 +109,9 @@
 ; The trade-off is that the Values have to be put somwhere where they
 ; can be found. i.e. anchired "some where".
 ;
-; (RandomStream N) creates a vector of N random numbers.
+; (RandomStream N) creates a vector of N random numbers. These numbers
+; change with every access (which is why it is called a "stream" instead
+; of a "vector".)
 ;
 (cog-set-value!
 	(Anchor "some data") (Predicate "some stream")
@@ -125,35 +127,64 @@
 
 ; Run it once ...
 (cog-execute! vector-stream)
-(format #t "Float stream results ... ~A\n"
+(format #t "Random numbers from a stream ...\n~A\n"
 	(cog-execute! gpu-location))
 
 ; Run it again ...
 (cog-execute! vector-stream)
-(format #t "Float stream results ... ~A\n"
+(format #t "More random numbers ...\n~A\n"
 	(cog-execute! gpu-location))
 
 ; ---------------------------------------------------------------
-; Like above, but accumulator
+; Similar to above, but feed back the results of addition into the
+; same location. This implements an accumulator. The addition is
+; performed on the GPU, and, with each iteration, the result is
+; pulled out (back into system memory, into an Atomese FloatValue)
+; which is then used for the next round.
 
+; Initialze the accumulator to all-zeros, and anchor it where
+; it can be found.
 (cog-set-value!
 	(Anchor "some data") (Predicate "accumulator")
-	(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0))
+	(FloatValue 0 0 0 0 0))
 
+; When executed, this will return the current accumulator value.
+(define accum-location
+	(ValueOf (Anchor "some data") (Predicate "accumulator")))
+
+; Bind the vector-add GPU kernel to a pair of input vectors. The first
+; vector is the accumulator, and the second one is a vector of three
+; random numbers. Note that these random numbers change with every
+; invocation.
 (cog-set-value!
 	(Anchor "some data") (Predicate "accum task")
 	(LinkValue
-		(Predicate "vec_add")
-		(ValueOf (Anchor "some data") (Predicate "accumulator"))
-		(RandomStream 3)))
+		(Predicate "vec_add") accum-location (RandomStream 3)))
 
+; Define a feedback loop. With each invocation, the accumulator will
+; be updated with the result of the addition.
 (define accum-stream
-	(Write gpu-location
-		(ValueOf (Anchor "some data") (Predicate "accum task"))))
+	(SetValue
+		(Anchor "some data") (Predicate "accumulator")
+		(Write gpu-location
+			(ValueOf (Anchor "some data") (Predicate "accum task")))))
 
 ; Run it once ...
+(format #t "Accumulator stream results ...\n  ~A\n"
+	(cog-execute! accum-stream))
+
+(format #t "Again ...\n  ~A\n"
+	(cog-execute! accum-stream))
+
+(format #t "And again ...\n  ~A\n"
+	(cog-execute! accum-stream))
+
 (cog-execute! accum-stream)
-(format #t "Accum stream results ... ~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! accum-stream)
+(cog-execute! accum-stream)
+(cog-execute! accum-stream)
+
+(format #t "Many more times ...\n  ~A\n"
+	(cog-execute! accum-stream))
 
 ; --------- The End! That's All, Folks! --------------

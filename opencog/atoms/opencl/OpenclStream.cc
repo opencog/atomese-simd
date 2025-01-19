@@ -270,7 +270,7 @@ void OpenclStream::update() const
 
 // ==============================================================
 
-/// Unwrap stuff.
+/// Unwrap kernel name.
 const std::string&
 OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 {
@@ -288,7 +288,7 @@ OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 		vp->to_string().c_str());
 }
 
-/// Unwrap stuff.
+/// Unwrap vector.
 const std::vector<double>&
 OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 {
@@ -319,7 +319,10 @@ OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
                                  const Handle& cref)
 {
-	return do_write_out(as, silent, cref);
+	do_write_out(as, silent, cref);
+	// return shared_from_this();
+	update();
+	return _value[0];
 }
 
 void OpenclStream::write_one(AtomSpace* as, bool silent,
