@@ -228,9 +228,9 @@ Pseudocode:
 ```
    ; Location of kernel code as path in local filesystem.
    ; OpenCLNode isA SensoryNode
-   (OpenCLNode "opencl://host/file/path/kernel.cl")
-   (OpenCLNode "opencl://host/file/path/kernel.clcpp")
-   (OpenCLNode "opencl://host/file/path/kernel.spv")
+   (OpenclNode "opencl://host/file/path/kernel.cl")
+   (OpenclNode "opencl://host/file/path/kernel.clcpp")
+   (OpenclNode "opencl://host/file/path/kernel.spv")
 
    ; Apply standard Open to SensoryNode
    ; Returns stream handle, which must be stored at some anchor.
