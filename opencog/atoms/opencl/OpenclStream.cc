@@ -271,13 +271,25 @@ void OpenclStream::update() const
 // ==============================================================
 
 /// Unwrap stuff.
-std::vector<double> get_floats (ValuePtr vp)
+const std::vector<double>&
+OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 {
+	if (HandleCast(vp)->is_executable())
+		vp = HandleCast(vp)->execute(as, silent);
+
 	if (vp->is_type(NUMBER_NODE))
-		return NumberNodeCast(HandleCast(vp)) ->value();
+	{
+		const std::vector<double>& vals(NumberNodeCast(HandleCast(vp))->value());
+		if (vals.size() < _vec_dim) _vec_dim = vals.size();
+		return vals;
+	}
 
 	if (vp->is_type(FLOAT_VALUE))
-		return FloatValueCast(vp) ->value();
+	{
+		const std::vector<double>& vals(FloatValueCast(vp) ->value());
+		if (vals.size() < _vec_dim) _vec_dim = vals.size();
+		return vals;
+	}
 
 	throw RuntimeException(TRACE_INFO,
 		"Expecting FloatValue or NumberNode, got %s\n",
@@ -292,7 +304,8 @@ ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
 	return do_write_out(as, silent, cref);
 }
 
-void OpenclStream::prt_value(const ValuePtr& kvec)
+void OpenclStream::write_one(AtomSpace* as, bool silent,
+                             const ValuePtr& kvec)
 {
 	if (0 == kvec->size())
 		throw RuntimeException(TRACE_INFO,
@@ -324,7 +337,7 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 				cl::Buffer(_context,
 					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 					vec_bytes,
-					(void*) get_floats(oset[i]).data()));
+					(void*) get_floats(as, silent, oset[i]).data()));
 		}
 	}
 	else
@@ -355,7 +368,7 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 				cl::Buffer(_context,
 					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 					vec_bytes,
-					(void*) get_floats(vsq[i]).data()));
+					(void*) get_floats(as, silent, vsq[i]).data()));
 		}
 	}
 	else

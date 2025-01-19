@@ -78,9 +78,9 @@ protected:
 	cl::Kernel _kernel;
 
 	Type _out_type;
-	std::vector<double> get_floats(ValuePtr);
+	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
 
-	void prt_value(const ValuePtr&);
+	void write_one(AtomSpace*, bool, const ValuePtr&);
 
 public:
 	OpenclStream(const Handle&);
