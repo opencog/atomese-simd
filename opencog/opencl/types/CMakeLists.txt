@@ -1,16 +1,17 @@
 
 # --------------------------------------------------
+# Attempt to follow naming convention used everywhere else.
 
 OPENCOG_GEN_CXX_ATOMTYPES(opencl_types.script
-	opencl_types.h
-	opencl_types.definitions
-	opencl_types.inheritance)
+	atom_types.h
+	atom_types.definitions
+	atom_types.inheritance)
 
 OPENCOG_GEN_SCM_ATOMTYPES(opencl_types.script opencl_types.scm)
 OPENCOG_GEN_PYTHON_ATOMTYPES(opencl_types.script opencl_types.pyx)
 
 ADD_CUSTOM_TARGET(opencl_types
-	DEPENDS opencl_types.h opencl_types.scm opencl_types.pyx)
+	DEPENDS atom_types.h opencl_types.scm opencl_types.pyx)
 
 # The atom_types.h file is written to the build directory
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
@@ -32,8 +33,8 @@ INSTALL (TARGETS opencl-types
 )
 
 INSTALL (FILES
-	${CMAKE_CURRENT_BINARY_DIR}/opencl_types.h
-	DESTINATION "include/opencog/opencl"
+	${CMAKE_CURRENT_BINARY_DIR}/atom_types.h
+	DESTINATION "include/opencog/opencl/types"
 )
 
 # Install the auto-generated atom types as well
