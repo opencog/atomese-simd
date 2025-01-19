@@ -51,3 +51,7 @@
 			(Number 2 2 2 2 2 2 3 42 999))))
 
 (cog-execute! do-mult-vecs)
+
+(format #t "Result from running kernel is ~A\n"
+	(cog-execute!
+		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))))

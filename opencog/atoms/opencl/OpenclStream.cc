@@ -249,8 +249,17 @@ ValuePtr OpenclStream::describe(AtomSpace* as, bool silent)
 
 void OpenclStream::update() const
 {
+printf("duuude updy dupty sat on a wall\n");
+	std::vector<double> result(_vec_dim);
+	size_t vec_bytes = _vec_dim * sizeof(double);
+
+	cl::Event event_handler;
+	_queue.enqueueReadBuffer(_outvec, CL_TRUE, 0, vec_bytes, result.data(),
+		nullptr, &event_handler);
+	event_handler.wait();
+
 	_value.resize(1);
-	_value[0] = createStringValue("foo");
+	_value[0] = createNumberNode(result);
 }
 
 // ==============================================================
