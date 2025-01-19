@@ -271,6 +271,24 @@ void OpenclStream::update() const
 // ==============================================================
 
 /// Unwrap stuff.
+const std::string&
+OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
+{
+	if (HandleCast(vp)->is_executable())
+		vp = HandleCast(vp)->execute(as, silent);
+
+	if (vp->is_node())
+		return HandleCast(vp)->get_name();
+
+	if (vp->is_type(STRING_VALUE))
+		return StringValueCast(vp)->value()[0];
+
+	throw RuntimeException(TRACE_INFO,
+		"Expecting Value with kernel name, got %s\n",
+		vp->to_string().c_str());
+}
+
+/// Unwrap stuff.
 const std::vector<double>&
 OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 {
@@ -318,11 +336,7 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
-		if (not oset[0]->is_node())
-			throw RuntimeException(TRACE_INFO,
-				"Expecting Atom with kernel name, got %s\n",
-				oset[0]->to_string().c_str());
-		kern_name = oset[0]->get_name();
+		kern_name = get_kern_name(as, silent, oset[0]);
 
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
@@ -335,14 +349,7 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 	if (kvec->is_type(LINK_VALUE))
 	{
 		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		if (vsq[0]->is_node())
-			kern_name = HandleCast(vsq[0])->get_name();
-		else if (vsq[0]->is_type(STRING_VALUE))
-			kern_name = StringValueCast(vsq[0])->value()[0];
-		else
-			throw RuntimeException(TRACE_INFO,
-				"Expecting Value with kernel name, got %s\n",
-				vsq[0]->to_string().c_str());
+		kern_name = get_kern_name(as, silent, vsq[0]);
 
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
