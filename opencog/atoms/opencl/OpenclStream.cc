@@ -293,6 +293,7 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 			if (oset[i]->size() < _vec_dim) _vec_dim = oset[i]->size();
 
 		// XXX Assume floating point vectors FIXME
+		_invec.clear();
 		size_t vec_bytes = _vec_dim * sizeof(double);
 		for (size_t i=1; i<oset.size(); i++)
 		{
