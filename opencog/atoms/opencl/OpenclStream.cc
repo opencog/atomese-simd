@@ -274,7 +274,7 @@ void OpenclStream::update() const
 const std::string&
 OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 {
-	if (HandleCast(vp)->is_executable())
+	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute(as, silent);
 
 	if (vp->is_node())
@@ -292,7 +292,7 @@ OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 const std::vector<double>&
 OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 {
-	if (HandleCast(vp)->is_executable())
+	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute(as, silent);
 
 	if (vp->is_type(NUMBER_NODE))
