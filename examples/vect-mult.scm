@@ -5,8 +5,10 @@
 ; Uses the Atomese "sensory" style API to open a channel to the
 ; OpenCL processing unit, and send data there.
 ;
-; To run demo, copy `vec-mult.cl` in this directory to /tmp
-; or alter the URL below.
+; Before running the demo, copy `vec-mult.cl` in this directory to
+; the `/tmp` directory, or alter the URL below.
+;
+; To run the demo, say `guile -s vect-mult.scm`
 ;
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
@@ -42,16 +44,26 @@
 ; Go ahead and open it.
 (cog-execute! do-open-device)
 
+; Now that it's open, define a simple stream that will write the name
+; of a kernel and some vector data to the GPU/machine. This just defines
+; what to do; nothing is done until this is executed.
 (define do-mult-vecs
 	(Write
 		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))
 		(List
-			(Predicate "vec_mult") ; must be name of kernel
+			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5)
 			(Number 2 2 2 2 2 2 3 42 999))))
 
+; Perform the actual multiply
 (cog-execute! do-mult-vecs)
 
+; Get the result
 (format #t "Result from running kernel is ~A\n"
+	(cog-execute!
+		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))))
+
+; Do it again ...
+(format #t "Once again ...its ~A\n"
 	(cog-execute!
 		(ValueOf (Anchor "some gpus") (Predicate "gpu channel"))))
