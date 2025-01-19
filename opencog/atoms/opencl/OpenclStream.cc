@@ -256,7 +256,30 @@ void OpenclStream::update() const
 ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
                                  const Handle& cref)
 {
-	return nullptr;
+	return do_write_out(as, silent, cref);
+}
+
+void OpenclStream::prt_value(const ValuePtr& kvec)
+{
+printf("duuude yo %s\n", kvec->to_string().c_str());
+	if (0 == kvec->size())
+		throw RuntimeException(TRACE_INFO,
+			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
+
+	std::string kern_name;
+	Type tc = kvec->get_type();
+	if (LIST_LINK == tc)
+	{
+		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
+		if (not oset[0]->is_node())
+			throw RuntimeException(TRACE_INFO,
+				"Expecting Atom with kernel name, got %s\n",
+				oset[0]->to_string().c_str());
+		kern_name = oset[0]->get_name();
+	}
+printf("duuude yah %s\n", kern_name.c_str());
+
+	_kernel = cl::Kernel(_program, kern_name.c_str());
 }
 
 // ==============================================================

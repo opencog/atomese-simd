@@ -48,22 +48,34 @@ protected:
 	void halt(void) const;
 	virtual void update() const;
 
+	// API description
 	Handle _description;
 	void do_describe(void);
 
+	// URL specifying platform and device.
 	std::string _uri;
 	std::string _splat; // platofrm substring
 	std::string _sdev;  // device substring
 	std::string _filepath; // path to cl, clcpp or spv file
 
+	// Actual platform and device to connect to.
 	void find_device(void);
 	cl::Platform _platform;
 	cl::Device _device;
 
+	// Kernel compilation
 	void build_kernel(void);
 	void load_kernel(void);
 	cl::Context _context;
 	cl::Program _program;
+
+	// kernel I/O. Using cl:Buffer for now.
+	// Need to create a derived class that will use SVM
+	size_t _vec_dim;
+	std::vector<cl::Buffer> _invec;
+	cl::Kernel _kernel;
+
+	void prt_value(const ValuePtr&);
 
 public:
 	OpenclStream(const Handle&);
