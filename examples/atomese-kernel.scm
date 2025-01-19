@@ -113,6 +113,7 @@
 		(Predicate "vec_add")
 		(FloatValue 0 0 0 0 0 0 0 0)
 		(FloatValue 1 2 3 4 5)))
+; (RandomStream 5)
 
 (cog-execute!
 	(Write

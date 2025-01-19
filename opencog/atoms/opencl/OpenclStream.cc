@@ -30,6 +30,8 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/NumberNode.h>
+#include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/LinkValue.h>
 #include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
@@ -277,8 +279,7 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
-	Type tc = kvec->get_type();
-	if (LIST_LINK == tc)
+	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
 		if (not oset[0]->is_node())
@@ -297,12 +298,54 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 		size_t vec_bytes = _vec_dim * sizeof(double);
 		for (size_t i=1; i<oset.size(); i++)
 		{
+			// XXX FIXME if its not a number node then maybe
+			// exec it first.
+			if (not oset[i]->is_type(NUMBER_NODE))
+				throw RuntimeException(TRACE_INFO,
+					"Expecting NumberNode, got %s\n",
+					oset[i]->to_string().c_str());
 			NumberNodePtr np(NumberNodeCast(oset[i]));
 			_invec.emplace_back(
 				cl::Buffer(_context,
 					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 					vec_bytes,
 					(void*) np->value().data()));
+		}
+	}
+	else
+	if (kvec->is_type(LINK_VALUE))
+	{
+		const ValueSeq& vsq = LinkValueCast(kvec)->value();
+		if (vsq[0]->is_node())
+			kern_name = HandleCast(vsq[0])->get_name();
+		else if (vsq[0]->is_type(STRING_VALUE))
+			kern_name = StringValueCast(vsq[0])->value()[0];
+		else
+			throw RuntimeException(TRACE_INFO,
+				"Expecting Value with kernel name, got %s\n",
+				vsq[0]->to_string().c_str());
+
+		// Find the shortest vector
+		_vec_dim = UINT_MAX;
+		for (size_t i=1; i<vsq.size(); i++)
+			if (vsq[i]->size() < _vec_dim) _vec_dim = vsq[i]->size();
+
+		// XXX Assume floating point vectors FIXME
+		_invec.clear();
+		size_t vec_bytes = _vec_dim * sizeof(double);
+		for (size_t i=1; i<vsq.size(); i++)
+		{
+			if (not vsq[i]->is_type(FLOAT_VALUE))
+				throw RuntimeException(TRACE_INFO,
+					"Expecting FloatValue, got %s\n",
+					vsq[i]->to_string().c_str());
+
+			FloatValuePtr fvp(FloatValueCast(vsq[i]));
+			_invec.emplace_back(
+				cl::Buffer(_context,
+					CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+					vec_bytes,
+					(void*) fvp->value().data()));
 		}
 	}
 	else
