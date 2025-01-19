@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclFloatStream.cc
+ * opencog/atoms/opencl/OpenclFloatVector.cc
  *
  * Copyright (C) 2015 Linas Vepstas
  * All Rights Reserved
@@ -22,14 +22,14 @@
 
 #include <opencog/util/exceptions.h>
 #include <opencog/atoms/value/ValueFactory.h>
-#include <opencog/atoms/opencl/OpenclFloatStream.h>
+#include <opencog/atoms/opencl/OpenclFloatVector.h>
 
 using namespace opencog;
 
 // ==============================================================
 
 // Adds factory when the library is loaded.
-DEFINE_VALUE_FACTORY(OPENCL_FLOAT_STREAM,
-                     createOpenclFloatStream)
-DEFINE_VALUE_FACTORY(OPENCL_FLOAT_STREAM,
-                     createOpenclFloatStream, std::vector<double>)
+DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VECTOR,
+                     createOpenclFloatVector)
+DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VECTOR,
+                     createOpenclFloatVector, std::vector<double>)
