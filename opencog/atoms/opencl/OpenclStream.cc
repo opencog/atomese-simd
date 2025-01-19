@@ -314,7 +314,7 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
 	_vec_dim = UINT_MAX;
-	std::vector<std::vector<double>> flts;
+	std::vector<const double*> flts;
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
@@ -324,9 +324,9 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 				oset[0]->to_string().c_str());
 		kern_name = oset[0]->get_name();
 
-		// Find the shortest vector. Sadly, this requires a vector-copy.
+		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
-			flts.emplace_back(get_floats(as, silent, oset[i]));
+			flts.emplace_back(get_floats(as, silent, oset[i]).data());
 
 		// XXX Assume floating point vectors FIXME
 		_out_type = NUMBER_NODE;
@@ -344,9 +344,9 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 				"Expecting Value with kernel name, got %s\n",
 				vsq[0]->to_string().c_str());
 
-		// Find the shortest vector. Sadly, this requires a vector-copy.
+		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
-			flts.emplace_back(get_floats(as, silent, vsq[i]));
+			flts.emplace_back(get_floats(as, silent, vsq[i]).data());
 
 		// XXX Assume floating point vectors FIXME
 		_out_type = FLOAT_VALUE;
@@ -358,13 +358,13 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 	// Copy vectors into cl::Buffer
 	_invec.clear();
 	size_t vec_bytes = _vec_dim * sizeof(double);
-	for (const std::vector<double>& flt : flts)
+	for (const double* flt : flts)
 	{
 		_invec.emplace_back(
 			cl::Buffer(_context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				vec_bytes,
-				(void*) flt.data()));
+				(void*) flt));
 	}
 
 	// XXX TODO this will throw exception if user mistyped the
