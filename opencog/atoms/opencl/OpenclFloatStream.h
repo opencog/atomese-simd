@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/stream/OpenclFloatStream.h
+ * opencog/atoms/opencl/OpenclFloatStream.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
