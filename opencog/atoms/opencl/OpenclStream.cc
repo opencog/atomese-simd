@@ -129,7 +129,7 @@ void OpenclStream::build_kernel(void)
 	}
 	catch (const cl::Error& e)
 	{
-		logger().error("OpenclStream failed compile >>%s<<\n",
+		logger().info("OpenclStream failed compile >>%s<<\n",
 			_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Unable to compile source file in URL \"%s\"\n",
@@ -173,27 +173,39 @@ void OpenclStream::init(const std::string& url)
 
 	// Ignore the first 9 chars "opencl://"
 	size_t pos = 9;
-	size_t platend = url.find(':', pos);
+
+	// Extract platform name substring
+	size_t platend = _uri.find(':', pos);
 	if (std::string::npos == platend) BAD_URL;
 	if (pos < platend)
 	{
-		_splat = url.substr(pos, platend-pos);
+		_splat = _uri.substr(pos, platend-pos);
 		pos = platend;
 	}
 	pos ++;
 
-	size_t devend = url.find('/', pos);
+	// Extract device name substring
+	size_t devend = _uri.find('/', pos);
 	if (std::string::npos == devend) BAD_URL;
 	if (pos < devend)
 	{
-		_sdev = url.substr(pos, devend-pos);
+		_sdev = _uri.substr(pos, devend-pos);
 		pos = devend;
 	}
-	_filepath = url.substr(pos);
+	_filepath = _uri.substr(pos);
 
+	// Try to create the OpenCL device
 	find_device();
 	_context = cl::Context(_device);
 
+	// Tryt ot load source or spv file
+	pos = _uri.find_last_of('.');
+	if (std::string::npos == pos) BAD_URL;
+
+	if (_uri.substr(pos) == ".spv")
+		load_kernel();
+	else
+		build_kernel();
 }
 
 // ==============================================================

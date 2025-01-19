@@ -11,7 +11,10 @@
 (cog-logger-set-stdout! #t)
 
 
+; To run demo, copy `vec-mult.cl` in this directory to /tmp
+; or alter the URL below.
+;
 (cog-execute!
 	(Open
 		(Type 'OpenclStream)
-		(SensoryNode "opencl://Clover:AMD/foo.cl")))
+		(SensoryNode "opencl://Clover:AMD/tmp/vec-mult.cl")))
