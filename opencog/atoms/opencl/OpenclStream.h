@@ -39,8 +39,14 @@ class OpenclStream
 	: public OutputStream
 {
 protected:
-
 	OpenclStream(Type);
+	void init(void);
+	void halt(void) const;
+	virtual void update() const;
+
+	Handle _description;
+	void do_describe(void);
+
 public:
 	OpenclStream(void);
 	virtual ~OpenclStream();

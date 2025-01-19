@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (opencl-atoms
 	OpenclFloatVector.cc
+	OpenclStream.cc
 )
 
 # Without this, parallel make will race and crap up the generated files.
