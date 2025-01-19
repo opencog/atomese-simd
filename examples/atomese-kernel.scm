@@ -1,14 +1,14 @@
 ;
-; vect-mult.scm
+; atomese-kernel.scm
 ;
 ; Basic OpenGL GPU vector multiplication demo.
 ; Uses the Atomese "sensory" style API to open a channel to the
 ; OpenCL processing unit, and send data there.
 ;
-; Before running the demo, copy `vec-mult.cl` in this directory to
+; Before running the demo, copy `vec-kernel.cl` in this directory to
 ; the `/tmp` directory, or alter the URL below.
 ;
-; To run the demo, say `guile -s vect-mult.scm`
+; To run the demo, say `guile -s atomese-kernel.scm`
 ;
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
@@ -20,12 +20,12 @@
 ; URL specifying platform, device and program source.
 ; Modify as needed. Any substrings will do for platform and device,
 ; including empty strings. The first match found will be used.
-; If in doubt, try 'opencl://:/tmp/vec-mult.c`
+; If in doubt, try 'opencl://:/tmp/vec-kernel.cl`
 ;
 ; Must be of the form 'opencl://platform/device/path/to/kernel.cl'
 ; Can also be clcpp or spv file.
-; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-mult.cl")
-(define clurl "opencl://:/tmp/vec-mult.cl")
+; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")
+(define clurl "opencl://:/tmp/vec-kernel.cl")
 
 ; Brute-force open. This checks the open function works.
 ; Optional; don't need to do this, except to manually check
