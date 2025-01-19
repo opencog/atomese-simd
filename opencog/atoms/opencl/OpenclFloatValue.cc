@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/stream/OpenclFloatValue.cc
+ * opencog/atoms/opencl/OpenclFloatValue.cc
  *
  * Copyright (C) 2015 Linas Vepstas
  * All Rights Reserved
@@ -22,7 +22,7 @@
 
 #include <opencog/util/exceptions.h>
 #include <opencog/atoms/value/ValueFactory.h>
-#include <opencog/atoms/opencl/stream/OpenclFloatValue.h>
+#include <opencog/atoms/opencl/OpenclFloatValue.h>
 
 using namespace opencog;
 
