@@ -260,7 +260,12 @@ void OpenclStream::update() const
 	event_handler.wait();
 
 	_value.resize(1);
-	_value[0] = createNumberNode(result);
+
+	// XXX Should be more sophisticated in output format handling ...
+	if (NUMBER_NODE == _out_type)
+		_value[0] = createNumberNode(result);
+	else
+		_value[0] = createFloatValue(result);
 }
 
 // ==============================================================
@@ -294,6 +299,7 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 			if (oset[i]->size() < _vec_dim) _vec_dim = oset[i]->size();
 
 		// XXX Assume floating point vectors FIXME
+		_out_type = NUMBER_NODE;
 		_invec.clear();
 		size_t vec_bytes = _vec_dim * sizeof(double);
 		for (size_t i=1; i<oset.size(); i++)
@@ -331,6 +337,7 @@ void OpenclStream::prt_value(const ValuePtr& kvec)
 			if (vsq[i]->size() < _vec_dim) _vec_dim = vsq[i]->size();
 
 		// XXX Assume floating point vectors FIXME
+		_out_type = FLOAT_VALUE;
 		_invec.clear();
 		size_t vec_bytes = _vec_dim * sizeof(double);
 		for (size_t i=1; i<vsq.size(); i++)

@@ -77,6 +77,8 @@ protected:
 	cl::Buffer _outvec;  // XXX FIXME assume only one output
 	cl::Kernel _kernel;
 
+	Type _out_type;
+
 	void prt_value(const ValuePtr&);
 
 public:

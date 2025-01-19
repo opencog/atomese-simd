@@ -38,7 +38,7 @@
 
 ; ---------------------------------------------------------------
 ; Define some Atomese to open connection, and place it where can
-; be found later.
+; be found later.  Start
 (define do-open-device
 	(SetValue
 		(Anchor "some gpus") (Predicate "some gpu channel")
@@ -107,19 +107,35 @@
 
 ; ---------------------------------------------------------------
 ; Instead of using NumberNodes, use FloatValues.
+; Both types can hold vectors of floats. NumberNodes are stored in
+; the AtomSpace (and thus clog things up), while FloatValues are not.
+; Which is great, as usally there are lots of them.
+; The trade-off is that the Values have to be put somwhere where they
+; can be found. i.e. anchired "some where".
+;
+; (RandomStream N) creates a vector of N random numbers.
+;
 (cog-set-value!
 	(Anchor "some data") (Predicate "some stream")
 	(LinkValue
 		(Predicate "vec_add")
-		(FloatValue 0 0 0 0 0 0 0 0)
-		(FloatValue 1 2 3 4 5)))
-; (RandomStream 5)
+		(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
+		(RandomStream 3)))
 
-(cog-execute!
+; Define Atomse that will send data to GPUs.
+(define vector-stream
 	(Write
 		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))
 		(ValueOf (Anchor "some data") (Predicate "some stream"))))
 
+; Run it once ...
+(cog-execute! vector-stream)
+(format #t "Float stream results ... ~A\n"
+	(cog-execute!
+		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
+
+; Run it again ...
+(cog-execute! vector-stream)
 (format #t "Float stream results ... ~A\n"
 	(cog-execute!
 		(ValueOf (Anchor "some gpus") (Predicate "some gpu channel"))))
