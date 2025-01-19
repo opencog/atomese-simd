@@ -14,6 +14,7 @@ TARGET_LINK_LIBRARIES(opencl
 	opencl-types
 	${SENSORY_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
+	OpenCL::OpenCL
 )
 
 INSTALL (TARGETS opencl EXPORT AtomSpaceTargets

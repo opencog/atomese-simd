@@ -21,6 +21,7 @@
  */
 
 #include <opencog/util/exceptions.h>
+#include <opencog/util/Logger.h>
 #include <opencog/util/oc_assert.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
@@ -61,6 +62,38 @@ void OpenclStream::halt(void) const
 	_value.clear();
 }
 
+// ==============================================================
+
+void OpenclStream::find_device(void)
+{
+	std::vector<cl::Platform> platforms;
+	cl::Platform::get(&platforms);
+
+	for (const auto& plat : platforms)
+	{
+		std::string pname = plat.getInfo<CL_PLATFORM_NAME>();
+		if (0 < _splat.size() and pname.find(_splat) == std::string::npos)
+			continue;
+
+		std::vector<cl::Device> devices;
+		plat.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+		for (const cl::Device& dev: devices)
+		{
+			std::string dname = dev.getInfo<CL_DEVICE_NAME>();
+			if (dname.find(_sdev) == std::string::npos)
+				continue;
+
+			_platform = plat;
+			_device = dev;
+
+			logger().info("OpenclStream: Using platform '%s' and device '%s'\n",
+				pname.c_str(), dname.c_str());
+		}
+	}
+}
+
+// ==============================================================
+
 #define BAD_URL \
 	throw RuntimeException(TRACE_INFO, \
 		"Unsupported URL \"%s\"\n" \
@@ -82,7 +115,7 @@ void OpenclStream::init(const std::string& url)
 	if (std::string::npos == platend) BAD_URL;
 	if (pos < platend)
 	{
-		_platform = url.substr(pos, platend-pos);
+		_splat = url.substr(pos, platend-pos);
 		pos = platend;
 	}
 	pos ++;
@@ -91,13 +124,15 @@ void OpenclStream::init(const std::string& url)
 	if (std::string::npos == devend) BAD_URL;
 	if (pos < devend)
 	{
-		_device = url.substr(pos, devend-pos);
+		_sdev = url.substr(pos, devend-pos);
 		pos = devend;
 	}
 	_filepath = url.substr(pos);
 
-printf("duuude got >>%s<< >>%s<< >>%s<<\n", _platform.c_str(), _device.c_str(),
+printf("duuude got >>%s<< >>%s<< >>%s<<\n", _splat.c_str(), _sdev.c_str(),
 _filepath.c_str());
+
+	find_device();
 }
 
 // ==============================================================

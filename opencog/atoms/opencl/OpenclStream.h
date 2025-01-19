@@ -23,6 +23,10 @@
 #ifndef _OPENCOG_OPENCL_STREAM_H
 #define _OPENCOG_OPENCL_STREAM_H
 
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION 300
+#include <CL/opencl.hpp>
+
 #include <opencog/atoms/sensory/OutputStream.h>
 
 namespace opencog
@@ -48,9 +52,13 @@ protected:
 	void do_describe(void);
 
 	std::string _uri;
-	std::string _platform;
-	std::string _device;
-	std::string _filepath;
+	std::string _splat; // platofrm substring
+	std::string _sdev;  // device substring
+	std::string _filepath; // path to cl, clcpp or spv file
+
+	void find_device(void);
+	cl::Platform _platform;
+	cl::Device _device;
 
 public:
 	OpenclStream(const Handle&);
