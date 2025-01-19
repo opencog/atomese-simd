@@ -8,7 +8,7 @@ ADD_LIBRARY (opencl-atoms
 )
 
 # Without this, parallel make will race and crap up the generated files.
-ADD_DEPENDENCIES(opencl-atoms opencl_types)
+ADD_DEPENDENCIES(opencl-atoms opencl_atom_types)
 
 TARGET_LINK_LIBRARIES(opencl-atoms
 	opencl-types

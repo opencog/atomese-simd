@@ -1,7 +1,16 @@
 
-DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog atomese-gpu-opencl-config" "ATOMESE_GPU_OPENCL_TEST")
+# This declaration must happen before subdirectory traversal.
+DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog opencl-config" "OPENCL_TEST")
 
 ADD_SUBDIRECTORY (atoms)
 ADD_SUBDIRECTORY (opencl)
+
+# -----------------------------
+# Testing framework boilerplate.
+
+WRITE_GUILE_CONFIG(${GUILE_BIN_DIR}/opencog/opencl-config.scm SCM_CONFIG TRUE)
+WRITE_GUILE_CONFIG(${GUILE_BIN_DIR}/opencog/opencl-config-installable.scm SCM_CONFIG FALSE)
+INSTALL(FILES ${GUILE_BIN_DIR}/opencog/opencl-config-installable.scm
+DESTINATION ${GUILE_SITE_DIR}/opencog RENAME opencl-config.scm)
 
 # ------------------------------------------------------------------

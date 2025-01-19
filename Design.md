@@ -228,15 +228,15 @@ Pseudocode:
 ```
    ; Location of kernel code as path in local filesystem.
    ; OpenCLNode isA SensoryNode
-   (OpenclNode "opencl://host/file/path/kernel.cl")
-   (OpenclNode "opencl://host/file/path/kernel.clcpp")
-   (OpenclNode "opencl://host/file/path/kernel.spv")
+   (SensoryNode "opencl://host/file/path/kernel.cl")
+   (SensoryNode "opencl://host/file/path/kernel.clcpp")
+   (SensoryNode "opencl://host/file/path/kernel.spv")
 
    ; Apply standard Open to SensoryNode
    ; Returns stream handle, which must be stored at some anchor.
    (Open
       (Type 'FloatValue)
-      ((OpenCL "opencl://host/file/path/kernel.cl"))
+      ((Sensory "opencl://host/file/path/kernel.cl"))
 
    ; Write two vectors to GPU. Apply 'vect_mult' kernel function to
    ; the vectors. The 'List' will typically be a 'ListValue'.
