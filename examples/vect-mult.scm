@@ -7,4 +7,6 @@
 (use-modules (opencog sensory) (opencog opencl))
 
 (cog-execute!
-	(Open (SensoryNode "opencl:///AMD/foo.cl")))
+	(Open
+		(Type 'OpenclStream)
+		(SensoryNode "opencl:///AMD/foo.cl")))

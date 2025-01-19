@@ -74,10 +74,13 @@ void OpenclStream::init(const std::string& url)
 	// Make a copy, for debuggingg purposes.
 	_uri = url;
 
-	// Ignore the first 8 chars "opencl://"
-	std::string rest = url.substr(8);
+	// Ignore the first 9 chars "opencl://"
+	size_t pos = 9;
+	size_t platend = url.find('/', pos);
+	if (pos < platend)
+		_platform = url.substr(pos, platend);
 
-printf("duuude got %s\n", rest.c_str());
+printf("duuude got %s %lu\n", _platform.c_str(), platend);
 }
 
 // ==============================================================

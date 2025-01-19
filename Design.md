@@ -235,7 +235,7 @@ Pseudocode:
    ; Apply standard Open to SensoryNode
    ; Returns stream handle, which must be stored at some anchor.
    (Open
-      (Type 'FloatValue)
+      (Type 'OpenclStream)
       ((Sensory "opencl://host/file/path/kernel.cl"))
 
    ; Write two vectors to GPU. Apply 'vect_mult' kernel function to

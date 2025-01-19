@@ -48,6 +48,9 @@ protected:
 	void do_describe(void);
 
 	std::string _uri;
+	std::string _platform;
+	std::string _device;
+	std::string _filepath;
 
 public:
 	OpenclStream(const Handle&);
