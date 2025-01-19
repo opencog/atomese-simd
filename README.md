@@ -94,7 +94,7 @@ Notable content:
   raw ideas on how the system should be designed.
 * The [types](opencog/opencl/types) directory contains
   definitions for some OpenCL Atom types.
-* The [stream](opencog/atoms/opencl/stream) directory contains
+* The [atoms](opencog/atoms/opencl) directory contains
   implementations for those Atom types.
 
 
@@ -110,6 +110,14 @@ Steps:
 * `sudo usermod -a -G video <user_id>`
 * Build and install cogutils, the AtomSpace, and the code here.
   This uses the same build style as all other OpenCog projects.
+* Build and install the code in this repo.
+  `mkdir build; cd build; cmake ..; make; sudo make install`
+* Look over the examples. Run them
+  `cd examples; guile -s vect-mult.scm`
+
+The `scaffolding` directory contains code that is "pure" OpenCL,
+and does not have any Atomese in it. It just provides some basic
+OpenCL examples.
 
 Make sure the software isn't insane, by running
 `opencog/opencl/scaffolding/show-ocl-hw` executable from the
@@ -127,3 +135,6 @@ from.
 
 The `opencog/opencl/scaffolding/run-vec-mult` executable is
 similar to above; it performs a simple vector multiply.
+
+The `run-flow-vec` executable is a rework of above, to more clearly
+define/prototype the distinct steps needed to flow data.
