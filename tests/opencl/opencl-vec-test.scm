@@ -53,14 +53,10 @@
 			(Number 2 2 2 2 2 2 3 42 999))))
 
 (define kern-m1 (cog-execute! kernel-runner))
+(test-assert "mult one" (equal? (Number 2 4 6 8 10) kern-m1))
 
-; Get the result
-(format #t "Result from running kernel is ~A\n"
-	(cog-execute! gpu-location))
-
-; Do it again ... Nothing changed.
-(format #t "Once again ...its ~A\n"
-	(cog-execute! gpu-location))
+(define kern-m2 (cog-value-ref (cog-execute! gpu-location) 0))
+(test-assert "mult two" (equal? (Number 2 4 6 8 10) kern-m2))
 
 ; ---------------------------------------------------------------
 ; Run it again, with different data.

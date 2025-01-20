@@ -67,6 +67,7 @@ void OpenclStream::halt(void)
 {
 	_value.clear();
 	_vec_dim = 0;
+	_out_as = nullptr;
 }
 
 // ==============================================================
@@ -172,6 +173,7 @@ void OpenclStream::init(const std::string& url)
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
+	_out_as = nullptr;
 
 	do_describe();
 	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
@@ -270,7 +272,7 @@ void OpenclStream::update() const
 
 	// XXX Should be more sophisticated in output format handling ...
 	if (NUMBER_NODE == _out_type)
-		_value[0] = createNumberNode(result);
+		_value[0] = _out_as->add_atom(createNumberNode(result));
 	else
 		_value[0] = createFloatValue(result);
 }
@@ -328,6 +330,8 @@ ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
 {
 	do_write_out(as, silent, cref);
 	// return shared_from_this();
+
+	_out_as = AtomSpaceCast(as->shared_from_this());
 	update();
 	return _value[0];
 }
