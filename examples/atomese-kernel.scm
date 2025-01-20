@@ -36,6 +36,7 @@
 ; Must be of the form 'opencl://platform/device/path/to/kernel.cl'
 ; Can also be clcpp or spv file.
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")
+; (define clurl "opencl://CUDA:NVIDIA RTX 4000/tmp/vec-kernel.cl")
 (define clurl "opencl://:/tmp/vec-kernel.cl")
 
 ; ---------------------------------------------------------------

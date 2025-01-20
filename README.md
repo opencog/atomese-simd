@@ -73,7 +73,7 @@ thought of what it means "to perceive and move".
 
 Status
 -----
-***Version 0.0.5.*** --
+***Version 0.0.6.*** --
 Basic proof-of-concept, showing how to use Atomese to open a connection
 to an OpenCL compute device (i.e. a GPU), load and invoke compute
 kernels, and have those kernels work with floating-point vector data
@@ -117,9 +117,12 @@ Steps:
 * Build and install cogutils, the AtomSpace, sensory and then the code
   here.  This uses the same build style as all other OpenCog projects:
   `mkdir build; cd build; cmake ..; make; sudo make install`
+* Run unit tests: `make check`.  If the unit tests fail, that's proably
+  because they could not find and GPU hardware. See below.
 * Look over the examples. Run them
   `cd examples; guile -s atomese-kernel.scm`
 
+### If unit tests fail
 The `scaffolding` directory contains code that is "pure" OpenCL,
 and does not have any Atomese in it. It just provides some basic
 OpenCL examples. Runs on both AMD and Nvidia hardware.

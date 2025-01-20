@@ -9,7 +9,12 @@
 (use-modules (opencog test-runner))
 
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")
-(define clurl "opencl://:/tmp/vec-kernel.cl")
+; (define clurl "opencl://CUDA:NVIDIA RTX 4000/tmp/vec-kernel.cl")
+
+(define clurl (string-concatenate (list
+	"opencl://:/" (getcwd) "/vec-kernel.cl")))
+
+(format #t "Looking for kernel at ~A\n" clurl)
 
 (opencog-test-runner)
 (define tname "opencl-vec-test")
