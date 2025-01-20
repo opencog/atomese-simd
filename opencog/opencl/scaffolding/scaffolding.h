@@ -16,7 +16,15 @@
 #define CL_HPP_ENABLE_EXCEPTIONS
 // #define CL_HPP_USE_IL_KHR  /* For SPV IL support */
 
-#include <CL/opencl.hpp>
+#if defined __has_include
+	#if __has_include(<CL/opencl.hpp>)
+		#include <CL/opencl.hpp>
+	#else
+		#include <CL/cl.hpp>
+	#endif
+#else
+	#include <CL/opencl.hpp>
+#endif
 
 /// Print rudimentary report of available OpenCL hardware.
 void report_hardware(void);

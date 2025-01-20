@@ -25,7 +25,16 @@
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 300
-#include <CL/opencl.hpp>
+
+#if defined __has_include
+	#if __has_include(<CL/opencl.hpp>)
+		#include <CL/opencl.hpp>
+	#else
+		#include <CL/cl.hpp>
+	#endif
+#else
+	#include <CL/opencl.hpp>
+#endif
 
 #include <opencog/atoms/sensory/OutputStream.h>
 
