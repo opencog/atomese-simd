@@ -1,7 +1,7 @@
 ;
 ; atomese-kernel.scm
 ;
-; Basic OpenGL GPU vector multiplication demo.
+; Basic OpenCL GPU vector multiplication demo.
 ;
 ; Uses the Atomese "sensory" style API to open a channel to the
 ; OpenCL processing unit, and then send kernels and data there.

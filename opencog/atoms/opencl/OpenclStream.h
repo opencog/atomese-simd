@@ -54,7 +54,7 @@ class OpenclStream
 protected:
 	OpenclStream(Type);
 	void init(const std::string& url);
-	void halt(void) const;
+	void halt(void);
 	virtual void update() const;
 
 	// API description

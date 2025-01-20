@@ -7,6 +7,7 @@
 #  error double precision is not supported
 #endif
 
+// Product of two vectors.
 kernel void vec_mult(global double *prod,
                      global const double *a,
                      global const double *b,
@@ -14,7 +15,6 @@ kernel void vec_mult(global double *prod,
 {
 	size_t i = get_global_id(0);
 
-	// Scalar product of two vectors.
 	if (i < sz)
 		prod[i] = a[i] * b[i];
 }

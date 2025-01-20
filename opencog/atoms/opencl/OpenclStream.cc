@@ -63,9 +63,10 @@ OpenclStream::~OpenclStream()
 	halt();
 }
 
-void OpenclStream::halt(void) const
+void OpenclStream::halt(void)
 {
 	_value.clear();
+	_vec_dim = 0;
 }
 
 // ==============================================================
@@ -168,6 +169,10 @@ void OpenclStream::load_kernel(void)
 /// Attempt to open connection to OpenCL device
 void OpenclStream::init(const std::string& url)
 {
+	// vec dim is used as an initialization flag.
+	// Set non-zero only after a kernel is loaded.
+	_vec_dim = 0;
+
 	do_describe();
 	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
 
@@ -251,6 +256,8 @@ ValuePtr OpenclStream::describe(AtomSpace* as, bool silent)
 
 void OpenclStream::update() const
 {
+	if (0 == _vec_dim) return;
+
 	std::vector<double> result(_vec_dim);
 	size_t vec_bytes = _vec_dim * sizeof(double);
 
