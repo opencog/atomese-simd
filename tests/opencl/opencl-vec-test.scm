@@ -59,43 +59,41 @@
 (test-assert "mult two" (equal? (Number 2 4 6 8 10) kern-m2))
 
 ; ---------------------------------------------------------------
-; Run it again, with different data.
-(cog-execute!
+; Run it again, different data
+(define krun-2
 	(Write gpu-location
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
-; Get the result
-(format #t "And now, with different data ... ~A\n"
-	(cog-execute! gpu-location))
+(define kern-m3 (cog-execute! krun-2))
+(test-assert "mult three"
+	(equal? (Number 2 6 12 20 30 30 28 24 18 10 0) kern-m3))
+
+(define kern-m4 (cog-value-ref (cog-execute! gpu-location) 0))
+(test-assert "mult four"
+	(equal? (Number 2 6 12 20 30 30 28 24 18 10 0) kern-m4))
 
 ; ---------------------------------------------------------------
-; Run it again, with a different kernel (addition this time, not
-; multiplication.)
-(cog-execute!
+; Run it again, with a different kernel
+(define krun-3
 	(Write gpu-location
 		(List
 			(Predicate "vec_add") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
-; Get the result
-(format #t "Adding, instead of multiplying ... ~A\n"
-	(cog-execute! gpu-location))
+(define kern-m5 (cog-execute! krun-3))
+(test-assert "mult five"
+	(equal? (Number 3 5 7 9 11 11 11 11 11 11 11) kern-m5))
+
+(define kern-m6 (cog-value-ref (cog-execute! gpu-location) 0))
+(test-assert "mult six"
+	(equal? (Number 3 5 7 9 11 11 11 11 11 11 11) kern-m6))
 
 ; ---------------------------------------------------------------
-; Instead of using NumberNodes, use FloatValues.
-; Both types can hold vectors of floats. NumberNodes are stored in
-; the AtomSpace (and thus clog things up), while FloatValues are not.
-; Which is great, as usually there are lots of them.
-; The trade-off is that the Values have to be put somewhere where they
-; can be found. i.e. anchired "some where".
-;
-; (RandomStream N) creates a vector of N random numbers. These numbers
-; change with every access (which is why it is called a "stream" instead
-; of a "vector".)
+; Use FloatValues
 ;
 (cog-set-value!
 	(Anchor "some data") (Predicate "some stream")
@@ -104,15 +102,14 @@
 		(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
 		(RandomStream 3)))
 
-; Define Atomse that will send data to GPUs.
 (define vector-stream
 	(Write gpu-location
 		(ValueOf (Anchor "some data") (Predicate "some stream"))))
 
-; Run it once ...
-(cog-execute! vector-stream)
-(format #t "Random numbers from a stream ...\n~A\n"
-	(cog-execute! gpu-location))
+(define kern-m7 (cog-execute! vector-stream))
+(define kern-m8 (cog-value-ref (cog-execute! gpu-location) 0))
+(test-assert "ran value" (equal? kern-m7 kern-m8))
+(test-assert "ran type" (equal? 'FloatValue (cog-type kern-m7)))
 
 ; Run it again ...
 (cog-execute! vector-stream)
