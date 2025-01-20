@@ -19,33 +19,32 @@
 (define open-stream (cog-execute!
 	(Open (Type 'OpenclStream) (SensoryNode clurl))))
 
-; Crash stream not corrrectly intialized.
-(define prt-ref (format #f "~A" open-stream))
+; Crash if stream not corrrectly intialized.
+(define stream-str (format #f "~A" open-stream))
+(test-assert "open stream" (equal? "(OpenclStream)\n" stream-str))
 
 (format #t "Opened stream is ~A\n" open-stream)
 
-; (test-assert "open stream" (equal? (FloatValue 70) open-stream))
-
 ; ---------------------------------------------------------------
-; Define Atomese, that, when executed, will open a connection to the
-; GPU's, and then anchor that channel to a "well-known acnhor point".
 (define do-open-device
 	(SetValue (Anchor "some gpus") (Predicate "some gpu channel")
 		(Open
 			(Type 'OpenclStream)
 			(SensoryNode clurl))))
 
-; Go ahead and open it.
-(cog-execute! do-open-device)
+(define reopen-stream (cog-execute! do-open-device))
+(define restream-str (format #f "~A" reopen-stream))
+(test-assert "reopen stream" (equal? "(OpenclStream)\n" restream-str))
 
 ; Define some short-hand for the anchor-point.
 (define gpu-location
 	(ValueOf (Anchor "some gpus") (Predicate "some gpu channel")))
 
+(define loc-stream (cog-execute! gpu-location))
+(define loc-str (format #f "~A" loc-stream))
+(test-assert "loc stream" (equal? "(OpenclStream)\n" loc-str))
+
 ; ---------------------------------------------------------------
-; Now that it's open, define a simple stream that will write the name
-; of a kernel and some vector data to the GPU/machine. This just defines
-; what to do; nothing is done until this is executed.
 (define kernel-runner
 	(Write gpu-location
 		(List
@@ -53,8 +52,7 @@
 			(Number 1 2 3 4 5)
 			(Number 2 2 2 2 2 2 3 42 999))))
 
-; Run the kernel.
-(cog-execute! kernel-runner)
+(define kern-m1 (cog-execute! kernel-runner))
 
 ; Get the result
 (format #t "Result from running kernel is ~A\n"
