@@ -102,23 +102,26 @@ Notable content:
 HOWTO
 -----
 Steps:
-* Get some OpenCL GPU hardware, such as a Radeon graphics card.
-* Install `clinfo` and `mesa-opencl-icd` and `opencl-headers`
+* Get some OpenCL GPU hardware. The demo should work on anything and has
+  been tested on a Radeon graphics card and an Nvidia card.
+* Install `clinfo`.
+* For AMD devices, install `mesa-opencl-icd` and `opencl-headers`
   Maybe more; depends on your distro and hardware.
-* Maybe also: `ocl-icd-opencl-dev` and `opencl-clhpp-headers` ?
+  (Maybe also: `ocl-icd-opencl-dev` and `opencl-clhpp-headers`?)
+* For Nvidia devices, install `cuda-opencl-dev`
+  Maybe more; depends on your distro and hardware.
 * Optional: Install `clang-14` and `llvm-spirv-14`
   Demos can use "offline-compiled" (pre-built) kernels.
 * `sudo usermod -a -G video <user_id>`
-* Build and install cogutils, the AtomSpace, and the code here.
-  This uses the same build style as all other OpenCog projects.
-* Build and install the code in this repo.
+* Build and install cogutils, the AtomSpace, sensory and then the code
+  here.  This uses the same build style as all other OpenCog projects:
   `mkdir build; cd build; cmake ..; make; sudo make install`
 * Look over the examples. Run them
   `cd examples; guile -s atomese-kernel.scm`
 
 The `scaffolding` directory contains code that is "pure" OpenCL,
 and does not have any Atomese in it. It just provides some basic
-OpenCL examples.
+OpenCL examples. Runs on both AMD and Nvidia hardware.
 
 Make sure the software isn't insane, by running the
 `opencog/opencl/scaffolding/show-ocl-hw` executable from the
