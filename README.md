@@ -1,8 +1,11 @@
 
-Atomse OpenCL Interfaces
-========================
-Experimental effort to enable I/O between Atomese and OpenCL devices
-(narrowly, to GPUs; broadly, to DL/NN architectures.)
+Atomse SIMD (OpenCL/CUDA) Interfaces
+====================================
+Experimental effort to enable I/O between Atomese and SIMD compute
+resouces. The primary target is commodity GPUs, running either OpenCL
+or CUDA. The current prototype accesses the hardware at a low level,
+working with individual vectors. High-level API's, such as commonly
+used in deep learning, are not supported in this interface layer.
 
 [Atomese](https://wiki.opencog.org/w/Atomese), the interface language for
 the OpenCog [AtomSpace](https://github.com/opencog/atomspace) hypergraph
@@ -44,15 +47,13 @@ variety of systems built on these, such as TensorFlow, offer a
 non-trivial exercise for testing and guiding the Atomese sensori-motor
 interfaces.
 
-At the narrowest level, the interfaces here simply move vectors to and
-from GPUs and invoke GPU kernels to perform processing on them. More
-broadly, the interfaces here explore some of the more complex APIs
-commonly used by major systems to communicate data across channels and
-process it on remote servers (such as GPUs).
+The interfaces here simply move vectors to and from GPUs and invoke GPU
+kernels to perform processing on them. Perhaps high-level interfaces
+will be added in the future; they're not here in this prototype.
 
-The effort here attempts to find a balance between abstract
-mathematical theory and a practical, usable interface. The generic
-Atomese sensorimotor research is being done in the hopes of discovering
+The main effort is to find a balance between abstract mathematical
+theory and a practical, usable interface. The generic Atomese
+sensorimotor research is being done in the hopes of discovering
 generic abstractions that symbolic (and neuro-symbolic) AI subsystems
 can use. If you are a human programmer, you have a zilllion-and-one
 choices for programming languages and APIs that allow you to hack up
