@@ -6,6 +6,7 @@ ENDIF (HAVE_OPENCL)
 
 ADD_SUBDIRECTORY (atoms)
 
+# ------------------------------------------------------------------
 IF (HAVE_OPENCL)
 	ADD_SUBDIRECTORY (opencl)
 
@@ -17,5 +18,10 @@ IF (HAVE_OPENCL)
 	INSTALL(FILES ${GUILE_BIN_DIR}/opencog/opencl-config-installable.scm
 		DESTINATION ${GUILE_SITE_DIR}/opencog RENAME opencl-config.scm)
 ENDIF (HAVE_OPENCL)
+
+# ------------------------------------------------------------------
+IF (HAVE_CUDA)
+	ADD_SUBDIRECTORY (cuda)
+ENDIF (HAVE_CUDA)
 
 # ------------------------------------------------------------------
