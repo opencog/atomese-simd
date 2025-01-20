@@ -11,8 +11,22 @@
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")
 ; (define clurl "opencl://CUDA:NVIDIA RTX 4000/tmp/vec-kernel.cl")
 
+; Horrible hacker to extract location of the unit test.
+(format #t "Command line: ~A\n" (command-line))
+(define last-arg (last (command-line)))
+(define pathcomp (string-split last-arg #\/))
+(define leader (take pathcomp (- (length pathcomp) 1)))
+(define path (fold
+	(lambda (s t) (string-concatenate (list t "/" s)))
+	"" leader))
+(format #t "Unit test location: ~A\n" path)
+
+; If unit test is run from cmake, then pathcomp is a long list.
+; Otherwise unit test is run by hand, and its just cwd.
+(define curloc (if (< 1 (length pathcomp)) path (getcwd)))
+
 (define clurl (string-concatenate (list
-	"opencl://:/" (getcwd) "/vec-kernel.cl")))
+	"opencl://:/" curloc "/vec-kernel.cl")))
 
 (format #t "Looking for kernel at ~A\n" clurl)
 
