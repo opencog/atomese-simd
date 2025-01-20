@@ -112,14 +112,14 @@ include(OpenCogFindGuile)
 include(OpenCogFindPython)
 
 # ----------------------------------------------------------
-# Find OpenCL. Mandatory.
+# Find OpenCL. Optional.
 FIND_PACKAGE(OpenCL)
 IF (OPENCL_FOUND)
 	MESSAGE(STATUS "OpenCL found.")
 	ADD_DEFINITIONS(-DHAVE_OPENCL)
 	SET(HAVE_OPENCL 1)
 ELSE (OPENCL_FOUND)
-	MESSAGE(FATAL_ERROR "OpenCL missing: it is needed!")
+	MESSAGE(STATUS "OpenCL NOT found.")
 ENDIF (OPENCL_FOUND)
 
 # ----------------------------------------------------------
@@ -154,6 +154,11 @@ IF (CMAKE_CUDA_COMPILER)
 	ADD_DEFINITIONS(-DHAVE_CUDA)
 	SET(HAVE_CUDA 1)
 ENDIF (CMAKE_CUDA_COMPILER)
+
+IF (NOT HAVE_OPENCL AND NOT HAVE_CUDA)
+	MESSAGE(FATAL_ERROR
+		"Expecting to find either OpenCL or CUDA (or both)!")
+ENDIF (NOT HAVE_OPENCL AND NOT HAVE_CUDA)
 
 # ===================================================================
 # Include configuration.
@@ -270,13 +275,13 @@ FIND_PACKAGE(Doxygen)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("Atomese-OpenCL" "Atomese OpenCL GPU interfaces"
+SUMMARY_ADD("Atomese-OpenCL"  "Atomese OpenCL GPU interfaces"
    HAVE_ATOMSPACE AND HAVE_SENSORY AND HAVE_OPENCL)
 SUMMARY_ADD("Offline compile" "OpenCL offline compile of kernels"
    HAVE_CLANG AND HAVE_LLVM_SPIRV)
-# SUMMARY_ADD("CUDA platform" "CUDA platform" HAVE_CUDA)
-# SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
-SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
-SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
+SUMMARY_ADD("Atomese-CUDA"    "Atomese CUDA GPU interfaces" HAVE_CUDA)
+# SUMMARY_ADD("Cython"          "Cython (python) bindings" HAVE_CYTHON)
+SUMMARY_ADD("Doxygen"         "Code documentation" DOXYGEN_FOUND)
+SUMMARY_ADD("Unit tests"      "Unit tests" CXXTEST_FOUND)
 
 SUMMARY_SHOW()
