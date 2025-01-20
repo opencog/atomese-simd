@@ -78,7 +78,9 @@ void run_vec_mult(cl::Device ocldev, cl::Context context, cl::Program program)
 // Run code on the GPU's.
 int main(int argc, char* argv[])
 {
-	cl::Device ocldev = find_device("", "AMD");
+	// Pick the first device found.
+	// cl::Device ocldev = find_device("", "AMD");
+	cl::Device ocldev = find_device("", "");
 	std::string dname = ocldev.getInfo<CL_DEVICE_NAME>();
 	printf("Will use: %s\n", dname.c_str());
 
