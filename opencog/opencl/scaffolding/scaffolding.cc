@@ -9,7 +9,6 @@
 
 #include "scaffolding.h"
 
-#include <CL/opencl.hpp>
 #include <iostream>
 #include <fstream>
 
