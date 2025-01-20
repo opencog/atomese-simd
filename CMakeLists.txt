@@ -18,7 +18,7 @@ IF (COMMAND CMAKE_POLICY)
 	CMAKE_POLICY(SET CMP0045 NEW)
 ENDIF (COMMAND CMAKE_POLICY)
 
-PROJECT(opencl)
+PROJECT(atomese-simd)
 
 # ----------------------------------------------------------
 # User-modifiable options. Feel free to change these!
