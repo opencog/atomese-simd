@@ -79,7 +79,8 @@ to an OpenCL compute device (i.e. a GPU), load and invoke compute
 kernels, and have those kernels work with floating-point vector data
 residing in the AtomSpace.
 
-The demo is minimal, but it works.
+The demo is minimal, but it works.  Tested on both AMD Radeon R9 and
+Nvidia RTX cards.
 
 Overview
 --------
