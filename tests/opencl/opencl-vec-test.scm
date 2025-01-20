@@ -110,40 +110,33 @@
 (define kern-m8 (cog-value-ref (cog-execute! gpu-location) 0))
 (test-assert "ran value" (equal? kern-m7 kern-m8))
 (test-assert "ran type" (equal? 'FloatValue (cog-type kern-m7)))
+(test-assert "ran size" (equal? 3 (length (cog-value->list kern-m7))))
 
-; Run it again ...
-(cog-execute! vector-stream)
-(format #t "More random numbers ...\n~A\n"
-	(cog-execute! gpu-location))
+; Run it again ... get different values
+(define kern-m9 (cog-execute! vector-stream))
+(define kern-m10 (cog-value-ref (cog-execute! gpu-location) 0))
+(test-assert "ran change" (not (equal? kern-m7 kern-m9)))
+(test-assert "ran2 value" (equal? kern-m9 kern-m10))
+(test-assert "ran2 type" (equal? 'FloatValue (cog-type kern-m9)))
+(test-assert "ran2 size" (equal? 3 (length (cog-value->list kern-m9))))
 
 ; ---------------------------------------------------------------
-; Similar to above, but feed back the results of addition into the
-; same location. This implements an accumulator. The addition is
-; performed on the GPU, and, with each iteration, the result is
-; pulled out (back into system memory, into an Atomese FloatValue)
-; which is then used for the next round.
+; Initialize the accumulator
+(define vec-size 130)
 
-; Initialize the accumulator to all-zeros, and anchor it where
-; it can be found.
 (cog-set-value!
 	(Anchor "some data") (Predicate "accumulator")
-	(FloatValue 0 0 0 0 0))
+	(FloatValue (make-list vec-size 0)))
 
-; When executed, this will return the current accumulator value.
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
 
-; Bind the vector-add GPU kernel to a pair of input vectors. The first
-; vector is the accumulator, and the second one is a vector of three
-; random numbers. Note that these random numbers change with every
-; invocation.
 (cog-set-value!
 	(Anchor "some data") (Predicate "accum task")
 	(LinkValue
-		(Predicate "vec_add") accum-location (RandomStream 3)))
+		(Predicate "vec_add") accum-location (RandomStream vec-size)))
 
-; Define a feedback loop. With each invocation, the accumulator will
-; be updated with the result of the addition.
+; Define a feedback loop.
 (define accum-stream
 	(SetValue
 		(Anchor "some data") (Predicate "accumulator")
@@ -151,22 +144,17 @@
 			(ValueOf (Anchor "some data") (Predicate "accum task")))))
 
 ; Run it once ...
-(format #t "Accumulator stream results ...\n  ~A\n"
-	(cog-execute! accum-stream))
+(define acc1 (cog-execute! accum-stream))
+(test-assert "acc1 type" (equal? 'FloatValue (cog-type acc1)))
+(test-assert "acc1 size" (equal? vec-size (length (cog-value->list acc1))))
 
-(format #t "Again ...\n  ~A\n"
-	(cog-execute! accum-stream))
+; Run it lots ...
+(define run-len 500)
+(for-each (lambda (x) (cog-execute! accum-stream)) (iota run-len 0))
 
-(format #t "And again ...\n  ~A\n"
-	(cog-execute! accum-stream))
-
-(cog-execute! accum-stream)
-(cog-execute! accum-stream)
-(cog-execute! accum-stream)
-(cog-execute! accum-stream)
-
-(format #t "Many more times ...\n  ~A\n"
-	(cog-execute! accum-stream))
+(define accn (cog-execute! accum-location))
+(test-assert "accn type" (equal? 'FloatValue (cog-type accn)))
+(test-assert "accn size" (equal? vec-size (length (cog-value->list accn))))
 
 (test-end tname)
 (opencog-test-end)
