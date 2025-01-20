@@ -12,7 +12,7 @@
 ; To run the demo, say `guile -s atomese-kernel.scm`. Alternately,
 ; cut-n-paste from this file to a guile command line.
 ;
-: The demo has four parts:
+; The demo has four parts:
 ; * Creating and opening a channel to the OpenCL device.
 ; * Sending a kernel along with NumberNode vector data the device.
 ; * Sending FloatValue data. Unlike NumberNodes, FloatValues are NOT
