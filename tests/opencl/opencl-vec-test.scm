@@ -3,6 +3,7 @@
 ;
 ; Basic OpenCL vector multiplication unit test.
 ;
+(use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
 (use-modules (opencog test-runner))
@@ -149,12 +150,28 @@
 (test-assert "acc1 size" (equal? vec-size (length (cog-value->list acc1))))
 
 ; Run it lots ...
-(define run-len 500)
+(define run-len 5123)
 (for-each (lambda (x) (cog-execute! accum-stream)) (iota run-len 0))
 
 (define accn (cog-execute! accum-location))
 (test-assert "accn type" (equal? 'FloatValue (cog-type accn)))
 (test-assert "accn size" (equal? vec-size (length (cog-value->list accn))))
+
+; Result of repeated executation should be a large number,
+; approx equal to 0.5 of vec-size * run-len by the central limit theorem
+; and with stddev of sqrt of num samples.
+(define vsum (fold + 0 (cog-value->list accn)))
+(define vlen (* vec-size run-len))
+(define vmean (/ vsum vlen))
+(define vsigma (/ 1 (sqrt vlen)))
+
+(format #t "sum: ~A len: ~A mean: ~A sigma: ~A\n" vsum vlen vmean vsigma)
+
+; Acceptable deviation
+(define accdev (* 5 vsigma))
+
+(test-assert "accn lo bound" (< (- 0.5 accdev) vmean))
+(test-assert "accn hi bound" (> (+ 0.5 accdev) vmean))
 
 (test-end tname)
 (opencog-test-end)
