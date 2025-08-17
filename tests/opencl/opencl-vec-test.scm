@@ -5,7 +5,7 @@
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog exec))
-(use-modules (opencog sensory) (opencog opencl))
+(use-modules (opencog sensory-v0) (opencog opencl))
 (use-modules (opencog test-runner))
 
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")

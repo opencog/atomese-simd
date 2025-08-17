@@ -12,7 +12,7 @@ ADD_DEPENDENCIES(opencl opencl_atom_types)
 
 TARGET_LINK_LIBRARIES(opencl
 	opencl-types
-	${SENSORY_LIBRARIES}
+	${SENSORY_V0_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
 	OpenCL::OpenCL
 )
