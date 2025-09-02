@@ -212,6 +212,7 @@ void OpenclNode::init(const std::string& url)
 
 // ==============================================================
 
+#if LATER_SOMEDAY
 Handle _global_desc = Handle::UNDEFINED;
 
 void OpenclNode::do_describe(void)
@@ -244,6 +245,7 @@ ValuePtr OpenclNode::describe(AtomSpace* as, bool silent)
 	_description = as->add_atom(_global_desc);
 	return _description;
 }
+#endif
 
 // ==============================================================
 

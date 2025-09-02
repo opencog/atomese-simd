@@ -54,11 +54,6 @@ class OpenclNode
 protected:
 	OpenclNode(Type);
 	void init(const std::string& url);
-	virtual void update() const;
-
-	// API description
-	Handle _description;
-	void do_describe(void);
 
 	// URL specifying platform and device.
 	std::string _uri;
