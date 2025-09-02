@@ -225,7 +225,7 @@ void OpenclNode::open(const ValuePtr& ignore)
 	_qvp = createQueueValue();
 }
 
-virtual bool OpenclNode::connected(void)
+bool OpenclNode::connected(void) const
 {
 	return nullptr != _qvp;
 }
@@ -287,8 +287,18 @@ ValuePtr OpenclNode::stream(void) const
 	return _qvp;
 }
 
+ValuePtr OpenclNode::read(void) const
+{
+	if (not connected())
+		throw RuntimeException(TRACE_INFO,
+			"Device not open! %s\n", get_name().c_str());
+
+printf("Enter OpenclNode::read to dequeue one\n");
+	return _qvp->remove();
+}
+
 #if 0
-should be read()...
+should be in soe event handler....
 void OpenclNode::update() const
 {
 	if (0 == _vec_dim) return;
@@ -359,23 +369,16 @@ OpenclNode::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 
 // ==============================================================
 // Send kernel and data
-ValuePtr OpenclNode::write_out(AtomSpace* as, bool silent,
-                                 const Handle& cref)
-{
-	do_write_out(as, silent, cref);
-	// return shared_from_this();
 
-	_out_as = AtomSpaceCast(as->shared_from_this());
-	// update();
-	return _value[0];
-}
-
-void OpenclNode::write_one(AtomSpace* as, bool silent,
-                             const ValuePtr& kvec)
+// XXX I think this is wrong. but whatever.
+void OpenclNode::do_write(const ValuePtr& kvec)
 {
 	if (0 == kvec->size())
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
+
+	AtomSpace* as = getAtomSpace();
+	bool silent = false;
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;

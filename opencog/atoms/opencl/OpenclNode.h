@@ -85,9 +85,6 @@ protected:
 	const std::string& get_kern_name(AtomSpace*, bool, ValuePtr);
 	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
 
-	void write_one(AtomSpace*, bool, const ValuePtr&);
-	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
-
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);
 	virtual void close(const ValuePtr&);
