@@ -53,10 +53,8 @@ class OpenclNode
 {
 protected:
 	OpenclNode(Type);
-	void init(const std::string& url);
 
 	// URL specifying platform and device.
-	std::string _uri;
 	std::string _splat; // platform substring
 	std::string _sdev;  // device substring
 	std::string _filepath; // path to cl, clcpp or spv file

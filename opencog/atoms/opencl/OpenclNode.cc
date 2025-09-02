@@ -44,7 +44,6 @@ using namespace opencog;
 OpenclNode::OpenclNode(const std::string&& str)
 	: StreamNode(OPENCL_NODE, std::move(str))
 {
-	init(get_name());
 }
 
 OpenclNode::OpenclNode(Type t, const std::string&& str)
@@ -53,8 +52,6 @@ OpenclNode::OpenclNode(Type t, const std::string&& str)
 	if (not nameserver().isA(t, OPENCL_NODE))
 		throw RuntimeException(TRACE_INFO,
 			"Expecting OpenclNode, got %s\n", to_string().c_str());
-
-	init(get_name());
 }
 
 OpenclNode::~OpenclNode()
@@ -159,41 +156,38 @@ void OpenclNode::load_kernel(void)
 		_uri.c_str());
 
 /// Attempt to open connection to OpenCL device
-void OpenclNode::init(const std::string& url)
+void OpenclNode::open(const ValuePtr& ignore)
 {
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
 	_out_as = nullptr;
 
-	do_describe();
+	const std::string& url = get_name();
 	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
-
-	// Make a copy, for debuggingg purposes.
-	_uri = url;
 
 	// Ignore the first 9 chars "opencl://"
 	size_t pos = 9;
 
 	// Extract platform name substring
-	size_t platend = _uri.find(':', pos);
+	size_t platend = url.find(':', pos);
 	if (std::string::npos == platend) BAD_URL;
 	if (pos < platend)
 	{
-		_splat = _uri.substr(pos, platend-pos);
+		_splat = url.substr(pos, platend-pos);
 		pos = platend;
 	}
 	pos ++;
 
 	// Extract device name substring
-	size_t devend = _uri.find('/', pos);
+	size_t devend = url.find('/', pos);
 	if (std::string::npos == devend) BAD_URL;
 	if (pos < devend)
 	{
-		_sdev = _uri.substr(pos, devend-pos);
+		_sdev = url.substr(pos, devend-pos);
 		pos = devend;
 	}
-	_filepath = _uri.substr(pos);
+	_filepath = url.substr(pos);
 
 	// Try to create the OpenCL device
 	find_device();
@@ -201,10 +195,10 @@ void OpenclNode::init(const std::string& url)
 	_queue = cl::CommandQueue(_context, _device);
 
 	// Try to load source or spv file
-	pos = _uri.find_last_of('.');
+	pos = url.find_last_of('.');
 	if (std::string::npos == pos) BAD_URL;
 
-	if (_uri.substr(pos) == ".spv")
+	if (url.substr(pos) == ".spv")
 		load_kernel();
 	else
 		build_kernel();
