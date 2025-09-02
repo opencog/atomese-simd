@@ -36,14 +36,15 @@
 
 ; ---------------------------------------------------------------
 
-(define open-stream (cog-execute!
-	(Open (Type 'OpenclStream) (SensoryNode clurl))))
+(define clnode (OpenclNode clurl))
+(format #t "testing ~A" clnode)
+(cog-execute!
+   (SetValue clnode (Predicate "*-open-*") (Type 'FloatValue)))
 
 ; Crash if stream not corrrectly intialized.
-(define stream-str (format #f "~A" open-stream))
-(test-assert "open stream" (equal? "(OpenclStream)\n" stream-str))
-
-(format #t "Opened stream is ~A\n" open-stream)
+(define cnct (cog-execute! (ValueOf clnode (Predicate "*-connected?-*"))))
+(format #t "connected? ~A" cnct)
+(test-assert "open stream" (cog-value-ref cnct))
 
 ; ---------------------------------------------------------------
 (define do-open-device
