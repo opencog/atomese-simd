@@ -300,9 +300,19 @@ printf("Enter OpenclNode::read to dequeue one\n");
 
 void OpenclNode::queue_job(const job_t& kjob)
 {
+	// Copy vectors into cl::Buffer
+	size_t vec_bytes = kjob._vec_dim * sizeof(double);
+	for (const double* flt : kjob._flts)
+	{
+		kjob._invec.emplace_back(
+			cl::Buffer(_context,
+				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				vec_bytes,
+				(void*) flt));
+	}
+
 	// XXX Hardwired assumption about argument order.
 	// FIXME... but how ??? Why? Is this important? ???
-	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 	kjob._kernel.setArg(0, kjob._outvec);
 	for (size_t i=1; i<kjob._ninputs; i++)
@@ -397,11 +407,11 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
 	job_t kjob;
+	kjob._kvec = kvec;
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
 	kjob._vec_dim = UINT_MAX;
-	std::vector<const double*> flts;
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
@@ -409,7 +419,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
-			flts.emplace_back(get_floats(oset[i], kjob._vec_dim).data());
+			kjob._flts.emplace_back(get_floats(oset[i], kjob._vec_dim).data());
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -419,22 +429,11 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
-			flts.emplace_back(get_floats(vsq[i], kjob._vec_dim).data());
+			kjob._flts.emplace_back(get_floats(vsq[i], kjob._vec_dim).data());
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
-
-	// Copy vectors into cl::Buffer
-	size_t vec_bytes = kjob._vec_dim * sizeof(double);
-	for (const double* flt : flts)
-	{
-		kjob._invec.emplace_back(
-			cl::Buffer(_context,
-				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				vec_bytes,
-				(void*) flt));
-	}
 
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier

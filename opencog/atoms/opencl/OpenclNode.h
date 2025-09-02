@@ -79,8 +79,13 @@ protected:
 	// Jobs run in their own thread, so that the GPU doesn't block us.
 	typedef struct
 	{
+		// This struct is access in a different thread the main thread.
+		// Thus, we keep a pointer to the Value, so that it does not
+		// get dtored before we access it.
+		ValuePtr _kvec;
 		size_t _vec_dim;
 		size_t _ninputs;
+		mutable std::vector<const double*> _flts;
 		mutable std::vector<cl::Buffer> _invec;
 		mutable cl::Buffer _outvec;  // XXX FIXME assume only one output
 		mutable cl::Kernel _kernel;
