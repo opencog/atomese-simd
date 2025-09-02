@@ -377,10 +377,8 @@ void OpenclNode::write_one(const ValuePtr& kvec)
 	do_write(kvec);
 }
 
-// XXX I think this is wrong. but whatever.
 void OpenclNode::do_write(const ValuePtr& kvec)
 {
-printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 	if (0 == kvec->size())
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
@@ -415,7 +413,6 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
 	// Copy vectors into cl::Buffer
-	kjob._invec.clear();
 	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 	for (const double* flt : flts)
 	{
@@ -432,7 +429,7 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
 
 	// XXX Hardwired assumption about argument order.
-	// FXIME... but how ???
+	// FIXME... but how ???
 	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 	kjob._kernel.setArg(0, kjob._outvec);
 	for (size_t i=1; i<kvec->size(); i++)
