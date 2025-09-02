@@ -202,6 +202,10 @@ void OpenclNode::load_kernel(void)
 /// Attempt to open connection to OpenCL device
 void OpenclNode::open(const ValuePtr& ignore)
 {
+	if (_qvp)
+		throw RuntimeException(TRACE_INFO,
+			"Device already open! %s\n", get_name().c_str());
+
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
@@ -217,6 +221,22 @@ void OpenclNode::open(const ValuePtr& ignore)
 		load_kernel();
 	else
 		build_kernel();
+
+	_qvp = createQueueValue();
+}
+
+virtual bool OpenclNode::connected(void)
+{
+	return nullptr != _qvp;
+}
+
+void OpenclNode::close(const ValuePtr& ignore)
+{
+	if (_qvp)
+		_qvp->close();
+	_qvp = nullptr;
+
+	// XXX more to do here. FIXME
 }
 
 // ==============================================================
@@ -258,6 +278,17 @@ ValuePtr OpenclNode::describe(AtomSpace* as, bool silent)
 
 // ==============================================================
 
+ValuePtr OpenclNode::stream(void) const
+{
+	if (not connected())
+		throw RuntimeException(TRACE_INFO,
+			"Device not open! %s\n", get_name().c_str());
+
+	return _qvp;
+}
+
+#if 0
+should be read()...
 void OpenclNode::update() const
 {
 	if (0 == _vec_dim) return;
@@ -278,6 +309,7 @@ void OpenclNode::update() const
 	else
 		_value[0] = createFloatValue(result);
 }
+#endif
 
 // ==============================================================
 
@@ -334,7 +366,7 @@ ValuePtr OpenclNode::write_out(AtomSpace* as, bool silent,
 	// return shared_from_this();
 
 	_out_as = AtomSpaceCast(as->shared_from_this());
-	update();
+	// update();
 	return _value[0];
 }
 
@@ -390,8 +422,8 @@ void OpenclNode::write_one(AtomSpace* as, bool silent,
 				(void*) flt));
 	}
 
-	// XXX TODO this will throw exception if user mistyped the
-	// kernel name. We should catch this and print a freindlier
+	// XXX TODO this will throw exception if user mis-typed the
+	// kernel name. We should catch this and print a friendlier
 	// error message.
 	_kernel = cl::Kernel(_program, kern_name.c_str());
 

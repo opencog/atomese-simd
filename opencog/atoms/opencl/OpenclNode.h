@@ -36,6 +36,7 @@
 	#include <CL/opencl.hpp>
 #endif
 
+#include <opencog/atoms/value/QueueValue.h>
 #include <opencog/atoms/sensory/StreamNode.h>
 
 namespace opencog
@@ -85,13 +86,14 @@ protected:
 	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
 
 	void write_one(AtomSpace*, bool, const ValuePtr&);
-	virtual ValuePtr describe(AtomSpace*, bool);
 	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
 
+	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);
 	virtual void close(const ValuePtr&);
 	virtual bool connected(void) const;
 	virtual ValuePtr read(void) const;
+	virtual ValuePtr stream(void) const;
 	virtual void do_write(const ValuePtr&);
 
 public:
