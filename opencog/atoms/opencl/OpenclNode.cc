@@ -379,7 +379,7 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
-	job_t& kjob = _job;
+	job_t kjob;
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
@@ -445,6 +445,8 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		nullptr, &event_handler);
 
 	event_handler.wait();
+
+	_job = std::move(kjob);
 }
 
 // ==============================================================
