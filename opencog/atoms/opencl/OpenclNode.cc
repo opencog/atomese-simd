@@ -33,6 +33,7 @@
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
 #include <opencog/atoms/value/StringValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>
@@ -73,7 +74,6 @@ void OpenclNode::init(void)
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
-	_out_as = nullptr;
 
 	const std::string& url = get_name();
 	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
@@ -209,7 +209,6 @@ void OpenclNode::open(const ValuePtr& ignore)
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
-	_out_as = nullptr;
 
 	// Try to create the OpenCL device
 	find_device();
@@ -294,14 +293,16 @@ ValuePtr OpenclNode::read(void) const
 			"Device not open! %s\n", get_name().c_str());
 
 printf("Enter OpenclNode::read to dequeue one\n");
-	return _qvp->remove();
+	// XXX FIXME ideally, we want to run async, and find the result on
+	// queue already.But not today.
+	// return _qvp->remove();
+
+	return update();
 }
 
-#if 0
-should be in soe event handler....
-void OpenclNode::update() const
+ValuePtr OpenclNode::update(void) const
 {
-	if (0 == _vec_dim) return;
+	if (0 == _vec_dim) return createVoidValue();
 
 	std::vector<double> result(_vec_dim);
 	size_t vec_bytes = _vec_dim * sizeof(double);
@@ -311,15 +312,12 @@ void OpenclNode::update() const
 		nullptr, &event_handler);
 	event_handler.wait();
 
-	_value.resize(1);
-
 	// XXX Should be more sophisticated in output format handling ...
 	if (NUMBER_NODE == _out_type)
-		_value[0] = _out_as->add_atom(createNumberNode(result));
+		return createNumberNode(result);
 	else
-		_value[0] = createFloatValue(result);
+		return createFloatValue(result);
 }
-#endif
 
 // ==============================================================
 
