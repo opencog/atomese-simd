@@ -42,14 +42,16 @@
 
 using namespace opencog;
 
-OpenclNode::OpenclNode(const std::string&& str)
-	: StreamNode(OPENCL_NODE, std::move(str))
+OpenclNode::OpenclNode(const std::string&& str) :
+	StreamNode(OPENCL_NODE, std::move(str)),
+	_dispatch_queue(this, &OpenclNode::queue_job, 1)
 {
 	init();
 }
 
-OpenclNode::OpenclNode(Type t, const std::string&& str)
-	: StreamNode(t, std::move(str))
+OpenclNode::OpenclNode(Type t, const std::string&& str) :
+	StreamNode(t, std::move(str)),
+	_dispatch_queue(this, &OpenclNode::queue_job, 1)
 {
 	if (not nameserver().isA(t, OPENCL_NODE))
 		throw RuntimeException(TRACE_INFO,
@@ -296,8 +298,35 @@ printf("Enter OpenclNode::read to dequeue one\n");
 	return _qvp->remove();
 }
 
-void OpenclNode::queue_job(job_t&& kjob)
+// This job handler runs in a different thread than the main thread.
+// It finishes the setup of the assorted buffers that OpenCL expects,
+// sends things to the GPU, and then waits for a reply. When a reply
+// is received, its turned into a FloatValue or NumberNode and handed
+// to the QueueValue, where main thread can find it.
+void OpenclNode::queue_job(const job_t& kjob)
 {
+	// Copy vectors into cl::Buffer
+	size_t vec_bytes = kjob._vec_dim * sizeof(double);
+	for (const double* flt : kjob._flts)
+	{
+		kjob._invec.emplace_back(
+			cl::Buffer(_context,
+				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				vec_bytes,
+				(void*) flt));
+	}
+
+	// XXX Hardwired assumption about argument order.
+	// FIXME... but how ??? Why? Is this important? ???
+	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
+	kjob._kernel.setArg(0, kjob._outvec);
+	for (size_t i=1; i<kjob._ninputs; i++)
+		kjob._kernel.setArg(i, kjob._invec[i-1]);
+
+	// XXX This is the wrong thing to do in the long run.
+	// Or is it? each kernel gets its own size ... what's the problem?
+	kjob._kernel.setArg(kjob._ninputs, kjob._vec_dim);
+
 	// Launch kernel
 	cl::Event event_handler;
 	_queue.enqueueNDRangeKernel(kjob._kernel,
@@ -311,12 +340,14 @@ void OpenclNode::queue_job(job_t&& kjob)
 	// ------------------------------------------------------
 	// Wait for results
 	std::vector<double> result(kjob._vec_dim);
-	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 
 	_queue.enqueueReadBuffer(kjob._outvec, CL_TRUE, 0, vec_bytes, result.data(),
 		nullptr, &event_handler);
 	event_handler.wait();
 
+	// XXX TODO: we should probably wrap this with the kvec, so that
+	// the user knows who these reesults belong to. I guess using an
+	// ExecutionLink, right?
 	if (NUMBER_NODE == _item_type)
 		_qvp->add(std::move(createNumberNode(result)));
 	else
@@ -377,6 +408,11 @@ void OpenclNode::write_one(const ValuePtr& kvec)
 	do_write(kvec);
 }
 
+// Prep everything needed to be able to send off a job to the GPU.
+// The code here does everything that might result in an exception
+// being thrown, i.e. due to user errors (e.g. badly written Atomese)
+// The actual communications with the GPU is done in a distinct thread,
+// so that the main thread does not hang, waiting for results to arrive.
 void OpenclNode::do_write(const ValuePtr& kvec)
 {
 	if (0 == kvec->size())
@@ -384,11 +420,11 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
 	job_t kjob;
+	kjob._kvec = kvec;
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
 	kjob._vec_dim = UINT_MAX;
-	std::vector<const double*> flts;
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
@@ -396,7 +432,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
-			flts.emplace_back(get_floats(oset[i], kjob._vec_dim).data());
+			kjob._flts.emplace_back(get_floats(oset[i], kjob._vec_dim).data());
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -406,40 +442,21 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
-			flts.emplace_back(get_floats(vsq[i], kjob._vec_dim).data());
+			kjob._flts.emplace_back(get_floats(vsq[i], kjob._vec_dim).data());
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
-
-	// Copy vectors into cl::Buffer
-	size_t vec_bytes = kjob._vec_dim * sizeof(double);
-	for (const double* flt : flts)
-	{
-		kjob._invec.emplace_back(
-			cl::Buffer(_context,
-				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				vec_bytes,
-				(void*) flt));
-	}
 
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier
 	// error message.
 	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
 
-	// XXX Hardwired assumption about argument order.
-	// FIXME... but how ???
-	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
-	kjob._kernel.setArg(0, kjob._outvec);
-	for (size_t i=1; i<kvec->size(); i++)
-		kjob._kernel.setArg(i, kjob._invec[i-1]);
+	kjob._ninputs = kvec->size();
 
-	// XXX This is the wrong thing to do in the long run.
-	// Or is it? each kernel gets its own size ... what's the problem?
-	kjob._kernel.setArg(kvec->size(), kjob._vec_dim);
-
-	queue_job(std::move(kjob));
+	// Send everything off to the GPU.
+	_dispatch_queue.enqueue(std::move(kjob));
 }
 
 // ==============================================================

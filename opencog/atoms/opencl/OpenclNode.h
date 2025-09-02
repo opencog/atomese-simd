@@ -36,6 +36,7 @@
 	#include <CL/opencl.hpp>
 #endif
 
+#include <opencog/util/async_method_caller.h>
 #include <opencog/atoms/value/QueueValue.h>
 #include <opencog/atoms/sensory/StreamNode.h>
 
@@ -75,14 +76,22 @@ protected:
 
 	// kernel I/O. Using cl:Buffer for now.
 	// Need to create a derived class that will use SVM
+	// Jobs run in their own thread, so that the GPU doesn't block us.
 	typedef struct
 	{
+		// This struct is access in a different thread the main thread.
+		// Thus, we keep a pointer to the Value, so that it does not
+		// get dtored before we access it.
+		ValuePtr _kvec;
 		size_t _vec_dim;
-		std::vector<cl::Buffer> _invec;
-		cl::Buffer _outvec;  // XXX FIXME assume only one output
-		cl::Kernel _kernel;
+		size_t _ninputs;
+		mutable std::vector<const double*> _flts;
+		mutable std::vector<cl::Buffer> _invec;
+		mutable cl::Buffer _outvec;  // XXX FIXME assume only one output
+		mutable cl::Kernel _kernel;
 	} job_t;
-	virtual void queue_job(job_t&&);
+	void queue_job(const job_t&);
+	async_caller<OpenclNode, job_t> _dispatch_queue;
 
 	const std::string& get_kern_name(ValuePtr) const;
 	const std::vector<double>& get_floats(ValuePtr, size_t&) const;
