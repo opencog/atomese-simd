@@ -82,7 +82,7 @@ protected:
 		cl::Buffer _outvec;  // XXX FIXME assume only one output
 		cl::Kernel _kernel;
 	} job_t;
-	mutable job_t _job;
+	virtual void queue_job(job_t&&);
 
 	const std::string& get_kern_name(ValuePtr) const;
 	const std::vector<double>& get_floats(ValuePtr, size_t&) const;
@@ -92,7 +92,6 @@ protected:
 	virtual void close(const ValuePtr&);
 	virtual bool connected(void) const;
 	virtual ValuePtr read(void) const;
-	virtual ValuePtr update(void) const;
 	virtual ValuePtr stream(void) const;
 	virtual void write_one(const ValuePtr&);
 	virtual void do_write(const ValuePtr&);

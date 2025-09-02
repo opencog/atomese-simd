@@ -292,29 +292,35 @@ ValuePtr OpenclNode::read(void) const
 			"Device not open! %s\n", get_name().c_str());
 
 printf("Enter OpenclNode::read to dequeue one\n");
-	// XXX FIXME ideally, we want to run async, and find the result on
-	// queue already.But not today.
-	// return _qvp->remove();
 
-	return update();
+	return _qvp->remove();
 }
 
-ValuePtr OpenclNode::update(void) const
+void OpenclNode::queue_job(job_t&& kjob)
 {
-	job_t& kjob = _job;
+	// Launch kernel
+	cl::Event event_handler;
+	_queue.enqueueNDRangeKernel(kjob._kernel,
+		cl::NullRange,
+		cl::NDRange(kjob._vec_dim),
+		cl::NullRange,
+		nullptr, &event_handler);
 
+	event_handler.wait();
+
+	// ------------------------------------------------------
+	// Wait for results
 	std::vector<double> result(kjob._vec_dim);
 	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 
-	cl::Event event_handler;
 	_queue.enqueueReadBuffer(kjob._outvec, CL_TRUE, 0, vec_bytes, result.data(),
 		nullptr, &event_handler);
 	event_handler.wait();
 
 	if (NUMBER_NODE == _item_type)
-		return createNumberNode(result);
+		_qvp->add(std::move(createNumberNode(result)));
 	else
-		return createFloatValue(result);
+		_qvp->add(std::move(createFloatValue(result)));
 }
 
 // ==============================================================
@@ -433,20 +439,10 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		kjob._kernel.setArg(i, kjob._invec[i-1]);
 
 	// XXX This is the wrong thing to do in the long run.
+	// Or is it? each kernel gets its own size ... what's the problem?
 	kjob._kernel.setArg(kvec->size(), kjob._vec_dim);
 
-	// ------------------------------------------------------
-	// Launch
-	cl::Event event_handler;
-	_queue.enqueueNDRangeKernel(kjob._kernel,
-		cl::NullRange,
-		cl::NDRange(kjob._vec_dim),
-		cl::NullRange,
-		nullptr, &event_handler);
-
-	event_handler.wait();
-
-	_job = std::move(kjob);
+	queue_job(std::move(kjob));
 }
 
 // ==============================================================
