@@ -52,7 +52,7 @@ class OpenclNode
 	: public StreamNode
 {
 protected:
-	OpenclNode(Type);
+	void init(void);
 
 	// URL specifying platform and device.
 	std::string _splat; // platform substring

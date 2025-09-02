@@ -44,6 +44,7 @@ using namespace opencog;
 OpenclNode::OpenclNode(const std::string&& str)
 	: StreamNode(OPENCL_NODE, std::move(str))
 {
+	init();
 }
 
 OpenclNode::OpenclNode(Type t, const std::string&& str)
@@ -52,10 +53,53 @@ OpenclNode::OpenclNode(Type t, const std::string&& str)
 	if (not nameserver().isA(t, OPENCL_NODE))
 		throw RuntimeException(TRACE_INFO,
 			"Expecting OpenclNode, got %s\n", to_string().c_str());
+
+	init();
 }
 
 OpenclNode::~OpenclNode()
 {
+}
+
+#define BAD_URL \
+	throw RuntimeException(TRACE_INFO, \
+		"Unsupported URL \"%s\"\n" \
+		"\tExpecting 'opencl://platform:device/file/path/kernel.cl'", \
+		url.c_str());
+
+/// Validate the OpenCL URL
+void OpenclNode::init(void)
+{
+	// vec dim is used as an initialization flag.
+	// Set non-zero only after a kernel is loaded.
+	_vec_dim = 0;
+	_out_as = nullptr;
+
+	const std::string& url = get_name();
+	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
+
+	// Ignore the first 9 chars "opencl://"
+	size_t pos = 9;
+
+	// Extract platform name substring
+	size_t platend = url.find(':', pos);
+	if (std::string::npos == platend) BAD_URL;
+	if (pos < platend)
+	{
+		_splat = url.substr(pos, platend-pos);
+		pos = platend;
+	}
+	pos ++;
+
+	// Extract device name substring
+	size_t devend = url.find('/', pos);
+	if (std::string::npos == devend) BAD_URL;
+	if (pos < devend)
+	{
+		_sdev = url.substr(pos, devend-pos);
+		pos = devend;
+	}
+	_filepath = url.substr(pos);
 }
 
 // ==============================================================
@@ -91,7 +135,7 @@ void OpenclNode::find_device(void)
 
 	throw RuntimeException(TRACE_INFO,
 		"Unable to find platform:device in URL \"%s\"\n",
-		_uri.c_str());
+		get_name().c_str());
 }
 
 // ==============================================================
@@ -106,7 +150,7 @@ void OpenclNode::build_kernel(void)
 	if (0 == src.size())
 		throw RuntimeException(TRACE_INFO,
 			"Unable to find source file in URL \"%s\"\n",
-			_uri.c_str());
+			get_name().c_str());
 
 	cl::Program::Sources sources;
 	sources.push_back(src);
@@ -126,7 +170,7 @@ void OpenclNode::build_kernel(void)
 			_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Unable to compile source file in URL \"%s\"\n",
-				_uri.c_str());
+				get_name().c_str());
 	}
 }
 
@@ -142,18 +186,12 @@ void OpenclNode::load_kernel(void)
 	if (0 == spv.size())
 		throw RuntimeException(TRACE_INFO,
 			"Unable to find SPV file in URL \"%s\"\n",
-			_uri.c_str());
+			get_name().c_str());
 
 	_program = cl::Program(_context, spv);
 }
 
 // ==============================================================
-
-#define BAD_URL \
-	throw RuntimeException(TRACE_INFO, \
-		"Unsupported URL \"%s\"\n" \
-		"\tExpecting 'opencl://platform:device/file/path/kernel.cl'", \
-		_uri.c_str());
 
 /// Attempt to open connection to OpenCL device
 void OpenclNode::open(const ValuePtr& ignore)
@@ -162,32 +200,6 @@ void OpenclNode::open(const ValuePtr& ignore)
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
 	_out_as = nullptr;
-
-	const std::string& url = get_name();
-	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
-
-	// Ignore the first 9 chars "opencl://"
-	size_t pos = 9;
-
-	// Extract platform name substring
-	size_t platend = url.find(':', pos);
-	if (std::string::npos == platend) BAD_URL;
-	if (pos < platend)
-	{
-		_splat = url.substr(pos, platend-pos);
-		pos = platend;
-	}
-	pos ++;
-
-	// Extract device name substring
-	size_t devend = url.find('/', pos);
-	if (std::string::npos == devend) BAD_URL;
-	if (pos < devend)
-	{
-		_sdev = url.substr(pos, devend-pos);
-		pos = devend;
-	}
-	_filepath = url.substr(pos);
 
 	// Try to create the OpenCL device
 	find_device();
