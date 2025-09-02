@@ -200,11 +200,13 @@ void OpenclNode::load_kernel(void)
 // ==============================================================
 
 /// Attempt to open connection to OpenCL device
-void OpenclNode::open(const ValuePtr& ignore)
+void OpenclNode::open(const ValuePtr& out_type)
 {
 	if (_qvp)
 		throw RuntimeException(TRACE_INFO,
 			"Device already open! %s\n", get_name().c_str());
+
+	StreamNode::open(out_type);
 
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
@@ -313,7 +315,7 @@ ValuePtr OpenclNode::update(void) const
 	event_handler.wait();
 
 	// XXX Should be more sophisticated in output format handling ...
-	if (NUMBER_NODE == _out_type)
+	if (NUMBER_NODE == _item_type)
 		return createNumberNode(result);
 	else
 		return createFloatValue(result);
@@ -396,9 +398,6 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
 			flts.emplace_back(get_floats(as, silent, oset[i]).data());
-
-		// XXX Assume floating point vectors FIXME
-		_out_type = NUMBER_NODE;
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -409,9 +408,6 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
 			flts.emplace_back(get_floats(as, silent, vsq[i]).data());
-
-		// XXX Assume floating point vectors FIXME
-		_out_type = FLOAT_VALUE;
 	}
 	else
 		throw RuntimeException(TRACE_INFO,

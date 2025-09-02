@@ -80,7 +80,6 @@ protected:
 	cl::Buffer _outvec;  // XXX FIXME assume only one output
 	cl::Kernel _kernel;
 
-	Type _out_type;
 	const std::string& get_kern_name(AtomSpace*, bool, ValuePtr);
 	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
 

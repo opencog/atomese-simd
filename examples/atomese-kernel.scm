@@ -24,7 +24,7 @@
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
 
-; Optional; view debug messages
+; Optional but recommended; view debug messages.
 (use-modules (opencog logger))
 (cog-logger-set-stdout! #t)
 
@@ -46,7 +46,7 @@
 ; Define and open the device.
 (define clnode (OpenclNode clurl))
 
-(cog-set-value! clnode (Predicate "*-open-*") (VoidValue))
+(cog-set-value! clnode (Predicate "*-open-*") (Type 'FloatValue))
 
 ; ---------------------------------------------------------------
 ; Now that it's open, define a simple stream that will write the name
