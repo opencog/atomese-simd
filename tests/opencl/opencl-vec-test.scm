@@ -44,7 +44,7 @@
 ; Test to see if stream is open.
 (define cnct (cog-execute! (ValueOf clnode (Predicate "*-connected?-*"))))
 (format #t "connected? ~A" cnct)
-(test-assert "open stream" (cog-value-ref cnct))
+(test-assert "open stream" (cog-value-ref cnct 0))
 
 ; ---------------------------------------------------------------
 (define kernel-runner
