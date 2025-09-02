@@ -22,7 +22,7 @@
 ; * A demo of a feedback loop, implementing an accumulator.
 ;
 (use-modules (opencog) (opencog exec))
-(use-modules (opencog sensory-v0) (opencog opencl))
+(use-modules (opencog sensory) (opencog opencl))
 
 ; Optional; view debug messages
 (use-modules (opencog logger))

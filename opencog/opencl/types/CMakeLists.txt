@@ -24,7 +24,7 @@ ADD_LIBRARY(opencl-types SHARED
 ADD_DEPENDENCIES(opencl-types opencl_atom_types)
 
 TARGET_LINK_LIBRARIES(opencl-types
-	${SENSORY_V0_LIBRARIES}
+	${SENSORY_LIBRARIES}
 	${ATOMSPACE_atomtypes_LIBRARY}
 )
 

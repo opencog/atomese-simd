@@ -36,7 +36,7 @@
 	#include <CL/opencl.hpp>
 #endif
 
-#include <opencog/atoms/sensory-v0/OutputStream.h>
+#include <opencog/atoms/sensory/OutputStream.h>
 
 namespace opencog
 {

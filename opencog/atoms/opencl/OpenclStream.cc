@@ -36,7 +36,7 @@
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>
-#include <opencog/sensory-v0/types/atom_types.h>
+#include <opencog/sensory/types/atom_types.h>
 #include "OpenclStream.h"
 
 using namespace opencog;
