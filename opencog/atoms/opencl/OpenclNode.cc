@@ -42,14 +42,16 @@
 
 using namespace opencog;
 
-OpenclNode::OpenclNode(const std::string&& str)
-	: StreamNode(OPENCL_NODE, std::move(str))
+OpenclNode::OpenclNode(const std::string&& str) :
+	StreamNode(OPENCL_NODE, std::move(str)),
+	_dispatch_queue(this, &OpenclNode::xqueue_job, 1)
 {
 	init();
 }
 
-OpenclNode::OpenclNode(Type t, const std::string&& str)
-	: StreamNode(t, std::move(str))
+OpenclNode::OpenclNode(Type t, const std::string&& str) :
+	StreamNode(t, std::move(str)),
+	_dispatch_queue(this, &OpenclNode::xqueue_job, 1)
 {
 	if (not nameserver().isA(t, OPENCL_NODE))
 		throw RuntimeException(TRACE_INFO,
@@ -294,6 +296,13 @@ ValuePtr OpenclNode::read(void) const
 printf("Enter OpenclNode::read to dequeue one\n");
 
 	return _qvp->remove();
+}
+
+// temp scaffolding
+void OpenclNode::xqueue_job(const job_t& kjob)
+{
+	job_t jopy = kjob;
+	queue_job(std::move(jopy));
 }
 
 void OpenclNode::queue_job(job_t&& kjob)

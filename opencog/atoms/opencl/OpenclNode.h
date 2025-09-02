@@ -36,6 +36,7 @@
 	#include <CL/opencl.hpp>
 #endif
 
+#include <opencog/util/async_method_caller.h>
 #include <opencog/atoms/value/QueueValue.h>
 #include <opencog/atoms/sensory/StreamNode.h>
 
@@ -82,7 +83,9 @@ protected:
 		cl::Buffer _outvec;  // XXX FIXME assume only one output
 		cl::Kernel _kernel;
 	} job_t;
-	virtual void queue_job(job_t&&);
+	void queue_job(job_t&&);
+	void xqueue_job(const job_t&);
+	async_caller<OpenclNode, job_t> _dispatch_queue;
 
 	const std::string& get_kern_name(ValuePtr) const;
 	const std::vector<double>& get_floats(ValuePtr, size_t&) const;
