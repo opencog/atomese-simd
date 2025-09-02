@@ -298,6 +298,11 @@ printf("Enter OpenclNode::read to dequeue one\n");
 	return _qvp->remove();
 }
 
+// This job handler runs in a different thread than the main thread.
+// It finishes the setup of the assorted buffers that OpenCL expects,
+// sends things to the GPU, and then waits for a reply. When a reply
+// is received, its turned into a FloatValue or NumberNode and handed
+// to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
 	// Copy vectors into cl::Buffer
@@ -340,6 +345,9 @@ void OpenclNode::queue_job(const job_t& kjob)
 		nullptr, &event_handler);
 	event_handler.wait();
 
+	// XXX TODO: we should probably wrap this with the kvec, so that
+	// the user knows who these reesults belong to. I guess using an
+	// ExecutionLink, right?
 	if (NUMBER_NODE == _item_type)
 		_qvp->add(std::move(createNumberNode(result)));
 	else
@@ -400,6 +408,11 @@ void OpenclNode::write_one(const ValuePtr& kvec)
 	do_write(kvec);
 }
 
+// Prep everything needed to be able to send off a job to the GPU.
+// The code here does everything that might result in an exception
+// being thrown, i.e. due to user errors (e.g. badly written Atomese)
+// The actual communications with the GPU is done in a distinct thread,
+// so that the main thread does not hang, waiting for results to arrive.
 void OpenclNode::do_write(const ValuePtr& kvec)
 {
 	if (0 == kvec->size())
@@ -442,6 +455,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 	kjob._ninputs = kvec->size();
 
+	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));
 }
 
