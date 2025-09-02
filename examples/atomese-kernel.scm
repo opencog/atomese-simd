@@ -49,7 +49,8 @@
 ; The argument to the *-open-* message is the type of the results
 ; that we want to receive. Two choices are avalabile: NumberNode
 ; and FloatValue.
-(cog-set-value! clnode (Predicate "*-open-*") (Type 'FloatValue))
+(cog-execute!
+	(SetValue clnode (Predicate "*-open-*") (Type 'FloatValue)))
 
 ; ---------------------------------------------------------------
 ; Now that it's open, define a simple stream that will write the name
@@ -65,36 +66,33 @@
 ; Run the kernel.
 (cog-execute! kernel-runner)
 
-; Get the result
-(format #t "Result from running kernel is ~A\n"
-	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
+; Get the result.
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Run it again, with different data.
 (cog-execute!
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
-; Get the result
-(format #t "And now, with different data ... ~A\n"
-	(cog-execute! gpu-location))
+; Get the result.
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Run it again, with a different kernel (addition this time, not
 ; multiplication.)
 (cog-execute!
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_add") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
 ; Get the result
-(format #t "Adding, instead of multiplying ... ~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Instead of using NumberNodes, use FloatValues.
@@ -102,7 +100,7 @@
 ; the AtomSpace (and thus clog things up), while FloatValues are not.
 ; Which is great, as usually there are lots of them.
 ; The trade-off is that the Values have to be put somewhere where they
-; can be found. i.e. anchired "some where".
+; can be found. i.e. anchored "some where".
 ;
 ; (RandomStream N) creates a vector of N random numbers. These numbers
 ; change with every access (which is why it is called a "stream" instead
@@ -117,18 +115,16 @@
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(ValueOf (Anchor "some data") (Predicate "some stream"))))
 
 ; Run it once ...
 (cog-execute! vector-stream)
-(format #t "Random numbers from a stream ...\n~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; Run it again ...
 (cog-execute! vector-stream)
-(format #t "More random numbers ...\n~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Similar to above, but feed back the results of addition into the
@@ -161,25 +157,19 @@
 (define accum-stream
 	(SetValue
 		(Anchor "some data") (Predicate "accumulator")
-		(Write gpu-location
+		(SetValue clnode (Predicate "*-write-*")
 			(ValueOf (Anchor "some data") (Predicate "accum task")))))
 
 ; Run it once ...
-(format #t "Accumulator stream results ...\n  ~A\n"
-	(cog-execute! accum-stream))
+(cog-execute! accum-stream)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
-(format #t "Again ...\n  ~A\n"
-	(cog-execute! accum-stream))
-
-(format #t "And again ...\n  ~A\n"
-	(cog-execute! accum-stream))
+(cog-execute! accum-stream)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 (cog-execute! accum-stream)
 (cog-execute! accum-stream)
 (cog-execute! accum-stream)
 (cog-execute! accum-stream)
-
-(format #t "Many more times ...\n  ~A\n"
-	(cog-execute! accum-stream))
 
 ; --------- The End! That's All, Folks! --------------
