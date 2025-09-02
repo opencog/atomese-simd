@@ -448,8 +448,8 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	// Or is it? each kernel gets its own size ... what's the problem?
 	kjob._kernel.setArg(kvec->size(), kjob._vec_dim);
 
-	// queue_job(std::move(kjob));
-	xqueue_job(kjob);
+	// _dispatch_queue.enqueue(std::move(kjob));
+	_dispatch_queue.enqueue(kjob);
 }
 
 // ==============================================================
