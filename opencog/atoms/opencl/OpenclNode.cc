@@ -293,8 +293,6 @@ ValuePtr OpenclNode::read(void) const
 		throw RuntimeException(TRACE_INFO,
 			"Device not open! %s\n", get_name().c_str());
 
-printf("Enter OpenclNode::read to dequeue one\n");
-
 	return _qvp->remove();
 }
 
