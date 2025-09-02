@@ -106,22 +106,31 @@
 		(Predicate "vec_add") accum-location (RandomStream vec-size)))
 
 ; Define a feedback loop.
-(define accum-stream
+(define run-kernel
+	(SetValue clnode (Predicate "*-write-*")
+		(ValueOf (Anchor "some data") (Predicate "accum task"))))
+
+(define update-data
 	(SetValue
 		(Anchor "some data") (Predicate "accumulator")
-		(Write gpu-location
-			(ValueOf (Anchor "some data") (Predicate "accum task")))))
+		(ValueOf clnode (Predicate "*-read-*"))))
 
 ; Run it once ...
-(define acc1 (cog-execute! accum-stream))
+(cog-execute! run-kernel)
+(define acc1 (cog-execute! update-data))
 (test-assert "acc1 type" (equal? 'FloatValue (cog-type acc1)))
 (test-assert "acc1 size" (equal? vec-size (length (cog-value->list acc1))))
 
 ; Run it lots ...
 (define run-len 5123)
-(for-each (lambda (x) (cog-execute! accum-stream)) (iota run-len 0))
+(for-each
+	(lambda (x)
+		(cog-execute! run-kernel)
+		(cog-execute! update-data))
+	(iota run-len 0))
 
-(define accn (cog-execute! accum-location))
+(cog-execute! run-kernel)
+(define accn (cog-execute!  update-data))
 (test-assert "accn type" (equal? 'FloatValue (cog-type accn)))
 (test-assert "accn size" (equal? vec-size (length (cog-value->list accn))))
 
