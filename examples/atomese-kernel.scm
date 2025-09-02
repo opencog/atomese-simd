@@ -39,37 +39,21 @@
 ; (define clurl "opencl://CUDA:NVIDIA RTX 4000/tmp/vec-kernel.cl")
 (define clurl "opencl://:/tmp/vec-kernel.cl")
 
-; ---------------------------------------------------------------
-; Brute-force open. This checks the open function works.
-; Optional; don't need to do this, except to manually check
-; things out.
-(cog-execute!
-	(Open
-		(Type 'OpenclStream)
-		(SensoryNode clurl)))
+; Copy the kernel from here to /tmp
+(copy-file "vec-kernel.cl" "/tmp/vec-kernel.cl")
 
 ; ---------------------------------------------------------------
-; Define Atomese, that, when executed, will open a connection to the
-; GPU's, and then anchor that channel to a "well-known acnhor point".
-(define do-open-device
-	(SetValue (Anchor "some gpus") (Predicate "some gpu channel")
-		(Open
-			(Type 'OpenclStream)
-			(SensoryNode clurl))))
+; Define and open the device.
+(define clnode (OpenclNode clurl))
 
-; Go ahead and open it.
-(cog-execute! do-open-device)
-
-; Define some short-hand for the anchor-point.
-(define gpu-location
-	(ValueOf (Anchor "some gpus") (Predicate "some gpu channel")))
+(cog-set-value! clnode (Predicate "*-open-*") (VoidValue))
 
 ; ---------------------------------------------------------------
 ; Now that it's open, define a simple stream that will write the name
 ; of a kernel and some vector data to the GPU/machine. This just defines
 ; what to do; nothing is done until this is executed.
 (define kernel-runner
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5)
