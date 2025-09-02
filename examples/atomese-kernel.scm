@@ -142,6 +142,7 @@
 ; When executed, this will return the current accumulator value.
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
+(cog-execute! accum-location)
 
 ; Bind the vector-add GPU kernel to a pair of input vectors. The first
 ; vector is the accumulator, and the second one is a vector of three
@@ -154,22 +155,27 @@
 
 ; Define a feedback loop. With each invocation, the accumulator will
 ; be updated with the result of the addition.
-(define accum-stream
+(define run-kernel
+	(SetValue clnode (Predicate "*-write-*")
+		(ValueOf (Anchor "some data") (Predicate "accum task"))))
+
+(define update-data
 	(SetValue
 		(Anchor "some data") (Predicate "accumulator")
-		(SetValue clnode (Predicate "*-write-*")
-			(ValueOf (Anchor "some data") (Predicate "accum task")))))
+		(ValueOf clnode (Predicate "*-read-*"))))
 
 ; Run it once ...
-(cog-execute! accum-stream)
-(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+(cog-execute! run-kernel)
+(cog-execute! update-data)
 
-(cog-execute! accum-stream)
-(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+; And again and again ...
+(cog-execute! run-kernel)
+(cog-execute! update-data)
 
-(cog-execute! accum-stream)
-(cog-execute! accum-stream)
-(cog-execute! accum-stream)
-(cog-execute! accum-stream)
+(cog-execute! run-kernel)
+(cog-execute! update-data)
+
+(cog-execute! run-kernel)
+(cog-execute! update-data)
 
 ; --------- The End! That's All, Folks! --------------
