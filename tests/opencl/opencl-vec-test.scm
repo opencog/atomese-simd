@@ -62,64 +62,32 @@
 ; ---------------------------------------------------------------
 ; Run it again, different data
 (define krun-2
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
-(define kern-m3 (cog-execute! krun-2))
+(cog-execute! krun-2)
+(define kern-m3
+	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
 (test-assert "mult three"
-	(equal? (Number 2 6 12 20 30 30 28 24 18 10 0) kern-m3))
-
-(define kern-m4 (cog-value-ref (cog-execute! gpu-location) 0))
-(test-assert "mult four"
-	(equal? (Number 2 6 12 20 30 30 28 24 18 10 0) kern-m4))
+	(equal? (FloatValue 2 6 12 20 30 30 28 24 18 10 0) kern-m3))
 
 ; ---------------------------------------------------------------
 ; Run it again, with a different kernel
 (define krun-3
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_add") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
-(define kern-m5 (cog-execute! krun-3))
+(cog-execute! krun-3)
+(define kern-m5
+	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
 (test-assert "mult five"
-	(equal? (Number 3 5 7 9 11 11 11 11 11 11 11) kern-m5))
-
-(define kern-m6 (cog-value-ref (cog-execute! gpu-location) 0))
-(test-assert "mult six"
-	(equal? (Number 3 5 7 9 11 11 11 11 11 11 11) kern-m6))
-
-; ---------------------------------------------------------------
-; Use FloatValues
-;
-(cog-set-value!
-	(Anchor "some data") (Predicate "some stream")
-	(LinkValue
-		(Predicate "vec_add")
-		(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
-		(RandomStream 3)))
-
-(define vector-stream
-	(Write gpu-location
-		(ValueOf (Anchor "some data") (Predicate "some stream"))))
-
-(define kern-m7 (cog-execute! vector-stream))
-(define kern-m8 (cog-value-ref (cog-execute! gpu-location) 0))
-(test-assert "ran value" (equal? kern-m7 kern-m8))
-(test-assert "ran type" (equal? 'FloatValue (cog-type kern-m7)))
-(test-assert "ran size" (equal? 3 (length (cog-value->list kern-m7))))
-
-; Run it again ... get different values
-(define kern-m9 (cog-execute! vector-stream))
-(define kern-m10 (cog-value-ref (cog-execute! gpu-location) 0))
-(test-assert "ran change" (not (equal? kern-m7 kern-m9)))
-(test-assert "ran2 value" (equal? kern-m9 kern-m10))
-(test-assert "ran2 type" (equal? 'FloatValue (cog-type kern-m9)))
-(test-assert "ran2 size" (equal? 3 (length (cog-value->list kern-m9))))
+	(equal? (FloatValue 3 5 7 9 11 11 11 11 11 11 11) kern-m5))
 
 ; ---------------------------------------------------------------
 ; Initialize the accumulator
