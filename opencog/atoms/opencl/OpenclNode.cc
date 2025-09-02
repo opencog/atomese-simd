@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclStream.cc
+ * opencog/atoms/opencl/OpenclNode.cc
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -37,17 +37,17 @@
 
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
-#include "OpenclStream.h"
+#include "OpenclNode.h"
 
 using namespace opencog;
 
-OpenclStream::OpenclStream(const std::string& str)
+OpenclNode::OpenclNode(const std::string& str)
 	: OutputStream(OPENCL_STREAM)
 {
 	init(str);
 }
 
-OpenclStream::OpenclStream(const Handle& senso)
+OpenclNode::OpenclNode(const Handle& senso)
 	: OutputStream(OPENCL_STREAM)
 {
 	if (SENSORY_NODE != senso->get_type())
@@ -57,13 +57,13 @@ OpenclStream::OpenclStream(const Handle& senso)
 	init(senso->get_name());
 }
 
-OpenclStream::~OpenclStream()
+OpenclNode::~OpenclNode()
 {
 	// Runs only if GC runs. This is a problem.
 	halt();
 }
 
-void OpenclStream::halt(void)
+void OpenclNode::halt(void)
 {
 	_value.clear();
 	_vec_dim = 0;
@@ -72,7 +72,7 @@ void OpenclStream::halt(void)
 
 // ==============================================================
 
-void OpenclStream::find_device(void)
+void OpenclNode::find_device(void)
 {
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
@@ -94,7 +94,7 @@ void OpenclStream::find_device(void)
 			_platform = plat;
 			_device = dev;
 
-			logger().info("OpenclStream: Using platform '%s' and device '%s'\n",
+			logger().info("OpenclNode: Using platform '%s' and device '%s'\n",
 				pname.c_str(), dname.c_str());
 
 			return;
@@ -108,7 +108,7 @@ void OpenclStream::find_device(void)
 
 // ==============================================================
 
-void OpenclStream::build_kernel(void)
+void OpenclNode::build_kernel(void)
 {
 	// Copy in source code. Must be a better way!?
 	std::ifstream srcfm(_filepath);
@@ -134,7 +134,7 @@ void OpenclStream::build_kernel(void)
 	}
 	catch (const cl::Error& e)
 	{
-		logger().info("OpenclStream failed compile >>%s<<\n",
+		logger().info("OpenclNode failed compile >>%s<<\n",
 			_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Unable to compile source file in URL \"%s\"\n",
@@ -144,7 +144,7 @@ void OpenclStream::build_kernel(void)
 
 // ==============================================================
 
-void OpenclStream::load_kernel(void)
+void OpenclNode::load_kernel(void)
 {
 	// Copy in SPV file. Must be a better way!?
 	std::ifstream spvfm(_filepath);
@@ -168,7 +168,7 @@ void OpenclStream::load_kernel(void)
 		_uri.c_str());
 
 /// Attempt to open connection to OpenCL device
-void OpenclStream::init(const std::string& url)
+void OpenclNode::init(const std::string& url)
 {
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
@@ -223,7 +223,7 @@ void OpenclStream::init(const std::string& url)
 
 Handle _global_desc = Handle::UNDEFINED;
 
-void OpenclStream::do_describe(void)
+void OpenclNode::do_describe(void)
 {
 	if (_global_desc) return;
 
@@ -233,7 +233,7 @@ void OpenclStream::do_describe(void)
 	// It needs no special arguments.
 	Handle open_cmd =
 		make_description("Open connection to GPU",
-		                 "OpenLink", "OpenclStream");
+		                 "OpenLink", "OpenclNode");
 	cmds.emplace_back(open_cmd);
 
 	// Write  XXX this is wrong.
@@ -247,7 +247,7 @@ void OpenclStream::do_describe(void)
 
 // This is totally bogus because it is unused.
 // This should be class static member
-ValuePtr OpenclStream::describe(AtomSpace* as, bool silent)
+ValuePtr OpenclNode::describe(AtomSpace* as, bool silent)
 {
 	if (_description) return as->add_atom(_description);
 	_description = as->add_atom(_global_desc);
@@ -256,7 +256,7 @@ ValuePtr OpenclStream::describe(AtomSpace* as, bool silent)
 
 // ==============================================================
 
-void OpenclStream::update() const
+void OpenclNode::update() const
 {
 	if (0 == _vec_dim) return;
 
@@ -281,7 +281,7 @@ void OpenclStream::update() const
 
 /// Unwrap kernel name.
 const std::string&
-OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
+OpenclNode::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute(as, silent);
@@ -299,7 +299,7 @@ OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 
 /// Unwrap vector.
 const std::vector<double>&
-OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
+OpenclNode::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute(as, silent);
@@ -325,7 +325,7 @@ OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 
 // ==============================================================
 // Send kernel and data
-ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
+ValuePtr OpenclNode::write_out(AtomSpace* as, bool silent,
                                  const Handle& cref)
 {
 	do_write_out(as, silent, cref);
@@ -336,7 +336,7 @@ ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
 	return _value[0];
 }
 
-void OpenclStream::write_one(AtomSpace* as, bool silent,
+void OpenclNode::write_one(AtomSpace* as, bool silent,
                              const ValuePtr& kvec)
 {
 	if (0 == kvec->size())
@@ -418,8 +418,7 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 // ==============================================================
 
 // Adds factory when library is loaded.
-DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream, std::string)
-DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream, Handle)
+DEFINE_NODE_FACTORY(OpenclNode, OPENCL_NODE);
 
 // ====================================================================
 

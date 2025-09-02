@@ -94,13 +94,18 @@ protected:
 	void write_one(AtomSpace*, bool, const ValuePtr&);
 
 public:
-	OpenclNode(const Handle&);
-	OpenclNode(const std::string&);
+	OpenclNode(const std::string&&);
+	OpenclNode(Type t, const std::string&&);
 	virtual ~OpenclNode();
 
 	virtual ValuePtr describe(AtomSpace*, bool);
 	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
+
+	static Handle factory(const Handle&);
 };
+
+NODE_PTR_DECL(OpenclNode)
+#define createOpenclNode CREATE_DECL(OpenclNode)
 
 /** @}*/
 } // namespace opencog
