@@ -80,8 +80,8 @@ protected:
 	cl::Buffer _outvec;  // XXX FIXME assume only one output
 	cl::Kernel _kernel;
 
-	const std::string& get_kern_name(AtomSpace*, bool, ValuePtr);
-	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
+	const std::string& get_kern_name(ValuePtr);
+	const std::vector<double>& get_floats(ValuePtr);
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

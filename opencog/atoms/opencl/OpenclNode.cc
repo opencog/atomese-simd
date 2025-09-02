@@ -319,7 +319,6 @@ ValuePtr OpenclNode::update(void) const
 		nullptr, &event_handler);
 	event_handler.wait();
 
-	// XXX Should be more sophisticated in output format handling ...
 	if (NUMBER_NODE == _item_type)
 		return createNumberNode(result);
 	else
@@ -330,10 +329,10 @@ ValuePtr OpenclNode::update(void) const
 
 /// Unwrap kernel name.
 const std::string&
-OpenclNode::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
+OpenclNode::get_kern_name (ValuePtr vp)
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute(as, silent);
+		vp = HandleCast(vp)->execute();
 
 	if (vp->is_node())
 		return HandleCast(vp)->get_name();
@@ -348,10 +347,10 @@ OpenclNode::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 
 /// Unwrap vector.
 const std::vector<double>&
-OpenclNode::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
+OpenclNode::get_floats (ValuePtr vp)
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute(as, silent);
+		vp = HandleCast(vp)->execute();
 
 	if (vp->is_type(NUMBER_NODE))
 	{
@@ -388,9 +387,6 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
-	AtomSpace* as = getAtomSpace();
-	bool silent = false;
-
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
 	_vec_dim = UINT_MAX;
@@ -398,21 +394,21 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
-		kern_name = get_kern_name(as, silent, oset[0]);
+		kern_name = get_kern_name(oset[0]);
 
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
-			flts.emplace_back(get_floats(as, silent, oset[i]).data());
+			flts.emplace_back(get_floats(oset[i]).data());
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
 	{
 		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		kern_name = get_kern_name(as, silent, vsq[0]);
+		kern_name = get_kern_name(vsq[0]);
 
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
-			flts.emplace_back(get_floats(as, silent, vsq[i]).data());
+			flts.emplace_back(get_floats(vsq[i]).data());
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
