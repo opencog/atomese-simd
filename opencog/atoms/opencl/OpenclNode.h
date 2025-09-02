@@ -80,9 +80,10 @@ protected:
 	typedef struct
 	{
 		size_t _vec_dim;
-		std::vector<cl::Buffer> _invec;
-		cl::Buffer _outvec;  // XXX FIXME assume only one output
-		cl::Kernel _kernel;
+		size_t _ninputs;
+		mutable std::vector<cl::Buffer> _invec;
+		mutable cl::Buffer _outvec;  // XXX FIXME assume only one output
+		mutable cl::Kernel _kernel;
 	} job_t;
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;

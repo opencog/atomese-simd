@@ -300,6 +300,18 @@ printf("Enter OpenclNode::read to dequeue one\n");
 
 void OpenclNode::queue_job(const job_t& kjob)
 {
+	// XXX Hardwired assumption about argument order.
+	// FIXME... but how ??? Why? Is this important? ???
+	size_t vec_bytes = kjob._vec_dim * sizeof(double);
+	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
+	kjob._kernel.setArg(0, kjob._outvec);
+	for (size_t i=1; i<kjob._ninputs; i++)
+		kjob._kernel.setArg(i, kjob._invec[i-1]);
+
+	// XXX This is the wrong thing to do in the long run.
+	// Or is it? each kernel gets its own size ... what's the problem?
+	kjob._kernel.setArg(kjob._ninputs, kjob._vec_dim);
+
 	// Launch kernel
 	cl::Event event_handler;
 	_queue.enqueueNDRangeKernel(kjob._kernel,
@@ -313,7 +325,6 @@ void OpenclNode::queue_job(const job_t& kjob)
 	// ------------------------------------------------------
 	// Wait for results
 	std::vector<double> result(kjob._vec_dim);
-	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 
 	_queue.enqueueReadBuffer(kjob._outvec, CL_TRUE, 0, vec_bytes, result.data(),
 		nullptr, &event_handler);
@@ -430,16 +441,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	// error message.
 	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
 
-	// XXX Hardwired assumption about argument order.
-	// FIXME... but how ???
-	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
-	kjob._kernel.setArg(0, kjob._outvec);
-	for (size_t i=1; i<kvec->size(); i++)
-		kjob._kernel.setArg(i, kjob._invec[i-1]);
-
-	// XXX This is the wrong thing to do in the long run.
-	// Or is it? each kernel gets its own size ... what's the problem?
-	kjob._kernel.setArg(kvec->size(), kjob._vec_dim);
+	kjob._ninputs = kvec->size();
 
 	_dispatch_queue.enqueue(std::move(kjob));
 }
