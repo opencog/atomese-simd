@@ -91,6 +91,7 @@ protected:
 	virtual bool connected(void) const;
 	virtual ValuePtr read(void) const;
 	virtual ValuePtr stream(void) const;
+	virtual void write_one(const ValuePtr&);
 	virtual void do_write(const ValuePtr&);
 
 public:

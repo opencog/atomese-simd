@@ -370,9 +370,15 @@ OpenclNode::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 // ==============================================================
 // Send kernel and data
 
+void OpenclNode::write_one(const ValuePtr& kvec)
+{
+	do_write(kvec);
+}
+
 // XXX I think this is wrong. but whatever.
 void OpenclNode::do_write(const ValuePtr& kvec)
 {
+printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 	if (0 == kvec->size())
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
