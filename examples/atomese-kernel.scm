@@ -46,6 +46,9 @@
 ; Define and open the device.
 (define clnode (OpenclNode clurl))
 
+; The argument to the *-open-* message is the type of the results
+; that we want to receive. Two choices are avalabile: NumberNode
+; and FloatValue.
 (cog-set-value! clnode (Predicate "*-open-*") (Type 'FloatValue))
 
 ; ---------------------------------------------------------------

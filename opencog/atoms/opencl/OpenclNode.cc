@@ -207,6 +207,11 @@ void OpenclNode::open(const ValuePtr& out_type)
 			"Device already open! %s\n", get_name().c_str());
 
 	StreamNode::open(out_type);
+	if (not nameserver().isA(_item_type, FLOAT_VALUE) and
+		 not nameserver().isA(_item_type, NUMBER_NODE))
+		throw RuntimeException(TRACE_INFO,
+			"Expecting the type to be a FloatValue or NumberNode; got %s\n",
+			out_type->to_string().c_str());
 
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
