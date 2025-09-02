@@ -100,6 +100,12 @@ void OpenclNode::init(void)
 		pos = devend;
 	}
 	_filepath = url.substr(pos);
+
+	// What kind of file is it? Source or SPV?
+	pos = url.find_last_of('.');
+	if (std::string::npos == pos) BAD_URL;
+
+	_is_spv = (url.substr(pos) == ".spv");
 }
 
 // ==============================================================
@@ -207,10 +213,7 @@ void OpenclNode::open(const ValuePtr& ignore)
 	_queue = cl::CommandQueue(_context, _device);
 
 	// Try to load source or spv file
-	pos = url.find_last_of('.');
-	if (std::string::npos == pos) BAD_URL;
-
-	if (url.substr(pos) == ".spv")
+	if (_is_spv)
 		load_kernel();
 	else
 		build_kernel();

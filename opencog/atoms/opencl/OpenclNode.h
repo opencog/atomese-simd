@@ -58,6 +58,7 @@ protected:
 	std::string _splat; // platform substring
 	std::string _sdev;  // device substring
 	std::string _filepath; // path to cl, clcpp or spv file
+	bool _is_spv; // true if a *.spv file
 
 	// Actual platform and device to connect to.
 	void find_device(void);
