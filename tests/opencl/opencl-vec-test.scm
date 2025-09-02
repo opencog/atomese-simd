@@ -41,43 +41,23 @@
 (cog-execute!
    (SetValue clnode (Predicate "*-open-*") (Type 'FloatValue)))
 
-; Crash if stream not corrrectly intialized.
+; Test to see if stream is open.
 (define cnct (cog-execute! (ValueOf clnode (Predicate "*-connected?-*"))))
 (format #t "connected? ~A" cnct)
 (test-assert "open stream" (cog-value-ref cnct))
 
 ; ---------------------------------------------------------------
-(define do-open-device
-	(SetValue (Anchor "some gpus") (Predicate "some gpu channel")
-		(Open
-			(Type 'OpenclStream)
-			(SensoryNode clurl))))
-
-(define reopen-stream (cog-execute! do-open-device))
-(define restream-str (format #f "~A" reopen-stream))
-(test-assert "reopen stream" (equal? "(OpenclStream)\n" restream-str))
-
-; Define some short-hand for the anchor-point.
-(define gpu-location
-	(ValueOf (Anchor "some gpus") (Predicate "some gpu channel")))
-
-(define loc-stream (cog-execute! gpu-location))
-(define loc-str (format #f "~A" loc-stream))
-(test-assert "loc stream" (equal? "(OpenclStream)\n" loc-str))
-
-; ---------------------------------------------------------------
 (define kernel-runner
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5)
 			(Number 2 2 2 2 2 2 3 42 999))))
 
-(define kern-m1 (cog-execute! kernel-runner))
-(test-assert "mult one" (equal? (Number 2 4 6 8 10) kern-m1))
-
-(define kern-m2 (cog-value-ref (cog-execute! gpu-location) 0))
-(test-assert "mult two" (equal? (Number 2 4 6 8 10) kern-m2))
+(cog-execute! kernel-runner)
+(define kern-m1
+	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
+(test-assert "mult one" (equal? (FloatValue 2 4 6 8 10) kern-m1))
 
 ; ---------------------------------------------------------------
 ; Run it again, different data
