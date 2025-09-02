@@ -75,13 +75,17 @@ protected:
 
 	// kernel I/O. Using cl:Buffer for now.
 	// Need to create a derived class that will use SVM
-	size_t _vec_dim;
-	std::vector<cl::Buffer> _invec;
-	cl::Buffer _outvec;  // XXX FIXME assume only one output
-	cl::Kernel _kernel;
+	typedef struct
+	{
+		size_t _vec_dim;
+		std::vector<cl::Buffer> _invec;
+		cl::Buffer _outvec;  // XXX FIXME assume only one output
+		cl::Kernel _kernel;
+	} job_t;
+	mutable job_t _job;
 
-	const std::string& get_kern_name(ValuePtr);
-	const std::vector<double>& get_floats(ValuePtr);
+	const std::string& get_kern_name(ValuePtr) const;
+	const std::vector<double>& get_floats(ValuePtr, size_t&) const;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

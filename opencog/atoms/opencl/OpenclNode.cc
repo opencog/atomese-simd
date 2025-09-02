@@ -71,10 +71,6 @@ OpenclNode::~OpenclNode()
 /// Validate the OpenCL URL
 void OpenclNode::init(void)
 {
-	// vec dim is used as an initialization flag.
-	// Set non-zero only after a kernel is loaded.
-	_vec_dim = 0;
-
 	const std::string& url = get_name();
 	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
 
@@ -213,10 +209,6 @@ void OpenclNode::open(const ValuePtr& out_type)
 			"Expecting the type to be a FloatValue or NumberNode; got %s\n",
 			out_type->to_string().c_str());
 
-	// vec dim is used as an initialization flag.
-	// Set non-zero only after a kernel is loaded.
-	_vec_dim = 0;
-
 	// Try to create the OpenCL device
 	find_device();
 	_context = cl::Context(_device);
@@ -309,13 +301,13 @@ printf("Enter OpenclNode::read to dequeue one\n");
 
 ValuePtr OpenclNode::update(void) const
 {
-	if (0 == _vec_dim) return createVoidValue();
+	job_t& kjob = _job;
 
-	std::vector<double> result(_vec_dim);
-	size_t vec_bytes = _vec_dim * sizeof(double);
+	std::vector<double> result(kjob._vec_dim);
+	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 
 	cl::Event event_handler;
-	_queue.enqueueReadBuffer(_outvec, CL_TRUE, 0, vec_bytes, result.data(),
+	_queue.enqueueReadBuffer(kjob._outvec, CL_TRUE, 0, vec_bytes, result.data(),
 		nullptr, &event_handler);
 	event_handler.wait();
 
@@ -329,7 +321,7 @@ ValuePtr OpenclNode::update(void) const
 
 /// Unwrap kernel name.
 const std::string&
-OpenclNode::get_kern_name (ValuePtr vp)
+OpenclNode::get_kern_name (ValuePtr vp) const
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute();
@@ -347,7 +339,7 @@ OpenclNode::get_kern_name (ValuePtr vp)
 
 /// Unwrap vector.
 const std::vector<double>&
-OpenclNode::get_floats (ValuePtr vp)
+OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute();
@@ -355,14 +347,14 @@ OpenclNode::get_floats (ValuePtr vp)
 	if (vp->is_type(NUMBER_NODE))
 	{
 		const std::vector<double>& vals(NumberNodeCast(HandleCast(vp))->value());
-		if (vals.size() < _vec_dim) _vec_dim = vals.size();
+		if (vals.size() < dim) dim = vals.size();
 		return vals;
 	}
 
 	if (vp->is_type(FLOAT_VALUE))
 	{
 		const std::vector<double>& vals(FloatValueCast(vp) ->value());
-		if (vals.size() < _vec_dim) _vec_dim = vals.size();
+		if (vals.size() < dim) dim = vals.size();
 		return vals;
 	}
 
@@ -387,9 +379,11 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
+	job_t& kjob = _job;
+
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
-	_vec_dim = UINT_MAX;
+	kjob._vec_dim = UINT_MAX;
 	std::vector<const double*> flts;
 	if (kvec->is_type(LIST_LINK))
 	{
@@ -398,7 +392,7 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
-			flts.emplace_back(get_floats(oset[i]).data());
+			flts.emplace_back(get_floats(oset[i], kjob._vec_dim).data());
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -408,18 +402,18 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
-			flts.emplace_back(get_floats(vsq[i]).data());
+			flts.emplace_back(get_floats(vsq[i], kjob._vec_dim).data());
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
 	// Copy vectors into cl::Buffer
-	_invec.clear();
-	size_t vec_bytes = _vec_dim * sizeof(double);
+	kjob._invec.clear();
+	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 	for (const double* flt : flts)
 	{
-		_invec.emplace_back(
+		kjob._invec.emplace_back(
 			cl::Buffer(_context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				vec_bytes,
@@ -429,24 +423,24 @@ printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier
 	// error message.
-	_kernel = cl::Kernel(_program, kern_name.c_str());
+	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
 
 	// XXX Hardwired assumption about argument order.
 	// FXIME... but how ???
-	_outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
-	_kernel.setArg(0, _outvec);
+	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
+	kjob._kernel.setArg(0, kjob._outvec);
 	for (size_t i=1; i<kvec->size(); i++)
-		_kernel.setArg(i, _invec[i-1]);
+		kjob._kernel.setArg(i, kjob._invec[i-1]);
 
 	// XXX This is the wrong thing to do in the long run.
-	_kernel.setArg(kvec->size(), _vec_dim);
+	kjob._kernel.setArg(kvec->size(), kjob._vec_dim);
 
 	// ------------------------------------------------------
 	// Launch
 	cl::Event event_handler;
-	_queue.enqueueNDRangeKernel(_kernel,
+	_queue.enqueueNDRangeKernel(kjob._kernel,
 		cl::NullRange,
-		cl::NDRange(_vec_dim),
+		cl::NDRange(kjob._vec_dim),
 		cl::NullRange,
 		nullptr, &event_handler);
 
