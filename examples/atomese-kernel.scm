@@ -64,11 +64,7 @@
 
 ; Get the result
 (format #t "Result from running kernel is ~A\n"
-	(cog-execute! gpu-location))
-
-; Do it again ... Nothing changed.
-(format #t "Once again ...its ~A\n"
-	(cog-execute! gpu-location))
+	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
 
 ; ---------------------------------------------------------------
 ; Run it again, with different data.
