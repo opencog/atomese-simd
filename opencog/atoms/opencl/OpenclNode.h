@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclStream.h
+ * opencog/atoms/opencl/OpenclNode.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,8 +20,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_STREAM_H
-#define _OPENCOG_OPENCL_STREAM_H
+#ifndef _OPENCOG_OPENCL_NODE_H
+#define _OPENCOG_OPENCL_NODE_H
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 300
@@ -36,7 +36,8 @@
 	#include <CL/opencl.hpp>
 #endif
 
-#include <opencog/atoms/sensory-v0/OutputStream.h>
+#include <opencog/atoms/value/QueueValue.h>
+#include <opencog/atoms/sensory/StreamNode.h>
 
 namespace opencog
 {
@@ -46,26 +47,19 @@ namespace opencog
  */
 
 /**
- * OpenclStreams hold an ordered vector of doubles.
+ * OpenclNodes hold an ordered vector of doubles.
  */
-class OpenclStream
-	: public OutputStream
+class OpenclNode
+	: public StreamNode
 {
 protected:
-	OpenclStream(Type);
-	void init(const std::string& url);
-	void halt(void);
-	virtual void update() const;
-
-	// API description
-	Handle _description;
-	void do_describe(void);
+	void init(void);
 
 	// URL specifying platform and device.
-	std::string _uri;
 	std::string _splat; // platform substring
 	std::string _sdev;  // device substring
 	std::string _filepath; // path to cl, clcpp or spv file
+	bool _is_spv; // true if a *.spv file
 
 	// Actual platform and device to connect to.
 	void find_device(void);
@@ -86,35 +80,30 @@ protected:
 	cl::Buffer _outvec;  // XXX FIXME assume only one output
 	cl::Kernel _kernel;
 
-	AtomSpacePtr _out_as;
-	Type _out_type;
 	const std::string& get_kern_name(AtomSpace*, bool, ValuePtr);
 	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
 
-	void write_one(AtomSpace*, bool, const ValuePtr&);
+	QueueValuePtr _qvp;
+	virtual void open(const ValuePtr&);
+	virtual void close(const ValuePtr&);
+	virtual bool connected(void) const;
+	virtual ValuePtr read(void) const;
+	virtual ValuePtr update(void) const;
+	virtual ValuePtr stream(void) const;
+	virtual void write_one(const ValuePtr&);
+	virtual void do_write(const ValuePtr&);
 
 public:
-	OpenclStream(const Handle&);
-	OpenclStream(const std::string&);
-	virtual ~OpenclStream();
+	OpenclNode(const std::string&&);
+	OpenclNode(Type t, const std::string&&);
+	virtual ~OpenclNode();
 
-	virtual ValuePtr describe(AtomSpace*, bool);
-	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
+
+	static Handle factory(const Handle&);
 };
 
-typedef std::shared_ptr<const OpenclStream> OpenclStreamPtr;
-static inline OpenclStreamPtr OpenclStreamCast(const ValuePtr& a)
-	{ return std::dynamic_pointer_cast<const OpenclStream>(a); }
-
-static inline const ValuePtr ValueCast(const OpenclStreamPtr& fv)
-{
-	return std::shared_ptr<Value>(fv, (Value*) fv.get());
-}
-
-template<typename ... Type>
-static inline std::shared_ptr<OpenclStream> createOpenclStream(Type&&... args) {
-	return std::make_shared<OpenclStream>(std::forward<Type>(args)...);
-}
+NODE_PTR_DECL(OpenclNode)
+#define createOpenclNode CREATE_DECL(OpenclNode)
 
 /** @}*/
 } // namespace opencog
@@ -123,4 +112,4 @@ extern "C" {
 void opencog_opencl_init(void);
 };
 
-#endif // _OPENCOG_OPENCL_STREAM_H
+#endif // _OPENCOG_OPENCL_NODE_H

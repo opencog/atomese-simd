@@ -22,9 +22,9 @@
 ; * A demo of a feedback loop, implementing an accumulator.
 ;
 (use-modules (opencog) (opencog exec))
-(use-modules (opencog sensory-v0) (opencog opencl))
+(use-modules (opencog sensory) (opencog opencl))
 
-; Optional; view debug messages
+; Optional but recommended; view debug messages.
 (use-modules (opencog logger))
 (cog-logger-set-stdout! #t)
 
@@ -39,37 +39,25 @@
 ; (define clurl "opencl://CUDA:NVIDIA RTX 4000/tmp/vec-kernel.cl")
 (define clurl "opencl://:/tmp/vec-kernel.cl")
 
+; Copy the kernel from here to /tmp
+(copy-file "vec-kernel.cl" "/tmp/vec-kernel.cl")
+
 ; ---------------------------------------------------------------
-; Brute-force open. This checks the open function works.
-; Optional; don't need to do this, except to manually check
-; things out.
+; Define and open the device.
+(define clnode (OpenclNode clurl))
+
+; The argument to the *-open-* message is the type of the results
+; that we want to receive. Two choices are avalabile: NumberNode
+; and FloatValue.
 (cog-execute!
-	(Open
-		(Type 'OpenclStream)
-		(SensoryNode clurl)))
-
-; ---------------------------------------------------------------
-; Define Atomese, that, when executed, will open a connection to the
-; GPU's, and then anchor that channel to a "well-known acnhor point".
-(define do-open-device
-	(SetValue (Anchor "some gpus") (Predicate "some gpu channel")
-		(Open
-			(Type 'OpenclStream)
-			(SensoryNode clurl))))
-
-; Go ahead and open it.
-(cog-execute! do-open-device)
-
-; Define some short-hand for the anchor-point.
-(define gpu-location
-	(ValueOf (Anchor "some gpus") (Predicate "some gpu channel")))
+	(SetValue clnode (Predicate "*-open-*") (Type 'FloatValue)))
 
 ; ---------------------------------------------------------------
 ; Now that it's open, define a simple stream that will write the name
 ; of a kernel and some vector data to the GPU/machine. This just defines
 ; what to do; nothing is done until this is executed.
 (define kernel-runner
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5)
@@ -78,40 +66,33 @@
 ; Run the kernel.
 (cog-execute! kernel-runner)
 
-; Get the result
-(format #t "Result from running kernel is ~A\n"
-	(cog-execute! gpu-location))
-
-; Do it again ... Nothing changed.
-(format #t "Once again ...its ~A\n"
-	(cog-execute! gpu-location))
+; Get the result.
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Run it again, with different data.
 (cog-execute!
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_mult") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
-; Get the result
-(format #t "And now, with different data ... ~A\n"
-	(cog-execute! gpu-location))
+; Get the result.
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Run it again, with a different kernel (addition this time, not
 ; multiplication.)
 (cog-execute!
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(List
 			(Predicate "vec_add") ; Must be name of kernel
 			(Number 1 2 3 4 5 6 7 8 9 10 11)
 			(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
 ; Get the result
-(format #t "Adding, instead of multiplying ... ~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Instead of using NumberNodes, use FloatValues.
@@ -119,7 +100,7 @@
 ; the AtomSpace (and thus clog things up), while FloatValues are not.
 ; Which is great, as usually there are lots of them.
 ; The trade-off is that the Values have to be put somewhere where they
-; can be found. i.e. anchired "some where".
+; can be found. i.e. anchored "some where".
 ;
 ; (RandomStream N) creates a vector of N random numbers. These numbers
 ; change with every access (which is why it is called a "stream" instead
@@ -134,18 +115,16 @@
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
-	(Write gpu-location
+	(SetValue clnode (Predicate "*-write-*")
 		(ValueOf (Anchor "some data") (Predicate "some stream"))))
 
 ; Run it once ...
 (cog-execute! vector-stream)
-(format #t "Random numbers from a stream ...\n~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; Run it again ...
 (cog-execute! vector-stream)
-(format #t "More random numbers ...\n~A\n"
-	(cog-execute! gpu-location))
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
 ; Similar to above, but feed back the results of addition into the
@@ -178,25 +157,19 @@
 (define accum-stream
 	(SetValue
 		(Anchor "some data") (Predicate "accumulator")
-		(Write gpu-location
+		(SetValue clnode (Predicate "*-write-*")
 			(ValueOf (Anchor "some data") (Predicate "accum task")))))
 
 ; Run it once ...
-(format #t "Accumulator stream results ...\n  ~A\n"
-	(cog-execute! accum-stream))
+(cog-execute! accum-stream)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
-(format #t "Again ...\n  ~A\n"
-	(cog-execute! accum-stream))
-
-(format #t "And again ...\n  ~A\n"
-	(cog-execute! accum-stream))
+(cog-execute! accum-stream)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 (cog-execute! accum-stream)
 (cog-execute! accum-stream)
 (cog-execute! accum-stream)
 (cog-execute! accum-stream)
-
-(format #t "Many more times ...\n  ~A\n"
-	(cog-execute! accum-stream))
 
 ; --------- The End! That's All, Folks! --------------

@@ -20,7 +20,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <opencog/sensory-v0/types/atom_types.h>
+#include <opencog/sensory/types/atom_types.h>
 #include "opencog/opencl/types/atom_types.definitions"
 
 #define INHERITANCE_FILE "opencog/opencl/types/atom_types.inheritance"

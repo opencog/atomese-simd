@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclStream.cc
+ * opencog/atoms/opencl/OpenclNode.cc
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -33,46 +33,84 @@
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
 #include <opencog/atoms/value/StringValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>
-#include <opencog/sensory-v0/types/atom_types.h>
-#include "OpenclStream.h"
+#include <opencog/sensory/types/atom_types.h>
+#include "OpenclNode.h"
 
 using namespace opencog;
 
-OpenclStream::OpenclStream(const std::string& str)
-	: OutputStream(OPENCL_STREAM)
+OpenclNode::OpenclNode(const std::string&& str)
+	: StreamNode(OPENCL_NODE, std::move(str))
 {
-	init(str);
+	init();
 }
 
-OpenclStream::OpenclStream(const Handle& senso)
-	: OutputStream(OPENCL_STREAM)
+OpenclNode::OpenclNode(Type t, const std::string&& str)
+	: StreamNode(t, std::move(str))
 {
-	if (SENSORY_NODE != senso->get_type())
+	if (not nameserver().isA(t, OPENCL_NODE))
 		throw RuntimeException(TRACE_INFO,
-			"Expecting SensoryNode, got %s\n", senso->to_string().c_str());
+			"Expecting OpenclNode, got %s\n", to_string().c_str());
 
-	init(senso->get_name());
+	init();
 }
 
-OpenclStream::~OpenclStream()
+OpenclNode::~OpenclNode()
 {
-	// Runs only if GC runs. This is a problem.
-	halt();
 }
 
-void OpenclStream::halt(void)
+#define BAD_URL \
+	throw RuntimeException(TRACE_INFO, \
+		"Unsupported URL \"%s\"\n" \
+		"\tExpecting 'opencl://platform:device/file/path/kernel.cl'", \
+		url.c_str());
+
+/// Validate the OpenCL URL
+void OpenclNode::init(void)
 {
-	_value.clear();
+	// vec dim is used as an initialization flag.
+	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
-	_out_as = nullptr;
+
+	const std::string& url = get_name();
+	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
+
+	// Ignore the first 9 chars "opencl://"
+	size_t pos = 9;
+
+	// Extract platform name substring
+	size_t platend = url.find(':', pos);
+	if (std::string::npos == platend) BAD_URL;
+	if (pos < platend)
+	{
+		_splat = url.substr(pos, platend-pos);
+		pos = platend;
+	}
+	pos ++;
+
+	// Extract device name substring
+	size_t devend = url.find('/', pos);
+	if (std::string::npos == devend) BAD_URL;
+	if (pos < devend)
+	{
+		_sdev = url.substr(pos, devend-pos);
+		pos = devend;
+	}
+	_filepath = url.substr(pos);
+
+	// What kind of file is it? Source or SPV?
+	pos = url.find_last_of('.');
+	if (std::string::npos == pos) BAD_URL;
+
+	_is_spv = (url.substr(pos) == ".spv");
 }
 
 // ==============================================================
 
-void OpenclStream::find_device(void)
+void OpenclNode::find_device(void)
 {
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
@@ -94,7 +132,7 @@ void OpenclStream::find_device(void)
 			_platform = plat;
 			_device = dev;
 
-			logger().info("OpenclStream: Using platform '%s' and device '%s'\n",
+			logger().info("OpenclNode: Using platform '%s' and device '%s'\n",
 				pname.c_str(), dname.c_str());
 
 			return;
@@ -103,12 +141,12 @@ void OpenclStream::find_device(void)
 
 	throw RuntimeException(TRACE_INFO,
 		"Unable to find platform:device in URL \"%s\"\n",
-		_uri.c_str());
+		get_name().c_str());
 }
 
 // ==============================================================
 
-void OpenclStream::build_kernel(void)
+void OpenclNode::build_kernel(void)
 {
 	// Copy in source code. Must be a better way!?
 	std::ifstream srcfm(_filepath);
@@ -118,7 +156,7 @@ void OpenclStream::build_kernel(void)
 	if (0 == src.size())
 		throw RuntimeException(TRACE_INFO,
 			"Unable to find source file in URL \"%s\"\n",
-			_uri.c_str());
+			get_name().c_str());
 
 	cl::Program::Sources sources;
 	sources.push_back(src);
@@ -134,17 +172,17 @@ void OpenclStream::build_kernel(void)
 	}
 	catch (const cl::Error& e)
 	{
-		logger().info("OpenclStream failed compile >>%s<<\n",
+		logger().info("OpenclNode failed compile >>%s<<\n",
 			_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
 		throw RuntimeException(TRACE_INFO,
 			"Unable to compile source file in URL \"%s\"\n",
-				_uri.c_str());
+				get_name().c_str());
 	}
 }
 
 // ==============================================================
 
-void OpenclStream::load_kernel(void)
+void OpenclNode::load_kernel(void)
 {
 	// Copy in SPV file. Must be a better way!?
 	std::ifstream spvfm(_filepath);
@@ -154,55 +192,30 @@ void OpenclStream::load_kernel(void)
 	if (0 == spv.size())
 		throw RuntimeException(TRACE_INFO,
 			"Unable to find SPV file in URL \"%s\"\n",
-			_uri.c_str());
+			get_name().c_str());
 
 	_program = cl::Program(_context, spv);
 }
 
 // ==============================================================
 
-#define BAD_URL \
-	throw RuntimeException(TRACE_INFO, \
-		"Unsupported URL \"%s\"\n" \
-		"\tExpecting 'opencl://platform:device/file/path/kernel.cl'", \
-		_uri.c_str());
-
 /// Attempt to open connection to OpenCL device
-void OpenclStream::init(const std::string& url)
+void OpenclNode::open(const ValuePtr& out_type)
 {
+	if (_qvp)
+		throw RuntimeException(TRACE_INFO,
+			"Device already open! %s\n", get_name().c_str());
+
+	StreamNode::open(out_type);
+	if (not nameserver().isA(_item_type, FLOAT_VALUE) and
+		 not nameserver().isA(_item_type, NUMBER_NODE))
+		throw RuntimeException(TRACE_INFO,
+			"Expecting the type to be a FloatValue or NumberNode; got %s\n",
+			out_type->to_string().c_str());
+
 	// vec dim is used as an initialization flag.
 	// Set non-zero only after a kernel is loaded.
 	_vec_dim = 0;
-	_out_as = nullptr;
-
-	do_describe();
-	if (0 != url.compare(0, 9, "opencl://")) BAD_URL;
-
-	// Make a copy, for debuggingg purposes.
-	_uri = url;
-
-	// Ignore the first 9 chars "opencl://"
-	size_t pos = 9;
-
-	// Extract platform name substring
-	size_t platend = _uri.find(':', pos);
-	if (std::string::npos == platend) BAD_URL;
-	if (pos < platend)
-	{
-		_splat = _uri.substr(pos, platend-pos);
-		pos = platend;
-	}
-	pos ++;
-
-	// Extract device name substring
-	size_t devend = _uri.find('/', pos);
-	if (std::string::npos == devend) BAD_URL;
-	if (pos < devend)
-	{
-		_sdev = _uri.substr(pos, devend-pos);
-		pos = devend;
-	}
-	_filepath = _uri.substr(pos);
 
 	// Try to create the OpenCL device
 	find_device();
@@ -210,20 +223,34 @@ void OpenclStream::init(const std::string& url)
 	_queue = cl::CommandQueue(_context, _device);
 
 	// Try to load source or spv file
-	pos = _uri.find_last_of('.');
-	if (std::string::npos == pos) BAD_URL;
-
-	if (_uri.substr(pos) == ".spv")
+	if (_is_spv)
 		load_kernel();
 	else
 		build_kernel();
+
+	_qvp = createQueueValue();
+}
+
+bool OpenclNode::connected(void) const
+{
+	return nullptr != _qvp;
+}
+
+void OpenclNode::close(const ValuePtr& ignore)
+{
+	if (_qvp)
+		_qvp->close();
+	_qvp = nullptr;
+
+	// XXX more to do here. FIXME
 }
 
 // ==============================================================
 
+#if LATER_SOMEDAY
 Handle _global_desc = Handle::UNDEFINED;
 
-void OpenclStream::do_describe(void)
+void OpenclNode::do_describe(void)
 {
 	if (_global_desc) return;
 
@@ -233,7 +260,7 @@ void OpenclStream::do_describe(void)
 	// It needs no special arguments.
 	Handle open_cmd =
 		make_description("Open connection to GPU",
-		                 "OpenLink", "OpenclStream");
+		                 "OpenLink", "OpenclNode");
 	cmds.emplace_back(open_cmd);
 
 	// Write  XXX this is wrong.
@@ -247,18 +274,42 @@ void OpenclStream::do_describe(void)
 
 // This is totally bogus because it is unused.
 // This should be class static member
-ValuePtr OpenclStream::describe(AtomSpace* as, bool silent)
+ValuePtr OpenclNode::describe(AtomSpace* as, bool silent)
 {
 	if (_description) return as->add_atom(_description);
 	_description = as->add_atom(_global_desc);
 	return _description;
 }
+#endif
 
 // ==============================================================
 
-void OpenclStream::update() const
+ValuePtr OpenclNode::stream(void) const
 {
-	if (0 == _vec_dim) return;
+	if (not connected())
+		throw RuntimeException(TRACE_INFO,
+			"Device not open! %s\n", get_name().c_str());
+
+	return _qvp;
+}
+
+ValuePtr OpenclNode::read(void) const
+{
+	if (not connected())
+		throw RuntimeException(TRACE_INFO,
+			"Device not open! %s\n", get_name().c_str());
+
+printf("Enter OpenclNode::read to dequeue one\n");
+	// XXX FIXME ideally, we want to run async, and find the result on
+	// queue already.But not today.
+	// return _qvp->remove();
+
+	return update();
+}
+
+ValuePtr OpenclNode::update(void) const
+{
+	if (0 == _vec_dim) return createVoidValue();
 
 	std::vector<double> result(_vec_dim);
 	size_t vec_bytes = _vec_dim * sizeof(double);
@@ -268,20 +319,18 @@ void OpenclStream::update() const
 		nullptr, &event_handler);
 	event_handler.wait();
 
-	_value.resize(1);
-
 	// XXX Should be more sophisticated in output format handling ...
-	if (NUMBER_NODE == _out_type)
-		_value[0] = _out_as->add_atom(createNumberNode(result));
+	if (NUMBER_NODE == _item_type)
+		return createNumberNode(result);
 	else
-		_value[0] = createFloatValue(result);
+		return createFloatValue(result);
 }
 
 // ==============================================================
 
 /// Unwrap kernel name.
 const std::string&
-OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
+OpenclNode::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute(as, silent);
@@ -299,7 +348,7 @@ OpenclStream::get_kern_name (AtomSpace* as, bool silent, ValuePtr vp)
 
 /// Unwrap vector.
 const std::vector<double>&
-OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
+OpenclNode::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute(as, silent);
@@ -325,23 +374,22 @@ OpenclStream::get_floats (AtomSpace* as, bool silent, ValuePtr vp)
 
 // ==============================================================
 // Send kernel and data
-ValuePtr OpenclStream::write_out(AtomSpace* as, bool silent,
-                                 const Handle& cref)
-{
-	do_write_out(as, silent, cref);
-	// return shared_from_this();
 
-	_out_as = AtomSpaceCast(as->shared_from_this());
-	update();
-	return _value[0];
+void OpenclNode::write_one(const ValuePtr& kvec)
+{
+	do_write(kvec);
 }
 
-void OpenclStream::write_one(AtomSpace* as, bool silent,
-                             const ValuePtr& kvec)
+// XXX I think this is wrong. but whatever.
+void OpenclNode::do_write(const ValuePtr& kvec)
 {
+printf("OpenclNode::do_write(%s)\n", kvec->to_string().c_str());
 	if (0 == kvec->size())
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
+
+	AtomSpace* as = getAtomSpace();
+	bool silent = false;
 
 	// Unpack kernel name and kernel arguments
 	std::string kern_name;
@@ -355,9 +403,6 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
 			flts.emplace_back(get_floats(as, silent, oset[i]).data());
-
-		// XXX Assume floating point vectors FIXME
-		_out_type = NUMBER_NODE;
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -368,9 +413,6 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
 			flts.emplace_back(get_floats(as, silent, vsq[i]).data());
-
-		// XXX Assume floating point vectors FIXME
-		_out_type = FLOAT_VALUE;
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
@@ -388,8 +430,8 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 				(void*) flt));
 	}
 
-	// XXX TODO this will throw exception if user mistyped the
-	// kernel name. We should catch this and print a freindlier
+	// XXX TODO this will throw exception if user mis-typed the
+	// kernel name. We should catch this and print a friendlier
 	// error message.
 	_kernel = cl::Kernel(_program, kern_name.c_str());
 
@@ -418,8 +460,7 @@ void OpenclStream::write_one(AtomSpace* as, bool silent,
 // ==============================================================
 
 // Adds factory when library is loaded.
-DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream, std::string)
-DEFINE_VALUE_FACTORY(OPENCL_STREAM, createOpenclStream, Handle)
+DEFINE_NODE_FACTORY(OpenclNode, OPENCL_NODE);
 
 // ====================================================================
 
