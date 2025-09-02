@@ -54,7 +54,6 @@ class OpenclNode
 protected:
 	OpenclNode(Type);
 	void init(const std::string& url);
-	void halt(void);
 	virtual void update() const;
 
 	// API description
@@ -92,14 +91,20 @@ protected:
 	const std::vector<double>& get_floats(AtomSpace*, bool, ValuePtr);
 
 	void write_one(AtomSpace*, bool, const ValuePtr&);
+	virtual ValuePtr describe(AtomSpace*, bool);
+	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
+
+	virtual void open(const ValuePtr&);
+	virtual void close(const ValuePtr&);
+	virtual bool connected(void) const;
+	virtual ValuePtr read(void) const;
+	virtual void do_write(const ValuePtr&);
 
 public:
 	OpenclNode(const std::string&&);
 	OpenclNode(Type t, const std::string&&);
 	virtual ~OpenclNode();
 
-	virtual ValuePtr describe(AtomSpace*, bool);
-	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
 
 	static Handle factory(const Handle&);
 };

@@ -41,33 +41,24 @@
 
 using namespace opencog;
 
-OpenclNode::OpenclNode(const std::string& str)
-	: OutputStream(OPENCL_STREAM)
+OpenclNode::OpenclNode(const std::string&& str)
+	: StreamNode(OPENCL_NODE, std::move(str))
 {
-	init(str);
+	init(get_name());
 }
 
-OpenclNode::OpenclNode(const Handle& senso)
-	: OutputStream(OPENCL_STREAM)
+OpenclNode::OpenclNode(Type t, const std::string&& str)
+	: StreamNode(t, std::move(str))
 {
-	if (SENSORY_NODE != senso->get_type())
+	if (not nameserver().isA(t, OPENCL_NODE))
 		throw RuntimeException(TRACE_INFO,
-			"Expecting SensoryNode, got %s\n", senso->to_string().c_str());
+			"Expecting OpenclNode, got %s\n", to_string().c_str());
 
-	init(senso->get_name());
+	init(get_name());
 }
 
 OpenclNode::~OpenclNode()
 {
-	// Runs only if GC runs. This is a problem.
-	halt();
-}
-
-void OpenclNode::halt(void)
-{
-	_value.clear();
-	_vec_dim = 0;
-	_out_as = nullptr;
 }
 
 // ==============================================================
