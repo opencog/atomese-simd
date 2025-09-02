@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclStream.h
+ * opencog/atoms/opencl/OpenclNode.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,8 +20,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_STREAM_H
-#define _OPENCOG_OPENCL_STREAM_H
+#ifndef _OPENCOG_OPENCL_NODE_H
+#define _OPENCOG_OPENCL_NODE_H
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 300
@@ -36,7 +36,7 @@
 	#include <CL/opencl.hpp>
 #endif
 
-#include <opencog/atoms/sensory/OutputStream.h>
+#include <opencog/atoms/sensory/StreamNode.h>
 
 namespace opencog
 {
@@ -46,13 +46,13 @@ namespace opencog
  */
 
 /**
- * OpenclStreams hold an ordered vector of doubles.
+ * OpenclNodes hold an ordered vector of doubles.
  */
-class OpenclStream
-	: public OutputStream
+class OpenclNode
+	: public StreamNode
 {
 protected:
-	OpenclStream(Type);
+	OpenclNode(Type);
 	void init(const std::string& url);
 	void halt(void);
 	virtual void update() const;
@@ -94,27 +94,13 @@ protected:
 	void write_one(AtomSpace*, bool, const ValuePtr&);
 
 public:
-	OpenclStream(const Handle&);
-	OpenclStream(const std::string&);
-	virtual ~OpenclStream();
+	OpenclNode(const Handle&);
+	OpenclNode(const std::string&);
+	virtual ~OpenclNode();
 
 	virtual ValuePtr describe(AtomSpace*, bool);
 	virtual ValuePtr write_out(AtomSpace*, bool, const Handle&);
 };
-
-typedef std::shared_ptr<const OpenclStream> OpenclStreamPtr;
-static inline OpenclStreamPtr OpenclStreamCast(const ValuePtr& a)
-	{ return std::dynamic_pointer_cast<const OpenclStream>(a); }
-
-static inline const ValuePtr ValueCast(const OpenclStreamPtr& fv)
-{
-	return std::shared_ptr<Value>(fv, (Value*) fv.get());
-}
-
-template<typename ... Type>
-static inline std::shared_ptr<OpenclStream> createOpenclStream(Type&&... args) {
-	return std::make_shared<OpenclStream>(std::forward<Type>(args)...);
-}
 
 /** @}*/
 } // namespace opencog
@@ -123,4 +109,4 @@ extern "C" {
 void opencog_opencl_init(void);
 };
 
-#endif // _OPENCOG_OPENCL_STREAM_H
+#endif // _OPENCOG_OPENCL_NODE_H
