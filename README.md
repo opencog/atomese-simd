@@ -73,7 +73,7 @@ thought of what it means "to perceive and move".
 
 Status
 -----
-***Version 0.0.6.*** --
+***Version 0.0.7.*** --
 Basic proof-of-concept, showing how to use Atomese to open a connection
 to an OpenCL compute device (i.e. a GPU), load and invoke compute
 kernels, and have those kernels work with floating-point vector data
@@ -107,8 +107,9 @@ Steps:
   been tested on a Radeon graphics card and an Nvidia card.
 * Install `clinfo`.
 * For AMD devices, install `mesa-opencl-icd` and `opencl-headers`
+  and `opencl-clhpp-headers`
   Maybe more; depends on your distro and hardware.
-  (Maybe also: `ocl-icd-opencl-dev` and `opencl-clhpp-headers`?)
+  (Maybe also: `ocl-icd-opencl-dev`???)
 * For Nvidia devices, install `cuda-opencl-dev`
   Maybe more; depends on your distro and hardware.
 * Optional: Install `clang-14` and `llvm-spirv-14`
