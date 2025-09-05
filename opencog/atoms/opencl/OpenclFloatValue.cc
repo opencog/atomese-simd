@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclFloatVector.cc
+ * opencog/atoms/opencl/OpenclFloatValue.cc
  *
  * Copyright (C) 2015 Linas Vepstas
  * All Rights Reserved
@@ -22,29 +22,29 @@
 
 #include <opencog/util/exceptions.h>
 #include <opencog/atoms/value/ValueFactory.h>
-#include <opencog/atoms/opencl/OpenclFloatVector.h>
+#include <opencog/atoms/opencl/OpenclFloatValue.h>
 #include <opencog/opencl/types/atom_types.h>
 
 using namespace opencog;
 
-OpenclFloatVector::OpenclFloatVector(void) :
-	StreamValue(OPENCL_FLOAT_VECTOR)
+OpenclFloatValue::OpenclFloatValue(void) :
+	FloatValue(OPENCL_FLOAT_VALUE)
 {
 }
 
-OpenclFloatVector::OpenclFloatVector(const std::vector<double>& v) :
-	StreamValue(OPENCL_FLOAT_VECTOR, v)
+OpenclFloatValue::OpenclFloatValue(const std::vector<double>& v) :
+	FloatValue(OPENCL_FLOAT_VALUE, v)
 {
 }
 
-void OpenclFloatVector::update(void) const
+void OpenclFloatValue::update(void) const
 {
 }
 
 // ==============================================================
 
 // Adds factory when the library is loaded.
-DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VECTOR,
-                     createOpenclFloatVector)
-DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VECTOR,
-                     createOpenclFloatVector, std::vector<double>)
+DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VALUE,
+                     createOpenclFloatValue)
+DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VALUE,
+                     createOpenclFloatValue, std::vector<double>)

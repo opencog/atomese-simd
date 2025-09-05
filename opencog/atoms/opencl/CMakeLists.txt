@@ -3,7 +3,7 @@
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (opencl SHARED
-	OpenclFloatVector.cc
+	OpenclFloatValue.cc
 	OpenclNode.cc
 )
 
