@@ -1,5 +1,7 @@
 Design Notes A
 ==============
+January 2025
+
 Notes about OpenCL interfaces and how they impact Atomese design.
 
 * SVM "Shared Virtual Memory" shares vector data between GPU and
@@ -39,6 +41,9 @@ Different ideas for communicating with GPUs.
   Which is adequate for the intended use, but leaves something to be
   desired.
 
+  Update (August 2025): the above has been fixed; `StorageNode` now
+  uses `ObjectNode` as its base class, and it now behave like an object.
+
 * Create something new, inspired by `BackingStore`. This removes some
   of the issues with StorageNodes, but leaves others in place. One
   is that, again, the API sits outside of Atmoese. The other is that
@@ -48,6 +53,11 @@ Different ideas for communicating with GPUs.
   well for many I/O tasks: open/close to manage the channel, and
   read/write to use it. But the OpenCL interfaces do not map cleanly
   to open/close/read/write. They use a more complex structure.
+
+  Update (August 2025): the new idea behind `ObjectNode` is that such
+  atoms can respond to arbitrary messages. This has now been implemented
+  in https://github.com/opencog/sensory and seems to work reasonably
+  well.
 
 The abstraction I'm getting is this: open near point, open far point,
 select far-point message recipient, send message. That mapping would
@@ -90,8 +100,8 @@ have psuedocode like so:
    }
 ```
 Caveat: the above is already an oversimplification of the OpenCL
-interfaces, because a `cl::Conext` is not created out of thin air, but
-requires a vector of `cl::Device` in it's ctor. And devices need
+interfaces, because a `cl::Context` is not created out of thin air,
+but requires a vector of `cl::Device` in it's ctor. And devices need
 `cl::Platform`. Lets ignore these additional complexities, for the
 moment.
 
@@ -225,6 +235,10 @@ For bootstrapping, lets stick to the basics.
 ### Basic vector I/O
 Ability to stream data data to GPU. One-shot is a special case.
 Pseudocode:
+(Update August 2025: the pseudocode below uses the now-obsolete
+`sensory-v0` interfaces. These have been redesigned, and sensory
+version "half" is now in production. See the [examples](./examples)
+directory for working code.)
 ```
    ; Location of kernel code as path in local filesystem.
    ; OpenCLNode isA SensoryNode
