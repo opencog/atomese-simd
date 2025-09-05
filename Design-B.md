@@ -17,16 +17,25 @@ Jobs are queued to it using `job_t` which holds:
    cl::Buffer _outvec
 ```
 
-I want to wrap `cl::Buffer` with either a `Value` or a `Node`. It seems
-that an `ObjectNode` (or `SensoryNode`) interface is best. For example:
+I want to wrap `cl::Buffer` with either a `Value` or a `Node`. Probably
+`Value` is best; it sticks to the original vision for mutable Values.
+But an `ObjectNode` (or `SensoryNode`) interface is not outrageous.
+Lets review,
 
-Upload vector data to GPU:
+
+### OpenclFloatVecNode
+Derived from `SensoryNode`. Thus has the mndatory set of
+open/close/read/write methods.  Alllows explicit control.
+
+For example: upload vector data to GPU:
 ```
 (SetValue
 	(OpenclFloatVecNode "some name")
 	(Predicate "*-write-*")
 	(Number 1 2.71828 3.14159 42))
 ```
+Except we might not want to upload just then but simply bind the
+float data to the object. Hmmm.
 
 Download vector data from GPU:
 ```
@@ -51,7 +60,14 @@ Issues:
 Solution: leave unbound until an explicit `*-bind-*` message, or until
 an implicit bind because it gets used.
 
-Using:
+### OpenclFloatValue
+Traditional Value design. Referencing it calls `update()` which
+downloads from the GPU, if that has not already been done. Carries
+addtional protected methods that allows OpenclNode to work with
+buffers and bind them as needed.
+
+Usage: the existing demo `atomese-kernel.scm` is effectively unaltered.
+Lets try this. I think it will work cleanly.
 
 
 -------
