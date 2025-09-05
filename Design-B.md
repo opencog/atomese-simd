@@ -43,5 +43,15 @@ Optional: specify vectors to be `FloatValue`s or `NumberNode`s.
 ```
 If not specified, defaults to `FloatValue`
 
+Issues:
+* The `cl::Buffer()` ctor needs `cl::Context` as an argument. The
+  `cl::Context` only becomes available after the platform and device
+   are found. This happens in `OpenclNode::open()`.
+
+Solution: leave unbound until an explicit `*-bind-*` message, or until
+an implicit bind because it gets used.
+
+Using:
+
 
 -------
