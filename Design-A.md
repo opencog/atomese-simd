@@ -1,5 +1,5 @@
-Design Notes
-============
+Design Notes A
+==============
 Notes about OpenCL interfaces and how they impact Atomese design.
 
 * SVM "Shared Virtual Memory" shares vector data between GPU and
