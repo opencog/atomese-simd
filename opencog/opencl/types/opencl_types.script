@@ -5,7 +5,16 @@
 //
 // Experimental.
 //
-OPENCL_FLOAT_VECTOR <- STREAM_VALUE
+OPENCL_VALUE <- VALUE
+
+// Recall that STREAM_VALUE <- FLOAT_VALUE
+// Note that STREAM_VALUE is almost useless; all that it does is
+// provide an operator==() method that calls update() before comparing.
+// We could probably just fold that into the default.
+OPENCL_BOOL_VALUE <- OPENCL_VALUE,BOOL_VALUE
+OPENCL_FLOAT_VALUE <- OPENCL_VALUE,STREAM_VALUE
+OPENCL_STRING_VALUE <- OPENCL_VALUE,STRING_VALUE
+OPENCL_LINK_VALUE <- OPENCL_VALUE,LINK_STREAM_VALUE
 
 // Provide the basic Sensory API
 OPENCL_NODE <- STREAM_NODE
