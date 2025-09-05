@@ -107,9 +107,8 @@ Steps:
   been tested on a Radeon graphics card and an Nvidia card.
 * Install `clinfo`.
 * For AMD devices, install `mesa-opencl-icd` and `opencl-headers`
-  and `opencl-clhpp-headers`
+  and `opencl-clhpp-headers` and `ocl-icd-opencl-dev`
   Maybe more; depends on your distro and hardware.
-  (Maybe also: `ocl-icd-opencl-dev`???)
 * For Nvidia devices, install `cuda-opencl-dev`
   Maybe more; depends on your distro and hardware.
 * Optional: Install `clang-14` and `llvm-spirv-14`
