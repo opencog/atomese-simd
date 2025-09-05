@@ -55,7 +55,7 @@ The main effort is to find a balance between abstract mathematical
 theory and a practical, usable interface. The generic Atomese
 sensorimotor research is being done in the hopes of discovering
 generic abstractions that symbolic (and neuro-symbolic) AI subsystems
-can use. If you are a human programmer, you have a zilllion-and-one
+can use. If you are a human programmer, you have a zillion-and-one
 choices for programming languages and APIs that allow you to hack up
 almost anything. If you are a symbolic AI agent, or a DL/NN transformer,
 you do not have this richness of tools. You mostly don't even have much
