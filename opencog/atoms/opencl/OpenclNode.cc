@@ -315,7 +315,10 @@ void OpenclNode::queue_job(const job_t& kjob)
 	}
 
 	// XXX Hardwired assumption about argument order.
-	// FIXME... but how ??? Why? Is this important? ???
+	// FIXME... but how ???
+	// The problem is this assumes the output comes first
+	// in the kernel, followed by the arguments. It could be
+	// different.
 	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
 	kjob._kernel.setArg(0, kjob._outvec);
 	for (size_t i=1; i<kjob._ninputs; i++)
