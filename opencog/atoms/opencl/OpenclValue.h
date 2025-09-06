@@ -60,8 +60,8 @@ protected:
 	mutable cl::Buffer _bytevec;
 
 	void set_context(const cl::Context&);
-	void to_gpu();
-	void from_gpu();
+	void to_gpu(size_t vec_bytes, void* vec);
+	void from_gpu(size_t);
 public:
 	virtual ~OpenclValue();
 };

@@ -26,7 +26,8 @@
 using namespace opencog;
 
 OpenclValue::OpenclValue(void) :
-	_context(nullptr)
+	_context(nullptr),
+	_bytevec(nullptr)
 {
 }
 
@@ -37,11 +38,40 @@ OpenclValue::~OpenclValue()
 
 void OpenclValue::set_context(const cl::Context& ctxt)
 {
-	if (_context)
+/*
+	if (_context != nullptr)
 		throw RuntimeException(TRACE_INFO,
 			"Context already set!");
+*/
 
 	_context = ctxt;
+}
+
+void OpenclValue::from_gpu(size_t vec_bytes)
+{
+	// FIXME. probably OK if its already set!?
+	// maybe should mark CL_MEM_READ_WRITE ???
+/*
+	if (nullptr != _bytevec)
+		throw RuntimeException(TRACE_INFO,
+			"Bytevec already set!");
+*/
+
+	_bytevec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
+}
+
+void OpenclValue::to_gpu(size_t vec_bytes, void* vec)
+{
+	// FIXME. probably OK if its already set!?
+/*
+	if (nullptr != _bytevec)
+		throw RuntimeException(TRACE_INFO,
+			"Bytevec already set!");
+*/
+
+	_bytevec = cl::Buffer(_context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		vec_bytes, vec);
 }
 
 // ==============================================================
