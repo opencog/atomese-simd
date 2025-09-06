@@ -22,7 +22,7 @@ INSTALL (TARGETS opencl EXPORT AtomSpaceTargets
 )
 
 INSTALL (FILES
-	OpenclFloatVector.h
+	OpenclFloatValue.h
 	OpenclNode.h
 	DESTINATION "include/opencog/atoms/opencl/"
 )
