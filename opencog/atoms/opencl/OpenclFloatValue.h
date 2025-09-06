@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/opencl/OpenclValue.h>
 
 namespace opencog
 {
@@ -37,7 +38,7 @@ namespace opencog
  * OpenclFloatValues hold an ordered vector of doubles.
  */
 class OpenclFloatValue
-	: public FloatValue
+	: public FloatValue, public OpenclValue
 {
 protected:
 	virtual void update() const;
@@ -57,19 +58,8 @@ public:
 	// virtual bool operator==(const Value&) const;
 };
 
-typedef std::shared_ptr<const OpenclFloatValue> OpenclFloatValuePtr;
-static inline OpenclFloatValuePtr OpenclFloatValueCast(const ValuePtr& a)
-	{ return std::dynamic_pointer_cast<const OpenclFloatValue>(a); }
-
-static inline const ValuePtr ValueCast(const OpenclFloatValuePtr& fv)
-{
-	return std::shared_ptr<Value>(fv, (Value*) fv.get());
-}
-
-template<typename ... Type>
-static inline std::shared_ptr<OpenclFloatValue> createOpenclFloatValue(Type&&... args) {
-	return std::make_shared<OpenclFloatValue>(std::forward<Type>(args)...);
-}
+VALUE_PTR_DECL(OpenclFloatValue);
+CREATE_VALUE_DECL(OpenclFloatValue);
 
 /** @}*/
 } // namespace opencog
