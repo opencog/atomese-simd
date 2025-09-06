@@ -25,12 +25,23 @@
 
 using namespace opencog;
 
-OpenclValue::OpenclValue(void)
+OpenclValue::OpenclValue(void) :
+	_context(nullptr)
 {
 }
 
 OpenclValue::~OpenclValue()
 {
+	_context = nullptr;
+}
+
+void OpenclValue::set_context(const cl::Context& ctxt)
+{
+	if (_context)
+		throw RuntimeException(TRACE_INFO,
+			"Context already set!");
+
+	_context = ctxt;
 }
 
 // ==============================================================
