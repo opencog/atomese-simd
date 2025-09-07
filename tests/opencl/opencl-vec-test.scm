@@ -105,8 +105,9 @@
 
 (cog-set-value!
 	(Anchor "some data") (Predicate "accum task")
-	(LinkValue
-		(Predicate "vec_add") accum-location (RandomStream vec-size)))
+	(SectionValue
+		(Predicate "vec_add")
+		(LinkValue  accum-location (RandomStream vec-size))))
 
 ; Define a feedback loop.
 (define run-kernel

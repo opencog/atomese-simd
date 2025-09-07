@@ -65,8 +65,9 @@
 ; invocation.
 (cog-set-value!
 	(Anchor "some place") (Predicate "accum task")
-	(LinkValue
-		(Predicate "vec_add") accum-location (RandomStream 3)))
+	(SectionValue
+		(Predicate "vec_add")
+		(LinkValue accum-location (RandomStream 3))))
 
 ; Define a pair of functions. The first runs the kernel, defined above,
 ; and the second downloads the results. Calling this pair in succession

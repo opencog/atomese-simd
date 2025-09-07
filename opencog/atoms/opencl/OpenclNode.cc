@@ -326,7 +326,7 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 	if (kvec->is_type(SECTION))
 		kern_name = get_kern_name(HandleCast(kvec)->getOutgoingAtom(0));
 	else
-	if (kvec->is_type(LINK_VALUE))
+	if (kvec->is_type(SECTION_VALUE))
 	{
 		const ValueSeq& vsq = LinkValueCast(kvec)->value();
 		kern_name = get_kern_name(vsq[0]);
@@ -390,15 +390,16 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 		}
 	}
 	else
-	if (kvec->is_type(LINK_VALUE))
+	if (kvec->is_type(SECTION_VALUE))
 	{
-		const ValueSeq& vsq = LinkValueCast(kvec)->value();
+		const ValueSeq& sex = LinkValueCast(kvec)->value();
+		const ValueSeq& vsq = LinkValueCast(sex[1])->value();
 
 		// Find the shortest vector.
-		for (size_t i=1; i<vsq.size(); i++)
+		for (const ValuePtr& v: vsq)
 		{
 			OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(get_floats(vsq[i], dim)));
+				std::move(get_floats(v, dim)));
 			invec.emplace_back(ofv);
 		}
 	}

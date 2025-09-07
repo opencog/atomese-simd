@@ -111,10 +111,11 @@
 ;
 (cog-set-value!
 	(Anchor "some data") (Predicate "some stream")
-	(LinkValue
+	(SectionValue
 		(Predicate "vec_add")
-		(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
-		(RandomStream 3)))
+		LinkValue
+			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
+			(RandomStream 3))))
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
