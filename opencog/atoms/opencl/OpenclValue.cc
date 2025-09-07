@@ -27,6 +27,7 @@ using namespace opencog;
 
 OpenclValue::OpenclValue(void) :
 	_have_ctxt(false),
+	_have_buffer(false),
 	_context(nullptr),
 	_buffer(nullptr)
 {
