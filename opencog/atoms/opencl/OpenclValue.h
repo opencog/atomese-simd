@@ -57,6 +57,7 @@ class OpenclValue
 protected:
 	OpenclValue(void);
 
+	bool _have_ctxt;
 	cl::Context _context;
 	mutable cl::Buffer _bytevec;
 

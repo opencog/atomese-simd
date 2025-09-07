@@ -26,6 +26,7 @@
 using namespace opencog;
 
 OpenclValue::OpenclValue(void) :
+	_have_ctxt(false),
 	_context(nullptr),
 	_bytevec(nullptr)
 {
@@ -38,12 +39,11 @@ OpenclValue::~OpenclValue()
 
 void OpenclValue::set_context(const cl::Context& ctxt)
 {
-/*
-	if (_context != nullptr)
+	if (_have_ctxt and _context != ctxt)
 		throw RuntimeException(TRACE_INFO,
 			"Context already set!");
-*/
 
+	_have_ctxt = true;
 	_context = ctxt;
 }
 
