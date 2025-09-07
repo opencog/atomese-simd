@@ -118,7 +118,7 @@
 ; Run it once ...
 (cog-execute! run-kernel)
 (define acc1 (cog-execute! update-data))
-(test-assert "acc1 type" (equal? 'FloatValue (cog-type acc1)))
+(test-assert "acc1 type" (cog-subtype? 'FloatValue (cog-type acc1)))
 (test-assert "acc1 size" (equal? vec-size (length (cog-value->list acc1))))
 
 ; Run it lots ...
@@ -131,7 +131,7 @@
 
 (cog-execute! run-kernel)
 (define accn (cog-execute!  update-data))
-(test-assert "accn type" (equal? 'FloatValue (cog-type accn)))
+(test-assert "accn type" (cog-subtype? 'FloatValue (cog-type accn)))
 (test-assert "accn size" (equal? vec-size (length (cog-value->list accn))))
 
 ; Result of repeated executation should be a large number,
