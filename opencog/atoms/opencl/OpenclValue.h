@@ -64,6 +64,11 @@ protected:
 	void from_gpu(size_t);
 public:
 	virtual ~OpenclValue();
+	virtual void set_arg(cl::Kernel&, size_t pos, bool dirfrom) = 0;
+
+	// XXX hack alert ... remove this from the API when ready.
+	// this is temp scaffolding
+	cl::Buffer& get_buffer() { return _bytevec; }
 };
 
 /** @}*/

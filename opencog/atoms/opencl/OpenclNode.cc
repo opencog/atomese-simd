@@ -38,6 +38,7 @@
 
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
+#include "OpenclFloatValue.h"
 #include "OpenclNode.h"
 
 using namespace opencog;
@@ -319,8 +320,8 @@ void OpenclNode::queue_job(const job_t& kjob)
 	// The problem is this assumes the output comes first
 	// in the kernel, followed by the arguments. It could be
 	// different.
-	kjob._outvec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
-	kjob._kernel.setArg(0, kjob._outvec);
+	OpenclFloatValuePtr ofv = createOpenclFloatValue(vec_bytes);
+	ofv->set_arg(kjob._kernel, 0, true);
 	for (size_t i=1; i<kjob._ninputs; i++)
 		kjob._kernel.setArg(i, kjob._invec[i-1]);
 
@@ -340,19 +341,15 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 	// ------------------------------------------------------
 	// Wait for results
-	std::vector<double> result(kjob._vec_dim);
-
-	_queue.enqueueReadBuffer(kjob._outvec, CL_TRUE, 0, vec_bytes, result.data(),
+	_queue.enqueueReadBuffer(ofv->get_buffer(),
+		CL_TRUE, 0, vec_bytes, ofv->data(),
 		nullptr, &event_handler);
 	event_handler.wait();
 
 	// XXX TODO: we should probably wrap this with the kvec, so that
-	// the user knows who these reesults belong to. I guess using an
+	// the user knows who these results belong to. I guess using an
 	// ExecutionLink, right?
-	if (NUMBER_NODE == _item_type)
-		_qvp->add(std::move(createNumberNode(result)));
-	else
-		_qvp->add(std::move(createFloatValue(result)));
+	_qvp->add(std::move(ofv));
 }
 
 // ==============================================================

@@ -46,13 +46,17 @@ protected:
 	OpenclFloatValue(Type t) : FloatValue(t) {}
 	OpenclFloatValue(Type t, const std::vector<double>& v) : FloatValue(t, v) {}
 public:
-	OpenclFloatValue(void);
+	OpenclFloatValue(size_t);
 	OpenclFloatValue(const std::vector<double>&);
+	OpenclFloatValue(std::vector<double>&&);
 
 	virtual ~OpenclFloatValue() {}
 
 	const std::vector<double>& value() const { update(); return _value; }
+	void* data() { return _value.data(); }
 	size_t size() const { return _value.size(); }
+
+	void set_arg(cl::Kernel&, size_t pos, bool dirfrom);
 
 	/** Returns true if two values are equal. */
 	// virtual bool operator==(const Value&) const;

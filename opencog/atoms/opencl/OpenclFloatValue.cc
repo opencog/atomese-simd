@@ -27,9 +27,10 @@
 
 using namespace opencog;
 
-OpenclFloatValue::OpenclFloatValue(void) :
+OpenclFloatValue::OpenclFloatValue(size_t sz) :
 	FloatValue(OPENCL_FLOAT_VALUE)
 {
+	_value.resize(sz);
 }
 
 OpenclFloatValue::OpenclFloatValue(const std::vector<double>& v) :
@@ -37,14 +38,28 @@ OpenclFloatValue::OpenclFloatValue(const std::vector<double>& v) :
 {
 }
 
+OpenclFloatValue::OpenclFloatValue(std::vector<double>&& v) :
+	FloatValue(OPENCL_FLOAT_VALUE, std::move(v))
+{
+}
+
 void OpenclFloatValue::update(void) const
 {
+}
+
+void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos, bool dirfrom)
+{
+	if (dirfrom)
+		from_gpu(size());
+	else
+		to_gpu(size(), _value.data());
+	kern.setArg(pos, _bytevec);
 }
 
 // ==============================================================
 
 // Adds factory when the library is loaded.
 DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VALUE,
-                     createOpenclFloatValue)
+                     createOpenclFloatValue, size_t)
 DEFINE_VALUE_FACTORY(OPENCL_FLOAT_VALUE,
                      createOpenclFloatValue, std::vector<double>)

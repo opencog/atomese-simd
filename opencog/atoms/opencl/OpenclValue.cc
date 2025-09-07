@@ -47,7 +47,7 @@ void OpenclValue::set_context(const cl::Context& ctxt)
 	_context = ctxt;
 }
 
-void OpenclValue::from_gpu(size_t vec_bytes)
+void OpenclValue::from_gpu(size_t nbytes)
 {
 	// FIXME. probably OK if its already set!?
 	// maybe should mark CL_MEM_READ_WRITE ???
@@ -57,10 +57,10 @@ void OpenclValue::from_gpu(size_t vec_bytes)
 			"Bytevec already set!");
 */
 
-	_bytevec = cl::Buffer(_context, CL_MEM_READ_WRITE, vec_bytes);
+	_bytevec = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
 }
 
-void OpenclValue::to_gpu(size_t vec_bytes, void* vec)
+void OpenclValue::to_gpu(size_t nbytes, void* vec)
 {
 	// FIXME. probably OK if its already set!?
 /*
@@ -71,7 +71,7 @@ void OpenclValue::to_gpu(size_t vec_bytes, void* vec)
 
 	_bytevec = cl::Buffer(_context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		vec_bytes, vec);
+		nbytes, vec);
 }
 
 // ==============================================================

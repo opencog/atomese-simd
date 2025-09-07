@@ -39,6 +39,7 @@
 #include <opencog/util/async_method_caller.h>
 #include <opencog/atoms/value/QueueValue.h>
 #include <opencog/atoms/sensory/StreamNode.h>
+#include <opencog/atoms/opencl/OpenclFloatValue.h>
 
 namespace opencog
 {
@@ -87,7 +88,6 @@ protected:
 		size_t _ninputs;
 		mutable std::vector<const double*> _flts;
 		mutable std::vector<cl::Buffer> _invec;
-		mutable cl::Buffer _outvec;  // XXX FIXME assume only one output
 		mutable cl::Kernel _kernel;
 	} job_t;
 	void queue_job(const job_t&);
