@@ -61,6 +61,7 @@
 		(Section
 			(Predicate "vec_mult") ; Must be name of kernel
 			(ConnectorSeq
+				(Type 'FloatValue)
 				(Number 1 2 3 4 5)
 				(Number 2 2 2 2 2 2 3 42 999)))))
 
@@ -77,6 +78,7 @@
 		(Section
 			(Predicate "vec_mult") ; Must be name of kernel
 			(ConnectorSeq
+				(Type 'FloatValue)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
 				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
@@ -91,6 +93,7 @@
 		(Section
 			(Predicate "vec_add") ; Must be name of kernel
 			(ConnectorSeq
+				(Type 'FloatValue)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
 				(Number 2 3 4 5 6 5 4 3 2 1 0))))
 
@@ -114,6 +117,7 @@
 	(SectionValue
 		(Predicate "vec_add")
 		LinkValue
+			(Type 'FloatValue)
 			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
 			(RandomStream 3))))
 

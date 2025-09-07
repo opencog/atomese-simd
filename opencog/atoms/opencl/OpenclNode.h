@@ -86,16 +86,16 @@ protected:
 		ValuePtr _kvec;
 		cl::Kernel _kern;
 		size_t _vecdim;
+		std::vector<OpenclFloatValuePtr> _flovecs;
 		OpenclFloatValuePtr _outvec;
-		std::vector<OpenclFloatValuePtr> _inputs;
 	} job_t;
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;
 
 	const std::string& get_kern_name(ValuePtr) const;
 	cl::Kernel get_kernel(ValuePtr) const;
-	OpenclFloatValuePtr get_floats(ValuePtr, size_t&) const;
-	std::vector<OpenclFloatValuePtr> make_vectors (ValuePtr, size_t&) const;
+	OpenclFloatValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t&) const;
+	std::vector<OpenclFloatValuePtr> make_vectors (ValuePtr, cl::Kernel&, size_t&) const;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

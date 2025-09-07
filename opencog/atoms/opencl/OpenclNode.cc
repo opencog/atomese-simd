@@ -345,7 +345,7 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 
 /// Unwrap vector.
 OpenclFloatValuePtr
-OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
+OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern, size_t& pos, size_t& dim) const
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute();
@@ -358,6 +358,8 @@ OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 				std::move(vals));
 
 		ofv->set_context(_context);
+		ofv->set_arg(kern, pos, false);
+		pos ++;
 		return ofv;
 	}
 
@@ -368,6 +370,20 @@ OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(
 				std::move(vals));
 		ofv->set_context(_context);
+		ofv->set_arg(kern, pos, false);
+		pos ++;
+		return ofv;
+	}
+
+	if (vp->is_type(TYPE_NODE))
+	{
+		// TODO check that type is not insane
+		std::vector<double> vals;
+		vals.resize(dim);
+		OpenclFloatValuePtr ofv = createOpenclFloatValue(std::move(vals));
+		ofv->set_context(_context);
+		ofv->set_arg(kern, pos, true);
+		pos ++;
 		return ofv;
 	}
 
@@ -377,12 +393,14 @@ OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 }
 
 std::vector<OpenclFloatValuePtr>
-OpenclNode::make_vectors (ValuePtr kvec, size_t& dim) const
+OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 {
 	std::vector<OpenclFloatValuePtr> flovec;
 
 	// Unpack kernel arguments
 	dim = UINT_MAX;
+	dim = 500; // XXX Oh no Mr. Bill!
+	size_t pos = 0;
 	if (kvec->is_type(SECTION))
 	{
 		const Handle& conseq = HandleCast(kvec)->getOutgoingAtom(1);
@@ -390,7 +408,7 @@ OpenclNode::make_vectors (ValuePtr kvec, size_t& dim) const
 
 		// Find the shortest vector.
 		for (const Handle& oh : oset)
-			flovec.emplace_back(get_floats(oh, dim));
+			flovec.emplace_back(get_floats(oh, kern, pos, dim));
 	}
 	else
 	if (kvec->is_type(SECTION_VALUE))
@@ -400,11 +418,13 @@ OpenclNode::make_vectors (ValuePtr kvec, size_t& dim) const
 
 		// Find the shortest vector.
 		for (const ValuePtr& v: vsq)
-			flovec.emplace_back(get_floats(v, dim));
+			flovec.emplace_back(get_floats(v, kern, pos, dim));
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
+
+	kern.setArg(pos, dim);
 
 	return flovec;
 }
@@ -467,28 +487,15 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	cl::Kernel kern = get_kernel(kvec);
 
 	size_t dim;
-	std::vector<OpenclFloatValuePtr> inputs =
-		make_vectors (kvec, dim);
-
-	for (size_t i=0; i<inputs.size(); i++)
-	{
-		inputs[i]->set_arg(kern, i+1, false);
-	}
-
-	OpenclFloatValuePtr ofv = createOpenclFloatValue(dim);
-	ofv->set_context(_context);
-	ofv->set_arg(kern, 0, true);
-
-	// XXX This is the wrong thing to do in the long run.
-	// Or is it? each kernel gets its own size ... what's the problem?
-	kern.setArg(inputs.size() + 1, dim);
+	std::vector<OpenclFloatValuePtr> flovecs =
+		make_vectors (kvec, kern, dim);
 
 	job_t kjob;
 	kjob._kvec = kvec;
 	kjob._kern = kern;
 	kjob._vecdim = dim;
-	kjob._inputs = inputs;
-	kjob._outvec = ofv;
+	kjob._flovecs = flovecs;
+	kjob._outvec = flovecs[0];
 
 	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));
