@@ -304,16 +304,7 @@ ValuePtr OpenclNode::read(void) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-	// Copy vectors into cl::Buffer
 	size_t vec_bytes = kjob._vec_dim * sizeof(double);
-	for (const double* flt : kjob._flts)
-	{
-		kjob._invec.emplace_back(
-			cl::Buffer(_context,
-				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				vec_bytes,
-				(void*) flt));
-	}
 
 	// XXX Hardwired assumption about argument order.
 	// FIXME... but how ???
@@ -323,12 +314,16 @@ void OpenclNode::queue_job(const job_t& kjob)
 	OpenclFloatValuePtr ofv = createOpenclFloatValue(kjob._vec_dim);
 	ofv->set_context(_context);
 	ofv->set_arg(kjob._kernel, 0, true);
-	for (size_t i=1; i<kjob._ninputs; i++)
-		kjob._kernel.setArg(i, kjob._invec[i-1]);
+
+	for (size_t i=0; i<kjob._ninputs; i++)
+	{
+		kjob._invec[i]->set_context(_context);
+		kjob._invec[i]->set_arg(kjob._kernel, i+1, false);
+	}
 
 	// XXX This is the wrong thing to do in the long run.
 	// Or is it? each kernel gets its own size ... what's the problem?
-	kjob._kernel.setArg(kjob._ninputs, kjob._vec_dim);
+	// kjob._kernel.setArg(kjob._ninputs, kjob._vec_dim);
 
 	// Launch kernel
 	cl::Event event_handler;
@@ -431,7 +426,11 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 		// Find the shortest vector.
 		for (size_t i=1; i<oset.size(); i++)
-			kjob._flts.emplace_back(get_floats(oset[i], kjob._vec_dim).data());
+		{
+			OpenclFloatValuePtr ofv = createOpenclFloatValue(
+				std::move(get_floats(oset[i], kjob._vec_dim)));
+			kjob._invec.emplace_back(std::move(ofv));
+		}
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
@@ -441,7 +440,11 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 		// Find the shortest vector.
 		for (size_t i=1; i<vsq.size(); i++)
-			kjob._flts.emplace_back(get_floats(vsq[i], kjob._vec_dim).data());
+		{
+			OpenclFloatValuePtr ofv = createOpenclFloatValue(
+				std::move(get_floats(vsq[i], kjob._vec_dim)));
+			kjob._invec.emplace_back(std::move(ofv));
+		}
 	}
 	else
 		throw RuntimeException(TRACE_INFO,

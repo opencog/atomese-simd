@@ -86,8 +86,7 @@ protected:
 		ValuePtr _kvec;
 		size_t _vec_dim;
 		size_t _ninputs;
-		mutable std::vector<const double*> _flts;
-		mutable std::vector<cl::Buffer> _invec;
+		mutable std::vector<OpenclFloatValuePtr> _invec;
 		mutable cl::Kernel _kernel;
 	} job_t;
 	void queue_job(const job_t&);
