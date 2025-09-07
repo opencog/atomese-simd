@@ -420,34 +420,11 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-	// XXX Hardwired assumption about argument order.
-	// FIXME... Use SignatureLink or ArrowLink
-	ValuePtr kvec = kjob._kvec;
-
-	cl::Kernel kern = get_kernel(kvec);
-
-	size_t dim;
-	std::vector<OpenclFloatValuePtr> inputs = get_inputs (kvec, dim);
-
-	for (size_t i=0; i<inputs.size(); i++)
-	{
-		inputs[i]->set_context(_context);
-		inputs[i]->set_arg(kern, i+1, false);
-	}
-
-	OpenclFloatValuePtr ofv = createOpenclFloatValue(dim);
-	ofv->set_context(_context);
-	ofv->set_arg(kern, 0, true);
-
-	// XXX This is the wrong thing to do in the long run.
-	// Or is it? each kernel gets its own size ... what's the problem?
-	kern.setArg(inputs.size() + 1, dim);
-
 	// Launch kernel
 	cl::Event event_handler;
-	_queue.enqueueNDRangeKernel(kern,
+	_queue.enqueueNDRangeKernel(kjob._kern,
 		cl::NullRange,
-		cl::NDRange(dim),
+		cl::NDRange(kjob._vecdim),
 		cl::NullRange,
 		nullptr, &event_handler);
 
@@ -455,16 +432,16 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 	// ------------------------------------------------------
 	// Wait for results
-	size_t vec_bytes = dim * sizeof(double);
-	_queue.enqueueReadBuffer(ofv->get_buffer(),
-		CL_TRUE, 0, vec_bytes, ofv->data(),
+	size_t vec_bytes = kjob._vecdim * sizeof(double);
+	_queue.enqueueReadBuffer(kjob._outvec->get_buffer(),
+		CL_TRUE, 0, vec_bytes, kjob._outvec->data(),
 		nullptr, &event_handler);
 	event_handler.wait();
 
 	// XXX TODO: we should probably wrap this with the kvec, so that
 	// the user knows who these results belong to. I guess using an
 	// ArrowLink, right?
-	_qvp->add(std::move(ofv));
+	_qvp->add(kjob._outvec);
 }
 
 // ==============================================================
@@ -486,8 +463,35 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
+	// XXX Hardwired assumption about argument order.
+	// FIXME... Use SignatureLink or ArrowLink
+
+	cl::Kernel kern = get_kernel(kvec);
+
+	size_t dim;
+	std::vector<OpenclFloatValuePtr> inputs =
+		get_inputs (kvec, dim);
+
+	for (size_t i=0; i<inputs.size(); i++)
+	{
+		inputs[i]->set_context(_context);
+		inputs[i]->set_arg(kern, i+1, false);
+	}
+
+	OpenclFloatValuePtr ofv = createOpenclFloatValue(dim);
+	ofv->set_context(_context);
+	ofv->set_arg(kern, 0, true);
+
+	// XXX This is the wrong thing to do in the long run.
+	// Or is it? each kernel gets its own size ... what's the problem?
+	kern.setArg(inputs.size() + 1, dim);
+
 	job_t kjob;
 	kjob._kvec = kvec;
+	kjob._kern = kern;
+	kjob._vecdim = dim;
+	kjob._inputs = inputs;
+	kjob._outvec = ofv;
 
 	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));

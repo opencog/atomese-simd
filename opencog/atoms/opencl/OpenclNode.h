@@ -84,6 +84,10 @@ protected:
 		// Thus, we keep a pointer to the Value, so that it does not
 		// get dtored before we access it.
 		ValuePtr _kvec;
+		cl::Kernel _kern;
+		size_t _vecdim;
+		OpenclFloatValuePtr _outvec;
+		std::vector<OpenclFloatValuePtr> _inputs;
 	} job_t;
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;
