@@ -321,6 +321,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 	// in the kernel, followed by the arguments. It could be
 	// different.
 	OpenclFloatValuePtr ofv = createOpenclFloatValue(vec_bytes);
+	ofv->set_context(_context);
 	ofv->set_arg(kjob._kernel, 0, true);
 	for (size_t i=1; i<kjob._ninputs; i++)
 		kjob._kernel.setArg(i, kjob._invec[i-1]);
