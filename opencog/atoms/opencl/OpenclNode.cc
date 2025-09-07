@@ -320,7 +320,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 	// The problem is this assumes the output comes first
 	// in the kernel, followed by the arguments. It could be
 	// different.
-	OpenclFloatValuePtr ofv = createOpenclFloatValue(vec_bytes);
+	OpenclFloatValuePtr ofv = createOpenclFloatValue(kjob._vec_dim);
 	ofv->set_context(_context);
 	ofv->set_arg(kjob._kernel, 0, true);
 	for (size_t i=1; i<kjob._ninputs; i++)
