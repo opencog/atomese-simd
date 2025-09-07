@@ -378,13 +378,14 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 	dim = UINT_MAX;
 	if (kvec->is_type(SECTION))
 	{
-		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
+		const Handle& conseq = HandleCast(kvec)->getOutgoingAtom(1);
+		const HandleSeq& oset = conseq->getOutgoingSet();
 
 		// Find the shortest vector.
-		for (size_t i=1; i<oset.size(); i++)
+		for (const Handle& oh : oset)
 		{
 			OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(get_floats(oset[i], dim)));
+				std::move(get_floats(oh, dim)));
 			invec.emplace_back(ofv);
 		}
 	}
