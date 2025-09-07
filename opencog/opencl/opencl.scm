@@ -13,7 +13,7 @@
    "opencl_types_init")
 
 (load-extension
-   (string-append opencog-ext-path-opencl "libopencl")
+   (string-append opencog-ext-path-opencl "libopencl-atoms")
    "opencog_opencl_init")
 
 (include-from-path "opencog/opencl/opencl_types.scm")

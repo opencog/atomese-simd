@@ -2,23 +2,23 @@
 # Auto-generated types files are in the build directory.
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
-ADD_LIBRARY (opencl SHARED
+ADD_LIBRARY (opencl-atoms SHARED
 	OpenclFloatValue.cc
 	OpenclNode.cc
 	OpenclValue.cc
 )
 
 # Without this, parallel make will race and crap up the generated files.
-ADD_DEPENDENCIES(opencl opencl_atom_types)
+ADD_DEPENDENCIES(opencl-atoms opencl_atom_types)
 
-TARGET_LINK_LIBRARIES(opencl
+TARGET_LINK_LIBRARIES(opencl-atoms
 	opencl-types
 	${SENSORY_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
 	OpenCL::OpenCL
 )
 
-INSTALL (TARGETS opencl EXPORT AtomSpaceTargets
+INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
 	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
 )
 
