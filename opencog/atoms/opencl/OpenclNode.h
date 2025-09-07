@@ -84,9 +84,6 @@ protected:
 		// Thus, we keep a pointer to the Value, so that it does not
 		// get dtored before we access it.
 		ValuePtr _kvec;
-		size_t _vec_dim;
-		size_t _ninputs;
-		mutable std::vector<OpenclFloatValuePtr> _invec;
 		mutable cl::Kernel _kernel;
 	} job_t;
 	void queue_job(const job_t&);
@@ -94,6 +91,7 @@ protected:
 
 	const std::string& get_kern_name(ValuePtr) const;
 	const std::vector<double>& get_floats(ValuePtr, size_t&) const;
+	std::vector<OpenclFloatValuePtr> get_inputs (ValuePtr, size_t&) const;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

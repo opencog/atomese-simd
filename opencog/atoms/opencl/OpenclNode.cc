@@ -297,6 +297,73 @@ ValuePtr OpenclNode::read(void) const
 	return _qvp->remove();
 }
 
+// ==============================================================
+
+/// Unwrap vector.
+const std::vector<double>&
+OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
+{
+	if (vp->is_atom() and HandleCast(vp)->is_executable())
+		vp = HandleCast(vp)->execute();
+
+	if (vp->is_type(NUMBER_NODE))
+	{
+		const std::vector<double>& vals(NumberNodeCast(HandleCast(vp))->value());
+		if (vals.size() < dim) dim = vals.size();
+		return vals;
+	}
+
+	if (vp->is_type(FLOAT_VALUE))
+	{
+		const std::vector<double>& vals(FloatValueCast(vp) ->value());
+		if (vals.size() < dim) dim = vals.size();
+		return vals;
+	}
+
+	throw RuntimeException(TRACE_INFO,
+		"Expecting FloatValue or NumberNode, got %s\n",
+		vp->to_string().c_str());
+}
+
+std::vector<OpenclFloatValuePtr>
+OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
+{
+	std::vector<OpenclFloatValuePtr> invec;
+
+	// Unpack kernel arguments
+	dim = UINT_MAX;
+	if (kvec->is_type(LIST_LINK))
+	{
+		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
+
+		// Find the shortest vector.
+		for (size_t i=1; i<oset.size(); i++)
+		{
+			OpenclFloatValuePtr ofv = createOpenclFloatValue(
+				std::move(get_floats(oset[i], dim)));
+			invec.emplace_back(ofv);
+		}
+	}
+	else
+	if (kvec->is_type(LINK_VALUE))
+	{
+		const ValueSeq& vsq = LinkValueCast(kvec)->value();
+
+		// Find the shortest vector.
+		for (size_t i=1; i<vsq.size(); i++)
+		{
+			OpenclFloatValuePtr ofv = createOpenclFloatValue(
+				std::move(get_floats(vsq[i], dim)));
+			invec.emplace_back(ofv);
+		}
+	}
+	else
+		throw RuntimeException(TRACE_INFO,
+			"Unknown data type: got %s\n", kvec->to_string().c_str());
+
+	return invec;
+}
+
 // This job handler runs in a different thread than the main thread.
 // It finishes the setup of the assorted buffers that OpenCL expects,
 // sends things to the GPU, and then waits for a reply. When a reply
@@ -304,32 +371,36 @@ ValuePtr OpenclNode::read(void) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-	size_t vec_bytes = kjob._vec_dim * sizeof(double);
 
 	// XXX Hardwired assumption about argument order.
 	// FIXME... but how ???
 	// The problem is this assumes the output comes first
 	// in the kernel, followed by the arguments. It could be
 	// different.
-	OpenclFloatValuePtr ofv = createOpenclFloatValue(kjob._vec_dim);
+
+	size_t dim;
+	std::vector<OpenclFloatValuePtr> inputs =
+		get_inputs (kjob._kvec, dim);
+
+	for (size_t i=0; i<inputs.size(); i++)
+	{
+		inputs[i]->set_context(_context);
+		inputs[i]->set_arg(kjob._kernel, i+1, false);
+	}
+
+	OpenclFloatValuePtr ofv = createOpenclFloatValue(dim);
 	ofv->set_context(_context);
 	ofv->set_arg(kjob._kernel, 0, true);
 
-	for (size_t i=0; i<kjob._ninputs; i++)
-	{
-		kjob._invec[i]->set_context(_context);
-		kjob._invec[i]->set_arg(kjob._kernel, i+1, false);
-	}
-
 	// XXX This is the wrong thing to do in the long run.
 	// Or is it? each kernel gets its own size ... what's the problem?
-	kjob._kernel.setArg(kjob._ninputs + 1, kjob._vec_dim);
+	kjob._kernel.setArg(inputs.size() + 1, dim);
 
 	// Launch kernel
 	cl::Event event_handler;
 	_queue.enqueueNDRangeKernel(kjob._kernel,
 		cl::NullRange,
-		cl::NDRange(kjob._vec_dim),
+		cl::NDRange(dim),
 		cl::NullRange,
 		nullptr, &event_handler);
 
@@ -337,6 +408,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 	// ------------------------------------------------------
 	// Wait for results
+	size_t vec_bytes = dim * sizeof(double);
 	_queue.enqueueReadBuffer(ofv->get_buffer(),
 		CL_TRUE, 0, vec_bytes, ofv->data(),
 		nullptr, &event_handler);
@@ -368,32 +440,6 @@ OpenclNode::get_kern_name (ValuePtr vp) const
 		vp->to_string().c_str());
 }
 
-/// Unwrap vector.
-const std::vector<double>&
-OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
-{
-	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute();
-
-	if (vp->is_type(NUMBER_NODE))
-	{
-		const std::vector<double>& vals(NumberNodeCast(HandleCast(vp))->value());
-		if (vals.size() < dim) dim = vals.size();
-		return vals;
-	}
-
-	if (vp->is_type(FLOAT_VALUE))
-	{
-		const std::vector<double>& vals(FloatValueCast(vp) ->value());
-		if (vals.size() < dim) dim = vals.size();
-		return vals;
-	}
-
-	throw RuntimeException(TRACE_INFO,
-		"Expecting FloatValue or NumberNode, got %s\n",
-		vp->to_string().c_str());
-}
-
 // ==============================================================
 // Send kernel and data
 
@@ -416,35 +462,18 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	job_t kjob;
 	kjob._kvec = kvec;
 
-	// Unpack kernel name and kernel arguments
+	// Unpack kernel name.
 	std::string kern_name;
-	kjob._vec_dim = UINT_MAX;
 	if (kvec->is_type(LIST_LINK))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
 		kern_name = get_kern_name(oset[0]);
-
-		// Find the shortest vector.
-		for (size_t i=1; i<oset.size(); i++)
-		{
-			OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(get_floats(oset[i], kjob._vec_dim)));
-			kjob._invec.emplace_back(std::move(ofv));
-		}
 	}
 	else
 	if (kvec->is_type(LINK_VALUE))
 	{
 		const ValueSeq& vsq = LinkValueCast(kvec)->value();
 		kern_name = get_kern_name(vsq[0]);
-
-		// Find the shortest vector.
-		for (size_t i=1; i<vsq.size(); i++)
-		{
-			OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(get_floats(vsq[i], kjob._vec_dim)));
-			kjob._invec.emplace_back(std::move(ofv));
-		}
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
@@ -454,9 +483,6 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	// kernel name. We should catch this and print a friendlier
 	// error message.
 	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
-
-	// first one is the kernel, rest are the inputs
-	kjob._ninputs = kvec->size() - 1;
 
 	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));
