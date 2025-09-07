@@ -58,8 +58,9 @@ protected:
 	OpenclValue(void);
 
 	bool _have_ctxt;
+	bool _have_buffer;
 	cl::Context _context;
-	mutable cl::Buffer _bytevec;
+	mutable cl::Buffer _buffer;
 
 	void set_context(const cl::Context&);
 
@@ -72,7 +73,7 @@ public:
 
 	// XXX hack alert ... remove this from the API when ready.
 	// this is temp scaffolding
-	cl::Buffer& get_buffer() { return _bytevec; }
+	cl::Buffer& get_buffer() { return _buffer; }
 };
 
 /** @}*/

@@ -53,7 +53,7 @@ void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos, bool dirfrom)
 		from_gpu(sizeof(double)*size());
 	else
 		to_gpu(sizeof(double)*size(), _value.data());
-	kern.setArg(pos, _bytevec);
+	kern.setArg(pos, _buffer);
 }
 
 // ==============================================================
