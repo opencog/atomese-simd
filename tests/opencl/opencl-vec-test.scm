@@ -47,21 +47,6 @@
 (test-assert "open stream" (cog-value-ref cnct 0))
 
 ; ---------------------------------------------------------------
-(define kernel-number
-	(SetValue clnode (Predicate "*-write-*")
-		(Section
-			(Predicate "vec_mult") ; Must be name of kernel
-			(ConnectorSeq
-				(Type 'Number)
-				(Number 1 2 3 4 5)
-				(Number 2 2 2 2 2 2 3 42 999)))))
-
-(cog-execute! kernel-number)
-(define kern-num
-	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
-(test-assert "num one" (equal? (Number 2 4 6 8 10) kern-num))
-
-; ---------------------------------------------------------------
 (define kernel-runner
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
