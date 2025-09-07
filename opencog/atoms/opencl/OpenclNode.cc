@@ -299,6 +299,53 @@ ValuePtr OpenclNode::read(void) const
 
 // ==============================================================
 
+/// Unwrap kernel name.
+const std::string&
+OpenclNode::get_kern_name (ValuePtr vp) const
+{
+	if (vp->is_atom() and HandleCast(vp)->is_executable())
+		vp = HandleCast(vp)->execute();
+
+	if (vp->is_node())
+		return HandleCast(vp)->get_name();
+
+	if (vp->is_type(STRING_VALUE))
+		return StringValueCast(vp)->value()[0];
+
+	throw RuntimeException(TRACE_INFO,
+		"Expecting Value with kernel name, got %s\n",
+		vp->to_string().c_str());
+}
+
+cl::Kernel
+OpenclNode::get_kernel (ValuePtr kvec) const
+{
+	// Unpack kernel name.
+	std::string kern_name;
+
+	if (kvec->is_type(LIST_LINK))
+	{
+		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
+		kern_name = get_kern_name(oset[0]);
+	}
+	else
+	if (kvec->is_type(LINK_VALUE))
+	{
+		const ValueSeq& vsq = LinkValueCast(kvec)->value();
+		kern_name = get_kern_name(vsq[0]);
+	}
+	else
+		throw RuntimeException(TRACE_INFO,
+			"Unknown data type: got %s\n", kvec->to_string().c_str());
+
+	// XXX TODO this will throw exception if user mis-typed the
+	// kernel name. We should catch this and print a friendlier
+	// error message.
+	return cl::Kernel(_program, kern_name.c_str());
+}
+
+// ==============================================================
+
 /// Unwrap vector.
 const std::vector<double>&
 OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
@@ -364,6 +411,8 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 	return invec;
 }
 
+// ==============================================================
+
 // This job handler runs in a different thread than the main thread.
 // It finishes the setup of the assorted buffers that OpenCL expects,
 // sends things to the GPU, and then waits for a reply. When a reply
@@ -373,10 +422,9 @@ void OpenclNode::queue_job(const job_t& kjob)
 {
 
 	// XXX Hardwired assumption about argument order.
-	// FIXME... but how ???
-	// The problem is this assumes the output comes first
-	// in the kernel, followed by the arguments. It could be
-	// different.
+	// FIXME... Use SignatureLink or ArrowLink
+
+	cl::Kernel kern = get_kernel(kjob._kvec);
 
 	size_t dim;
 	std::vector<OpenclFloatValuePtr> inputs =
@@ -385,20 +433,20 @@ void OpenclNode::queue_job(const job_t& kjob)
 	for (size_t i=0; i<inputs.size(); i++)
 	{
 		inputs[i]->set_context(_context);
-		inputs[i]->set_arg(kjob._kernel, i+1, false);
+		inputs[i]->set_arg(kern, i+1, false);
 	}
 
 	OpenclFloatValuePtr ofv = createOpenclFloatValue(dim);
 	ofv->set_context(_context);
-	ofv->set_arg(kjob._kernel, 0, true);
+	ofv->set_arg(kern, 0, true);
 
 	// XXX This is the wrong thing to do in the long run.
 	// Or is it? each kernel gets its own size ... what's the problem?
-	kjob._kernel.setArg(inputs.size() + 1, dim);
+	kern.setArg(inputs.size() + 1, dim);
 
 	// Launch kernel
 	cl::Event event_handler;
-	_queue.enqueueNDRangeKernel(kjob._kernel,
+	_queue.enqueueNDRangeKernel(kern,
 		cl::NullRange,
 		cl::NDRange(dim),
 		cl::NullRange,
@@ -416,28 +464,8 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 	// XXX TODO: we should probably wrap this with the kvec, so that
 	// the user knows who these results belong to. I guess using an
-	// ExecutionLink, right?
+	// ArrowLink, right?
 	_qvp->add(std::move(ofv));
-}
-
-// ==============================================================
-
-/// Unwrap kernel name.
-const std::string&
-OpenclNode::get_kern_name (ValuePtr vp) const
-{
-	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute();
-
-	if (vp->is_node())
-		return HandleCast(vp)->get_name();
-
-	if (vp->is_type(STRING_VALUE))
-		return StringValueCast(vp)->value()[0];
-
-	throw RuntimeException(TRACE_INFO,
-		"Expecting Value with kernel name, got %s\n",
-		vp->to_string().c_str());
 }
 
 // ==============================================================
@@ -461,28 +489,6 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 	job_t kjob;
 	kjob._kvec = kvec;
-
-	// Unpack kernel name.
-	std::string kern_name;
-	if (kvec->is_type(LIST_LINK))
-	{
-		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
-		kern_name = get_kern_name(oset[0]);
-	}
-	else
-	if (kvec->is_type(LINK_VALUE))
-	{
-		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		kern_name = get_kern_name(vsq[0]);
-	}
-	else
-		throw RuntimeException(TRACE_INFO,
-			"Unknown data type: got %s\n", kvec->to_string().c_str());
-
-	// XXX TODO this will throw exception if user mis-typed the
-	// kernel name. We should catch this and print a friendlier
-	// error message.
-	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
 
 	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));
