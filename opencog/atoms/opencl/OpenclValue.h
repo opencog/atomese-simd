@@ -53,21 +53,21 @@ namespace opencog
  */
 class OpenclValue
 {
+	friend class OpenclNode;
 protected:
 	OpenclValue(void);
 
 	cl::Context _context;
 	mutable cl::Buffer _bytevec;
 
+	void set_context(const cl::Context&);
+
 	void to_gpu(size_t vec_bytes, void* vec);
 	void from_gpu(size_t);
+
 public:
 	virtual ~OpenclValue();
 	virtual void set_arg(cl::Kernel&, size_t pos, bool dirfrom) = 0;
-
-	// XXX hack alert ... move this to protected soon as we figure out
-	// the API. this is temp scaffolding
-	void set_context(const cl::Context&);
 
 	// XXX hack alert ... remove this from the API when ready.
 	// this is temp scaffolding
