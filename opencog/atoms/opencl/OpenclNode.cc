@@ -323,7 +323,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 	// XXX This is the wrong thing to do in the long run.
 	// Or is it? each kernel gets its own size ... what's the problem?
-	// kjob._kernel.setArg(kjob._ninputs, kjob._vec_dim);
+	kjob._kernel.setArg(kjob._ninputs + 1, kjob._vec_dim);
 
 	// Launch kernel
 	cl::Event event_handler;
@@ -455,7 +455,8 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	// error message.
 	kjob._kernel = cl::Kernel(_program, kern_name.c_str());
 
-	kjob._ninputs = kvec->size();
+	// first one is the kernel, rest are the inputs
+	kjob._ninputs = kvec->size() - 1;
 
 	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));
