@@ -356,15 +356,18 @@ OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 		if (vals.size() < dim) dim = vals.size();
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(
 				std::move(vals));
+
+		ofv->set_context(_context);
 		return ofv;
 	}
 
 	if (vp->is_type(FLOAT_VALUE))
 	{
-		const std::vector<double>& vals(FloatValueCast(vp) ->value());
+		const std::vector<double>& vals(FloatValueCast(vp)->value());
 		if (vals.size() < dim) dim = vals.size();
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(
 				std::move(vals));
+		ofv->set_context(_context);
 		return ofv;
 	}
 
@@ -469,7 +472,6 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 	for (size_t i=0; i<inputs.size(); i++)
 	{
-		inputs[i]->set_context(_context);
 		inputs[i]->set_arg(kern, i+1, false);
 	}
 
