@@ -323,11 +323,8 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 	// Unpack kernel name.
 	std::string kern_name;
 
-	if (kvec->is_type(LIST_LINK))
-	{
-		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
-		kern_name = get_kern_name(oset[0]);
-	}
+	if (kvec->is_type(SECTION))
+		kern_name = get_kern_name(HandleCast(kvec)->getOutgoingAtom(0));
 	else
 	if (kvec->is_type(LINK_VALUE))
 	{
@@ -379,7 +376,7 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 
 	// Unpack kernel arguments
 	dim = UINT_MAX;
-	if (kvec->is_type(LIST_LINK))
+	if (kvec->is_type(SECTION))
 	{
 		const HandleSeq& oset = HandleCast(kvec)->getOutgoingSet();
 
