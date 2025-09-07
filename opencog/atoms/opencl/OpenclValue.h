@@ -59,6 +59,8 @@ protected:
 
 	bool _have_ctxt;
 	bool _have_buffer;
+	bool _wait_for_update;
+
 	cl::Context _context;
 	mutable cl::Buffer _buffer;
 

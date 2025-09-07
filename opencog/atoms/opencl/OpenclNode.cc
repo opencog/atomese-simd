@@ -344,7 +344,7 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 // ==============================================================
 
 /// Unwrap vector.
-const std::vector<double>&
+OpenclFloatValuePtr
 OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
@@ -352,16 +352,20 @@ OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 
 	if (vp->is_type(NUMBER_NODE))
 	{
-		const std::vector<double>& vals(NumberNodeCast(HandleCast(vp))->value());
+		const std::vector<double>& vals(NumberNodeCast(vp)->value());
 		if (vals.size() < dim) dim = vals.size();
-		return vals;
+		OpenclFloatValuePtr ofv = createOpenclFloatValue(
+				std::move(vals));
+		return ofv;
 	}
 
 	if (vp->is_type(FLOAT_VALUE))
 	{
 		const std::vector<double>& vals(FloatValueCast(vp) ->value());
 		if (vals.size() < dim) dim = vals.size();
-		return vals;
+		OpenclFloatValuePtr ofv = createOpenclFloatValue(
+				std::move(vals));
+		return ofv;
 	}
 
 	throw RuntimeException(TRACE_INFO,
@@ -370,9 +374,9 @@ OpenclNode::get_floats (ValuePtr vp, size_t& dim) const
 }
 
 std::vector<OpenclFloatValuePtr>
-OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
+OpenclNode::make_vectors (ValuePtr kvec, size_t& dim) const
 {
-	std::vector<OpenclFloatValuePtr> invec;
+	std::vector<OpenclFloatValuePtr> flovec;
 
 	// Unpack kernel arguments
 	dim = UINT_MAX;
@@ -383,11 +387,7 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 
 		// Find the shortest vector.
 		for (const Handle& oh : oset)
-		{
-			OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(get_floats(oh, dim)));
-			invec.emplace_back(ofv);
-		}
+			flovec.emplace_back(get_floats(oh, dim));
 	}
 	else
 	if (kvec->is_type(SECTION_VALUE))
@@ -397,17 +397,13 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 
 		// Find the shortest vector.
 		for (const ValuePtr& v: vsq)
-		{
-			OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(get_floats(v, dim)));
-			invec.emplace_back(ofv);
-		}
+			flovec.emplace_back(get_floats(v, dim));
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
-	return invec;
+	return flovec;
 }
 
 // ==============================================================
@@ -469,7 +465,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 	size_t dim;
 	std::vector<OpenclFloatValuePtr> inputs =
-		get_inputs (kvec, dim);
+		make_vectors (kvec, dim);
 
 	for (size_t i=0; i<inputs.size(); i++)
 	{

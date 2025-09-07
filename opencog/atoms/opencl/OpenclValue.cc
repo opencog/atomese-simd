@@ -28,6 +28,7 @@ using namespace opencog;
 OpenclValue::OpenclValue(void) :
 	_have_ctxt(false),
 	_have_buffer(false),
+	_wait_for_update(false),
 	_context(nullptr),
 	_buffer(nullptr)
 {
@@ -57,6 +58,7 @@ void OpenclValue::from_gpu(size_t nbytes)
 		throw RuntimeException(TRACE_INFO,
 			"Bytevec already set!");
 
+	_wait_for_update = true;
 	_have_buffer = true;
 	_buffer = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
 }
@@ -69,6 +71,7 @@ void OpenclValue::to_gpu(size_t nbytes, void* vec)
 		throw RuntimeException(TRACE_INFO,
 			"Bytevec already set!");
 
+	_wait_for_update = false;
 	_have_buffer = true;
 	_buffer = cl::Buffer(_context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
