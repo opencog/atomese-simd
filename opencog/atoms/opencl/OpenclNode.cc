@@ -420,15 +420,14 @@ OpenclNode::get_inputs (ValuePtr kvec, size_t& dim) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-
 	// XXX Hardwired assumption about argument order.
 	// FIXME... Use SignatureLink or ArrowLink
+	ValuePtr kvec = kjob._kvec;
 
-	cl::Kernel kern = get_kernel(kjob._kvec);
+	cl::Kernel kern = get_kernel(kvec);
 
 	size_t dim;
-	std::vector<OpenclFloatValuePtr> inputs =
-		get_inputs (kjob._kvec, dim);
+	std::vector<OpenclFloatValuePtr> inputs = get_inputs (kvec, dim);
 
 	for (size_t i=0; i<inputs.size(); i++)
 	{
