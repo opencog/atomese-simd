@@ -425,7 +425,7 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 	return ofv;
 }
 
-std::vector<OpenclFloatValuePtr>
+ValueSeq
 OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 {
 	// Unpack kernel arguments
@@ -464,7 +464,7 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 	// Find the shortest vector.
 	dim = get_vec_len(vsq);
 	size_t pos = 0;
-	std::vector<OpenclFloatValuePtr> flovec;
+	ValueSeq flovec;
 	for (const ValuePtr& v: vsq)
 		flovec.emplace_back(get_floats(v, kern, pos, dim));
 
@@ -531,20 +531,19 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
 	// XXX Hardwired assumption about argument order.
-	// FIXME... Use SignatureLink or ArrowLink
+	// FIXME... We're almost there, with Section but not quite.
 
 	cl::Kernel kern = get_kernel(kvec);
 
-	size_t dim;
-	std::vector<OpenclFloatValuePtr> flovecs =
-		make_vectors (kvec, kern, dim);
+	size_t dim = 0;
+	ValueSeq flovecs = make_vectors (kvec, kern, dim);
 
 	job_t kjob;
 	kjob._kvec = kvec;
 	kjob._kern = kern;
 	kjob._vecdim = dim;
 	kjob._flovecs = flovecs;
-	kjob._outvec = flovecs[0];
+	kjob._outvec = OpenclFloatValueCast(flovecs[0]);
 
 	// Send everything off to the GPU.
 	_dispatch_queue.enqueue(std::move(kjob));

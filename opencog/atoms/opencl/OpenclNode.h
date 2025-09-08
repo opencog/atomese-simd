@@ -86,7 +86,7 @@ protected:
 		ValuePtr _kvec;
 		cl::Kernel _kern;
 		size_t _vecdim;
-		std::vector<OpenclFloatValuePtr> _flovecs;
+		ValueSeq _flovecs;
 		OpenclFloatValuePtr _outvec;
 	} job_t;
 	void queue_job(const job_t&);
@@ -96,7 +96,7 @@ protected:
 	cl::Kernel get_kernel(ValuePtr) const;
 	size_t get_vec_len(const ValueSeq&) const;
 	OpenclFloatValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t) const;
-	std::vector<OpenclFloatValuePtr> make_vectors (ValuePtr, cl::Kernel&, size_t&) const;
+	ValueSeq make_vectors(ValuePtr, cl::Kernel&, size_t&) const;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);
