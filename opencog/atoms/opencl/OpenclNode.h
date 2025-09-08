@@ -94,7 +94,8 @@ protected:
 
 	const std::string& get_kern_name(ValuePtr) const;
 	cl::Kernel get_kernel(ValuePtr) const;
-	OpenclFloatValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t&) const;
+	size_t get_vec_len(const ValueSeq&) const;
+	OpenclFloatValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t) const;
 	std::vector<OpenclFloatValuePtr> make_vectors (ValuePtr, cl::Kernel&, size_t&) const;
 
 	QueueValuePtr _qvp;

@@ -343,57 +343,90 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 
 // ==============================================================
 
+/// Find the vector length.
+/// Look either for a length specification embedded in the list,
+/// else obtain the shortest of all the vectors.
+size_t
+OpenclNode::get_vec_len (const ValueSeq& vsq) const
+{
+	size_t dim = UINT_MAX;
+	for (const ValuePtr& vp : vsq)
+	{
+		if (vp->is_type(TYPE_NODE)) continue;
+
+		if (vp->is_type(NUMBER_NODE))
+		{
+			size_t sz = NumberNodeCast(vp)->size();
+			if (sz < dim) dim = sz;
+			continue;
+		}
+
+		if (vp->is_type(FLOAT_VALUE))
+		{
+			size_t sz = FloatValueCast(vp)->size();
+			if (sz < dim) dim = sz;
+			continue;
+		}
+
+		// Assume the length specification is wrapped like so:
+		// (Connector (Number 42))
+		// XXX FIXME check for insane structures here.
+		if (vp->is_type(CONNECTOR))
+		{
+			const Handle& h = HandleCast(vp)->getOutgoingAtom(0);
+			double sz = NumberNodeCast(h)->get_value();
+			if (sz < 0.0) continue;
+
+			// round, just in case.
+			return (size_t) (sz+0.5);
+		}
+	}
+
+	return dim;
+}
+
 /// Unwrap vector.
 OpenclFloatValuePtr
-OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern,
-                        size_t& pos, size_t& dim) const
+OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
+                       size_t& pos, size_t dim) const
 {
-	if (vp->is_type(NUMBER_NODE))
-	{
-		const std::vector<double>& vals(NumberNodeCast(vp)->value());
-		if (vals.size() < dim) dim = vals.size();
-		OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(vals));
+	bool from_gpu = false;
+	const std::vector<double>* vals = nullptr;
 
-		ofv->set_context(_context);
-		ofv->set_arg(kern, pos, false);
-		pos ++;
-		return ofv;
-	}
+	if (vp->is_type(NUMBER_NODE))
+		vals = &(NumberNodeCast(vp)->value());
 
 	if (vp->is_type(FLOAT_VALUE))
-	{
-		const std::vector<double>& vals(FloatValueCast(vp)->value());
-		if (vals.size() < dim) dim = vals.size();
-		OpenclFloatValuePtr ofv = createOpenclFloatValue(
-				std::move(vals));
-		ofv->set_context(_context);
-		ofv->set_arg(kern, pos, false);
-		pos ++;
-		return ofv;
-	}
+		vals = &(FloatValueCast(vp)->value());
 
+	// XXX For now, we ignore the type. FIXME
 	if (vp->is_type(TYPE_NODE))
-	{
-		// TODO check that type is not insane
-		std::vector<double> vals;
-// XXX temp hack til we fix sizes
-vals.resize(6000); // XXX BADDDDDDDDDDDDDDDDDDDDD
-if (6000 < dim) { dim = 6000; }
-		OpenclFloatValuePtr ofv = createOpenclFloatValue(std::move(vals));
-		ofv->set_context(_context);
-		ofv->set_arg(kern, pos, true);
-		pos ++;
-		return ofv;
-	}
+		from_gpu = true;
 
-	throw RuntimeException(TRACE_INFO,
-		"Expecting FloatValue or NumberNode, got %s\n",
-		vp->to_string().c_str());
+	OpenclFloatValuePtr ofv;
+	if (nullptr == vals)
+	{
+		std::vector<double> zero;
+		zero.resize(dim);
+		ofv = createOpenclFloatValue(std::move(zero));
+	}
+	else if (vals->size() < dim)
+	{
+		std::vector<double> cpy(*vals);
+		cpy.resize(dim);
+		ofv = createOpenclFloatValue(std::move(cpy));
+	}
+	else
+		ofv = createOpenclFloatValue(*vals);
+
+	ofv->set_context(_context);
+	ofv->set_arg(kern, pos, from_gpu);
+	pos ++;
+	return ofv;
 }
 
 std::vector<OpenclFloatValuePtr>
-OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
+OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 {
 	// Unpack kernel arguments
 	ValueSeq vsq;
@@ -429,17 +462,11 @@ OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
 	// Find the shortest vector.
-	dim = UINT_MAX;
+	dim = get_vec_len(vsq);
 	size_t pos = 0;
 	std::vector<OpenclFloatValuePtr> flovec;
 	for (const ValuePtr& v: vsq)
 		flovec.emplace_back(get_floats(v, kern, pos, dim));
-
-	for (const OpenclFloatValuePtr& ofv : flovec)
-	{
-		if (ofv->is_output())
-			ofv->resize(dim);
-	}
 
 	kern.setArg(pos, dim);
 

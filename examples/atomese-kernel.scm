@@ -63,7 +63,8 @@
 			(ConnectorSeq
 				(Type 'Number)
 				(Number 1 2 3 4 5)
-				(Number 2 2 2 2 2 2 3 42 999)))))
+				(Number 2 2 2 2 2 2 3 42 999)
+				(Connector (Number -1))))))
 
 ; Run the kernel.
 (cog-execute! kernel-runner)
