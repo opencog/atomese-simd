@@ -11,11 +11,16 @@
 ; (define clurl "opencl://Clover:AMD Radeon/tmp/vec-kernel.cl")
 ; (define clurl "opencl://CUDA:NVIDIA RTX 4000/tmp/vec-kernel.cl")
 
-; Horrible hacker to extract location of the unit test.
+; Horrible hackery to extract location of the unit test.
+; Currently works only with absolute paths; relative paths ar broken.
 (format #t "Command line: ~A\n" (command-line))
 (define last-arg (last (command-line)))
 (define pathcomp (string-split last-arg #\/))
 (define leader (take pathcomp (- (length pathcomp) 1)))
+
+; leading char of path should be either slash, or dot.
+; We want this to rebuild a relative path...
+(define leading-char (list->string (list (string-ref last-arg 0))))
 (define path (fold
 	(lambda (s t) (string-concatenate (list t "/" s)))
 	"" leader))
@@ -26,7 +31,7 @@
 (define curloc (if (< 1 (length pathcomp)) path (getcwd)))
 
 (define clurl (string-concatenate (list
-	"opencl://:/" curloc "/vec-kernel.cl")))
+	"opencl://:" curloc "/vec-kernel.cl")))
 
 (format #t "Looking for kernel at ~A\n" clurl)
 
