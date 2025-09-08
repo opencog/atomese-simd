@@ -348,9 +348,6 @@ OpenclFloatValuePtr
 OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern,
                         size_t& pos, size_t& dim) const
 {
-	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute();
-
 	if (vp->is_type(NUMBER_NODE))
 	{
 		const std::vector<double>& vals(NumberNodeCast(vp)->value());
@@ -398,11 +395,8 @@ if (6000 < dim) { dim = 6000; }
 std::vector<OpenclFloatValuePtr>
 OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 {
-	std::vector<OpenclFloatValuePtr> flovec;
-
 	// Unpack kernel arguments
-	dim = UINT_MAX;
-	size_t pos = 0;
+	ValueSeq vsq;
 	if (kvec->is_type(SECTION))
 	{
 		const Handle& conseq = HandleCast(kvec)->getOutgoingAtom(1);
@@ -410,21 +404,36 @@ OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 
 		// Find the shortest vector.
 		for (const Handle& oh : oset)
-			flovec.emplace_back(get_floats(oh, kern, pos, dim));
+		{
+			if (oh->is_executable())
+				vsq.emplace_back(oh->execute());
+			else
+				vsq.push_back(oh);
+		}
 	}
 	else
 	if (kvec->is_type(SECTION_VALUE))
 	{
 		const ValueSeq& sex = LinkValueCast(kvec)->value();
-		const ValueSeq& vsq = LinkValueCast(sex[1])->value();
-
-		// Find the shortest vector.
-		for (const ValuePtr& v: vsq)
-			flovec.emplace_back(get_floats(v, kern, pos, dim));
+		const ValueSeq& vsx = LinkValueCast(sex[1])->value();
+		for (const ValuePtr& v: vsx)
+		{
+			if (v->is_atom() and HandleCast(v)->is_executable())
+				vsq.emplace_back(HandleCast(v)->execute());
+			else
+				vsq.push_back(v);
+		}
 	}
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
+
+	// Find the shortest vector.
+	dim = UINT_MAX;
+	size_t pos = 0;
+	std::vector<OpenclFloatValuePtr> flovec;
+	for (const ValuePtr& v: vsq)
+		flovec.emplace_back(get_floats(v, kern, pos, dim));
 
 	for (const OpenclFloatValuePtr& ofv : flovec)
 	{
