@@ -2,7 +2,9 @@ Design Notes B
 ==============
 August 2025
 
-Notes about OpenCL interfaces and how they impact Atomese design.
+Notes about porting the system & demos to the Sensory Version Half API.
+This is the `ObjectNode` API; it partitions functions differently from
+the original Version Zero.
 
 `OpenclNode` currently holds:
 ```

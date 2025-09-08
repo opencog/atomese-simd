@@ -2,7 +2,7 @@ Design Notes C
 ==============
 September 2025
 
-Notes about OpenCL interfaces and how they impact Atomese design.
+Notes about wiring, composability and flow.
 
 Status: The most basic demo of adding and multiplying vectors works.
 Nothing flows in this demo: it's static in it's design. One specifies
