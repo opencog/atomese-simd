@@ -395,6 +395,14 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 	bool from_gpu = false;
 	const std::vector<double>* vals = nullptr;
 
+	// Special-case location of the vector length specification.
+	if (vp->is_type(CONNECTOR))
+	{
+		kern.setArg(pos, dim);
+		pos ++;
+		return vp;
+	}
+
 	if (vp->is_type(NUMBER_NODE))
 		vals = &(NumberNodeCast(vp)->value());
 
