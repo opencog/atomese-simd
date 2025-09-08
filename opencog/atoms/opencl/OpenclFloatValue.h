@@ -57,9 +57,7 @@ public:
 	size_t size() const { return _value.size(); }
 
 	void set_arg(cl::Kernel&, size_t pos, bool dirfrom);
-
-	/** Returns true if two values are equal. */
-	// virtual bool operator==(const Value&) const;
+	void resize(size_t dim) { _value.resize(dim); }
 };
 
 VALUE_PTR_DECL(OpenclFloatValue);

@@ -76,6 +76,8 @@ public:
 	// XXX hack alert ... remove this from the API when ready.
 	// this is temp scaffolding
 	cl::Buffer& get_buffer() { return _buffer; }
+
+	bool is_output(void) { return _wait_for_update; }
 };
 
 /** @}*/

@@ -379,7 +379,7 @@ OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern, size_t& pos, size_t& dim)
 	{
 		// TODO check that type is not insane
 		std::vector<double> vals;
-		vals.resize(dim);
+		vals.resize(2); // XXX oh yuck.
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(std::move(vals));
 		ofv->set_context(_context);
 		ofv->set_arg(kern, pos, true);
@@ -399,7 +399,6 @@ OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 
 	// Unpack kernel arguments
 	dim = UINT_MAX;
-	dim = 500; // XXX Oh no Mr. Bill!
 	size_t pos = 0;
 	if (kvec->is_type(SECTION))
 	{
@@ -423,6 +422,12 @@ OpenclNode::make_vectors (ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
+
+	for (const OpenclFloatValuePtr& ofv : flovec)
+	{
+		if (ofv->is_output())
+			ofv->resize(dim);
+	}
 
 	kern.setArg(pos, dim);
 
