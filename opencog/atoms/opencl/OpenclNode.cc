@@ -345,7 +345,8 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 
 /// Unwrap vector.
 OpenclFloatValuePtr
-OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern, size_t& pos, size_t& dim) const
+OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern,
+                        size_t& pos, size_t& dim) const
 {
 	if (vp->is_atom() and HandleCast(vp)->is_executable())
 		vp = HandleCast(vp)->execute();
@@ -379,7 +380,9 @@ OpenclNode::get_floats (ValuePtr vp, cl::Kernel& kern, size_t& pos, size_t& dim)
 	{
 		// TODO check that type is not insane
 		std::vector<double> vals;
-		vals.resize(2); // XXX oh yuck.
+// XXX temp hack til we fix sizes
+vals.resize(6000); // XXX BADDDDDDDDDDDDDDDDDDDDD
+if (6000 < dim) { dim = 6000; }
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(std::move(vals));
 		ofv->set_context(_context);
 		ofv->set_arg(kern, pos, true);
