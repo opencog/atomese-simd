@@ -94,7 +94,7 @@ protected:
 
 	const std::string& get_kern_name(ValuePtr) const;
 	cl::Kernel get_kernel(ValuePtr) const;
-	size_t get_vec_len(const ValueSeq&) const;
+	size_t get_vec_len(const ValueSeq&, bool&) const;
 	ValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t) const;
 	ValueSeq make_vectors(ValuePtr, cl::Kernel&, size_t&) const;
 

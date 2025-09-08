@@ -347,8 +347,9 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 /// Look either for a length specification embedded in the list,
 /// else obtain the shortest of all the vectors.
 size_t
-OpenclNode::get_vec_len (const ValueSeq& vsq) const
+OpenclNode::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 {
+	have_size_spec = false;
 	size_t dim = UINT_MAX;
 	for (const ValuePtr& vp : vsq)
 	{
@@ -373,6 +374,7 @@ OpenclNode::get_vec_len (const ValueSeq& vsq) const
 		// XXX FIXME check for insane structures here.
 		if (vp->is_type(CONNECTOR))
 		{
+			have_size_spec = true;
 			const Handle& h = HandleCast(vp)->getOutgoingAtom(0);
 			double sz = NumberNodeCast(h)->get_value();
 			if (sz < 0.0) continue;
@@ -462,18 +464,18 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
 	// Find the shortest vector.
-	dim = get_vec_len(vsq);
+	bool have_size_spec = false;
+	dim = get_vec_len(vsq, have_size_spec);
 	size_t pos = 0;
 	ValueSeq flovec;
 	for (const ValuePtr& v: vsq)
 		flovec.emplace_back(get_floats(v, kern, pos, dim));
 
-	// Set the size of the the vectors, assumed to be the last
-	// arg of the kernel, which is OK for the demo but wrong in
-	// general.
-	// XXX This is wrong, but we can't fix it till we redesign
-	// queueing and how the kernel is wrapped.
-	kern.setArg(pos, dim);
+	// If the user never specified an explicit location in which to pass
+	// the vector size, assume it is the last location. Set it now.
+	// Is this a good idea? I dunno. More thinking needed.
+	if (not have_size_spec)
+		kern.setArg(pos, dim);
 
 	return flovec;
 }
