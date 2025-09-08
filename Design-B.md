@@ -1,5 +1,7 @@
 Design Notes B
 ==============
+August 2025
+
 Notes about OpenCL interfaces and how they impact Atomese design.
 
 `OpenclNode` currently holds:
@@ -25,7 +27,7 @@ Lets review,
 
 ### OpenclFloatVecNode
 Derived from `SensoryNode`. Thus has the mndatory set of
-open/close/read/write methods.  Alllows explicit control.
+open/close/read/write methods.  Allows explicit control.
 
 For example: upload vector data to GPU:
 ```
@@ -63,7 +65,7 @@ an implicit bind because it gets used.
 ### OpenclFloatValue
 Traditional Value design. Referencing it calls `update()` which
 downloads from the GPU, if that has not already been done. Carries
-addtional protected methods that allows OpenclNode to work with
+additional protected methods that allows OpenclNode to work with
 buffers and bind them as needed.
 
 Usage: the existing demo `atomese-kernel.scm` is effectively unaltered.
