@@ -46,3 +46,6 @@ emerge.
 
 Wiring Diagrams
 ---------------
+There remains an unresolved tension between using `FilterLink`s and
+`RulleLink`s to define flows, as provided in the sensory demos, and
+the electronic wiring diagram idea of Link Grammar.
