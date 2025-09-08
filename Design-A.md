@@ -2,7 +2,10 @@ Design Notes A
 ==============
 January 2025
 
-Notes about OpenCL interfaces and how they impact Atomese design.
+OpenCL Notes
+------------
+Notes about OpenCL interfaces. How these work will impact the Sensory
+Atomese design.
 
 * SVM "Shared Virtual Memory" shares vector data between GPU and
   CPU, avoiding explicit copy semantics.  The ctors need `cl::Context`.
@@ -36,13 +39,12 @@ Different ideas for communicating with GPUs.
   while here, we need to send/receive vectors represented as
   `FloatValue`s.  Maybe other kinds of vectors, but for now,
   `FloatValue`s.  The other problem is that the `StorageNode`
-  API sits outside of Atomese proper, and uses instead a collection
-  of calls `cog-open` and `cog-close` to manage connection state.
-  Which is adequate for the intended use, but leaves something to be
-  desired.
+  provides a BackingStore API that is not suitable for operating
+  on vectors.
 
-  Update (August 2025): the above has been fixed; `StorageNode` now
-  uses `ObjectNode` as its base class, and it now behave like an object.
+  Update (August 2025): `StorageNode` has been modified to use
+  `ObjectNode` as its base class, and it now behave like an object.
+  The `BackingStore` must necessarily remain in place.
 
 * Create something new, inspired by `BackingStore`. This removes some
   of the issues with StorageNodes, but leaves others in place. One
@@ -159,7 +161,8 @@ Originally intended to be a base class for rewriting (for PLN).
   an output, and must be one or the other.) This is problematic if
   inputs or outputs are to be multiplexed, or given non-directional
   (monosexual) conntions.
-* No explicit connection/glueing semantics.
+* No explicit connection/gluing semantics. There is implicit glueing
+  via conventional proof theory.
 
 `RuleLink`s specify term rewrites. Ideal for forward-chained rewriting.
 With great difficulty, can be backwards-chained. That this was a difficulty
@@ -272,6 +275,6 @@ directory for working code.)
       (ValueOf anchor)
       (ValueOf (Anchor "some anchor point") (Predicate "some key")))
 
-   ; TODO RUleLink + FilterLink that provides an all-in-one wrapper for
+   ; TODO RuleLink + FilterLink that provides an all-in-one wrapper for
    ; above. See sensory examples for example.
 ```
