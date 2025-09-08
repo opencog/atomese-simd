@@ -386,7 +386,7 @@ OpenclNode::get_vec_len (const ValueSeq& vsq) const
 }
 
 /// Unwrap vector.
-OpenclFloatValuePtr
+ValuePtr
 OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
                        size_t& pos, size_t dim) const
 {
