@@ -468,6 +468,11 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 	for (const ValuePtr& v: vsq)
 		flovec.emplace_back(get_floats(v, kern, pos, dim));
 
+	// Set the size of the the vectors, assumed to be the last
+	// arg of the kernel, which is OK for the demo but wrong in
+	// general.
+	// XXX This is wrong, but we can't fix it till we redesign
+	// queueing and how the kernel is wrapped.
 	kern.setArg(pos, dim);
 
 	return flovec;
