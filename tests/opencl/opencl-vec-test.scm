@@ -115,8 +115,8 @@
 	(Anchor "some data") (Predicate "accum task")
 	(SectionValue
 		(Predicate "vec_add")
-		(LinkValue (Type 'FloatValue
-			accum-location (RandomStream vec-size)))))
+		(LinkValue (Type 'FloatValue)
+			accum-location (RandomStream vec-size))))
 
 ; Define a feedback loop.
 (define run-kernel
