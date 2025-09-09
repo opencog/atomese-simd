@@ -120,6 +120,8 @@ do this without a connext and a device; and since `OpenclNode` already
 has this, then may as well have `OpenclNode` do that management. So
 no new Node is needed.
 
+The OpenclKernelNode
+--------------------
 An `OpenclKernelLink` is needed to manage the specific kernel that is to
 be run. The current API is muddled: we need to be able to declare the
 following:
@@ -138,5 +140,57 @@ Hmm.
 An alternative design is to have an `OpenclKernelNode`. This makes
 sense, at it is the specific kernel name that is being invoked that is
 important.
+
+Great! This brings up back to the orginal `RuleLink` vs. `Section` flow
+description. Each specific `OpenclKernelNode` needs to have an
+adjoinging declaration of what it's valid inputs and outputs are.
+We have two choices for providing this description. The old-fashioned,
+traditional description would be to have a `VariableList` of
+`TypedVariable` indicating what it's inputs are. The problem here is
+that there is no particular way of describing the output.
+
+The `RuleLink` was sort-of imagined to describe inputs and outputs, but
+has been co-opted by the `FilterLink`. The use of variables in the
+`RuleLink` means that it is explicitly a re-write rule, in that it
+tracks variables in both the input and the output. By contrast, a kernel
+operation is not a rewrite: the outputs depend on the inputs, but they
+are not monotonic functions of the input variables.
+
+That leaves `Section` as the only viable candidate for describing inputs
+and outputs. Excellent: we finally arrive at an actual need for chaining
+and checking the chains! OK, so what should the connectors look like?
+Link Grammar style connectors would look like this:
+```
+    (Connector
+        (Type 'FloatValue)
+        (Sex "input"))
+```
+This is a paring of a tradtional type declaration, together with a
+direction (sex). The type declaration can be complicated, in principle:
+```
+    (Connector
+        (SignatureLink ...)
+        (Sex "input"))
+```
+with the usual richenesss of Signatures allowed.
+
+The current `vec_add` kernel in the demos then has the following form:
+```
+    (Section
+        (OpenclKernelNode "vec_add")
+        (ConnectorSeq
+            (Connector (Type 'FloatValue) (Sex "output"))
+            (Connector (Type 'FloatValue) (Sex "input"))
+            (Connector (Type 'FloatValue) (Sex "input"))
+            (Connector (Type 'FloatValue) (Sex "size"))))
+```
+Note that the order of the connectors in the `ConnectorSeq` must match
+the c/c++ code in the program.
+
+The `size` connector is interesting. In pricniple, it could be implicit,
+guessed from the sizes of the vectors. In practice, it seems to be a
+required part of the kernel API: the kernel needs to be told what the
+length of the vectors are, explicitly so.
+
 
 ----
