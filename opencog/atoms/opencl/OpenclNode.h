@@ -68,15 +68,21 @@ protected:
 	cl::Platform _platform;
 	cl::Device _device;
 
+	// Execution context.
+	// (TODO: I guess we could have several of these per device!?)
+	cl::Context _context;
+
+	// Async I/O queue to the execution context.
+	// (TODO: I guess we could have several of these per context!?)
+	cl::CommandQueue _queue;
+
 	// Kernel compilation
 	void build_kernel(void);
 	void load_kernel(void);
-	cl::Context _context;
 	cl::Program _program;
-	cl::CommandQueue _queue;
 
-	// kernel I/O. Using cl:Buffer for now.
-	// Need to create a derived class that will use SVM
+	// Kernel I/O. Using cl:Buffer for now.
+	// Need to create a derived class that will use SVM.
 	// Jobs run in their own thread, so that the GPU doesn't block us.
 	typedef struct
 	{

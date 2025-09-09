@@ -76,9 +76,67 @@ item is discarded from the stream.
 
 GPU State
 ---------
-In the foreground is the problem of the "correct" representation of
-vectors accessible to the GPU.
+One problem that arises is the proper design of the accumulator.
+Conceptually, there are two vectors: A, which is initially zero, and
+generally lives on the GPU "permanently", and is infrequently examined,
+and a sequence for vectors B, which are added to A. The vectors B might
+be coming from two different locations: they might be getting uploaded
+to to GPU from system memory, or they might be generated on the GPU.
 
-This is the accumulator issue.  Several solutions what is best?
+To implement this, we need to model the vector A as a "thing" in the
+"external world" (the GPU) which has some constancy of existance, but
+whose content changes. Using a compiler metaphor, it is a storage
+location whose content changes; a register or a moemory location.
+
+The `OpenclFloatValue` provides a mechanism to sample from this
+location. The C++ FloatValue can be sampled repeatedly, but this would
+require attaching the `update()` method to an Opencl device, context
+and event queue, which is not practical in the current design. The C++
+FloatValue is also not directly updatedable; the Value interfaces are,
+in general, not updatedable; one must create a new Value. That design
+was chosen to get thread safety. It should not be changed.
+
+To get an updateable `OpenclFloatValue` vecttor that can be both read,
+repeatedly, and changed, repeatedly, requires use of the `OpenclNode`
+`*-read-*` and `*-write-*` methods. These seem adequate for the task.
+Currently, `OpenclNode` only accepts kernels, and not the vectors
+themselves. That is easily fixed.
+
+Reads seem easy enough to deal with: the `OpenclFloatValue` holds the
+`cl::Buffer` needed for external ref constancy. That is, each
+`cl::Buffer` is a handle to that "thing" in the "external world".
+Reading from this is no problem, as long as that reference is retained.
+Writing is a problem, because 'FloatValue' has no generic 'set' method,
+so we need some way of updating contents without losing the `cl::Buffer`
+handle. This could be done with a custom priave/proected API that is
+accessible only to `OpenclNode`.
+
+An alternative design would be to have an `OpenclNumberNode`, which
+provides AtomSpace constancy. But this would need to be given some
+abstract name, since the numerical value would be changing. This, not
+a `NumberNode` after all, but a `OpenclVectorNode` which can be given a
+specific name. It could then manage reads and write ... except it can't
+do this without a connext and a device; and since `OpenclNode` already
+has this, then may as well have `OpenclNode` do that management. So
+no new Node is needed.
+
+An `OpenclKernelLink` is needed to manage the specific kernel that is to
+be run. The current API is muddled: we need to be able to declare the
+following:
+ * "Here's a vector in RAM; the kernel needs read acccess to it."
+   (Who is responsible for uploading it? SVM impies that explicit
+   upload is not needed!?)
+ * "Here's a vector you already have, the kernel will update it."
+   (Does not imply a download, or an upload; so perhaps it's already
+   available to the GPU and needs no management from us.)
+
+An alternative design point would be to have an `OpenclKernelLinkValue`
+so that `FloatValues` can be stuffed into it directly, instead of using
+`ValueOf` references.  But the long-term design is to flow, and so ...
+Hmm.
+
+An alternative design is to have an `OpenclKernelNode`. This makes
+sense, at it is the specific kernel name that is being invoked that is
+important.
 
 ----
