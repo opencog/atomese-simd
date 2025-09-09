@@ -44,10 +44,41 @@ It seems like all of these should be possible, but we're not there yet.
 Time to review these ideas in greater depth, to see what design could
 emerge.
 
-Wiring Diagrams
----------------
+Flow Demos
+----------
 The current sensory demos use a `FilterLink`/`RuleLink` combo to
-represent a processing element. The `DescribeLink` aka `*-describe-*`
-message was meant to provide a description of the connectors; this
-has not been implemented yet.
+represent a processing element. The mape from this to the SIMD Atomese
+is unclear.
 
+There's a recurrng confusion in my thinking: confusing `Sections`, which
+represent general jigsaws, and `RuleLink`s, which are specific jigsaws
+that are natural processing elements for flows. They are similar, but
+not the same, and the similarity is the source of the confusion.  The
+jigsaws desribed by `Sections` are primarily declarative, and they
+describe the connectors on jigsaws, and thus describe how they fit
+together. The `RuleLink`s feel like a special case, except that they
+use `VariableList`s to describe the conectors, instead of using
+`Section`s. There's an unresolved tension between these two. It hampers
+clear design.
+
+Let's review the `RuleLink`. It has the form:
+```
+    (RuleLink
+        (VariableList (Variable "$x") (Variable "$y") ...)
+        (Signature ... ) ; Item pattern to recognize
+        (Signature ... ) ; Item to generate.
+```
+What is the corresponding `Section` for this? I don't know. There are
+several choices. One is fairly trivial: the jigsaw that has one input (a
+stream of items) and one output (another stream of items). If the stream
+does not contain any items that match the rule recognizer pattern, that
+item is discarded from the stream.
+
+GPU State
+---------
+In the foreground is the problem of the "correct" representation of
+vectors accessible to the GPU.
+
+This is the accumulator issue.  Several solutions what is best?
+
+----
