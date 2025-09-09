@@ -192,5 +192,55 @@ guessed from the sizes of the vectors. In practice, it seems to be a
 required part of the kernel API: the kernel needs to be told what the
 length of the vectors are, explicitly so.
 
+Where is this API description kept? Well, the `*-description-*` message
+sent to the `(OpenclKernelNode "vec_add")` node should return this.
+I guess this is hand-coded, for now.
+
+Kernel Execution
+----------------
+What happens when
+```
+    (cog-execute! (OpenclNode ...) (Predicate "*-write-*")
+        ( ... data ...))
+```
+is sent? Well, the `*-write-*` method has to validate that the data
+is actually of the format defined in the `Section` declaration. If not,
+it throws an error. (We throw, instead of silently failing, to ease
+debuggability.)
+
+Here's the logic for the (implicit) type conversions in the data stream:
+
+ * If an input vector is a `NumberNode` or a `FloatValue`, a
+   corresponding `OpenclFloatValue` is created, copying the vector
+   out of the `NumberNode` or `FloatValue`, and marking it as
+   `CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR`.
+
+ * If an input vector is already an `OpenclFloatValue`, nothing needs
+   to be done, except maybe to or-in `CL_MEM_COPY_HOST_PTR` ??
+
+ * If an output vector is already an `OpenclFloatValue`, nothing needs
+   to be done, except maybe to or-in `CL_MEM_READ_WRITE`.
+
+The only problem I see here is that these `CL_MEM_*` flags are set up
+by the `cl::Buffer()` ctor; can they be changed later? Hmm. Well,
+certainly `enqueueReadBuffer` can specify the `void*` data pointer at a
+later time. Also `enqueueWriteBuffer` allows the data location to be
+defered, and so `CL_MEM_COPY_HOST_PTR` does not need to be specified at
+ctor time.
+
+A `cl::Buffer` created read-only cannot be converted to read-write.
+
+The current demo allows the output ector to be sepcified as a
+`(TypeNode 'FloatVector)`, after which it implicitly creates the
+required `OpenclFloatValue` and sets it to the correct size, and then
+returns it with the `*-read-*` method. This is OK, I guess, unless there
+are two outputs, in which case `*-read-*` needs to return a `LinkValue`
+holding both.
+
+Which rasies an old issue: due to the async nature, the `*-read-*`
+should return not just the outputs, but the entire wrapped kernel.
+A later read can retreive individual outputs, as required.
+
+OK, I think that's a plan. Lets do it.
 
 ----
