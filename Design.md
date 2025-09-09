@@ -60,6 +60,9 @@ such as addition, multiplication or sigmoids.
 Of course, human programmers, as well as Claude, can already do this,
 using conventional systems like PyTorch or TensorFlow or whatever. The
 goal here is to have a representation that is dynamic (can be created on
-the fly) and accessible to direct manipulation.
+the fly) and accessible to direct manipulation. At this time, Claude is
+not yet capable of managing the architectural complexity to do this, and
+the conventional software stack lacks the correct properties. So
+low-level Atomese design and research seems to be the only way forward.
 
 ----
