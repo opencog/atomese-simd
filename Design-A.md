@@ -48,9 +48,9 @@ Different ideas for communicating with GPUs.
 
 * Create something new, inspired by `BackingStore`. This removes some
   of the issues with StorageNodes, but leaves others in place. One
-  is that, again, the API sits outside of Atmoese. The other is that
+  is that, again, the API sits outside of Atomese. The other is that
   this becomes yet another engineered solution. Of course, engineered
-  solutions are inescapable, but... for example: the traditional unix
+  solutions are inescapable, but... for example: the traditional Unix
   open/close/read/write 4-tuple provides an abstraction that works very
   well for many I/O tasks: open/close to manage the channel, and
   read/write to use it. But the OpenCL interfaces do not map cleanly
@@ -63,7 +63,7 @@ Different ideas for communicating with GPUs.
 
 The abstraction I'm getting is this: open near point, open far point,
 select far-point message recipient, send message. That mapping would
-have psuedocode like so:
+have pseudocode like so:
 ```
    open_near_point() {
       Using cl::Device
@@ -113,7 +113,7 @@ four choices:
   Collapse the send and exec steps into a generic `write()`.
 * The multi-stage open-near, open-far, select-recipient is fairly
   generic for network communications. e.g. for tcp/ip, open-near
-  corresponds to opening local socket (initializing ethernet adapter)
+  corresponds to opening local socket (initializing Ethernet adapter)
   open-far corresponds to the remote socket, and select-recipient
   corresponds to selecting the port number.
   This multi-stage open-and-contact-recipient can be codified as
@@ -160,7 +160,7 @@ Originally intended to be a base class for rewriting (for PLN).
 * Rules are explicitly heterosexual (everything is either an input, or
   an output, and must be one or the other.) This is problematic if
   inputs or outputs are to be multiplexed, or given non-directional
-  (monosexual) conntions.
+  (monosexual) connections.
 * No explicit connection/gluing semantics. There is implicit glueing
   via conventional proof theory.
 
@@ -211,7 +211,7 @@ rules. Thus, a connection is allowed, if the mating rules allow it:
 typically, the types must match, and the "sex" of the connectors must
 be compatible.
 
-As abstract mathermatics, this is a very powerful abstraction. As a
+As abstract mathematics, this is a very powerful abstraction. As a
 programming API, it is verbose and hard to work with. In particular,
 a wiring engine is needed. Such a wiring engine has not yet been
 created.

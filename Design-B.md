@@ -28,7 +28,7 @@ Lets review,
 
 
 ### OpenclFloatVecNode
-Derived from `SensoryNode`. Thus has the mndatory set of
+Derived from `SensoryNode`. Thus has the mandatory set of
 open/close/read/write methods.  Allows explicit control.
 
 For example: upload vector data to GPU:
@@ -43,7 +43,7 @@ float data to the object. Hmmm.
 
 Download vector data from GPU:
 ```
-(GetValue
+(ValueOf
 	(OpenclFloatVecNode "some name")
 	(Predicate "+-read-*"))
 ```
@@ -101,13 +101,13 @@ is replaced by
 ```
 i.e. any kind of method.
 
-So this makes the `Section` not directly ececutable, but requiring
+So this makes the `Section` not directly executable, but requiring
 a hand-off to a system that knows how to execute it. We could redo
 the ExOutLink to follow this style, and write
 ```
 (cog-execute! (SetValue (PythonNode ...) *-write-* (Section ...)))
 ```
-Its not vlear that this has any actual avantages to the current
+Its not clear that this has any actual advantages to the current
 ExOutLink for FFI's like python.
 
 -------

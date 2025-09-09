@@ -38,7 +38,7 @@ arises in GCC's gimple: each insn has a set of connectors, defining input,
 output, state, widths, side effects, and the goal of the compiler is to
 generate a valid net.
 
-In both examples, the resulting network can process flows; for eletronics,
+In both examples, the resulting network can process flows; for electronics,
 the flows consist of electrons; for programs, it is bytes passing between
 registers, CPU and memory.
 

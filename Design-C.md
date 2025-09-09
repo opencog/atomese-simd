@@ -20,7 +20,7 @@ There are various unfulfilled design goals:
   That is, there should be a way of converting DL/NN pseudocode from
   published papers into Atomese, and then run it.
 
-* Implement an Atomese version of LTN, Logic Tensor Newtorks, but
+* Implement an Atomese version of LTN, Logic Tensor Networks, but
   generalizing it so that any kind of logic can be encoded, and not
   just the "real logic" of LTN. Specifically, want to be able to encode
   assorted modal logics, including epistemic logic.
@@ -50,7 +50,7 @@ The current sensory demos use a `FilterLink`/`RuleLink` combo to
 represent a processing element. The map from this to the SIMD Atomese
 is unclear.
 
-There's a recurrng confusion in my thinking: confusing `Sections`, which
+There's a recurring confusion in my thinking: confusing `Sections`, which
 represent general jigsaws, and `RuleLink`s, which are specific jigsaws
 that are natural processing elements for flows. They are similar, but
 not the same, and the similarity is the source of the confusion.  The
@@ -86,17 +86,17 @@ to to GPU from system memory, or they might be generated on the GPU.
 To implement this, we need to model the vector A as a "thing" in the
 "external world" (the GPU) which has some constancy of existence, but
 whose content changes. Using a compiler metaphor, it is a storage
-location whose content changes; a register or a moemory location.
+location whose content changes; a register or a memory location.
 
 The `OpenclFloatValue` provides a mechanism to sample from this
 location. The C++ FloatValue can be sampled repeatedly, but this would
 require attaching the `update()` method to an Opencl device, context
 and event queue, which is not practical in the current design. The C++
-FloatValue is also not directly updatedable; the Value interfaces are,
-in general, not updatedable; one must create a new Value. That design
+FloatValue is also not directly updateable; the Value interfaces are,
+in general, not updateable; one must create a new Value. That design
 was chosen to get thread safety. It should not be changed.
 
-To get an updateable `OpenclFloatValue` vecttor that can be both read,
+To get an updateable `OpenclFloatValue` vector that can be both read,
 repeatedly, and changed, repeatedly, requires use of the `OpenclNode`
 `*-read-*` and `*-write-*` methods. These seem adequate for the task.
 Currently, `OpenclNode` only accepts kernels, and not the vectors
@@ -108,7 +108,7 @@ Reads seem easy enough to deal with: the `OpenclFloatValue` holds the
 Reading from this is no problem, as long as that reference is retained.
 Writing is a problem, because 'FloatValue' has no generic 'set' method,
 so we need some way of updating contents without losing the `cl::Buffer`
-handle. This could be done with a custom private/proected API that is
+handle. This could be done with a custom private/protected API that is
 accessible only to `OpenclNode`.
 
 An alternative design would be to have an `OpenclNumberNode`, which
@@ -116,7 +116,7 @@ provides AtomSpace constancy. But this would need to be given some
 abstract name, since the numerical value would be changing. This, not
 a `NumberNode` after all, but a `OpenclVectorNode` which can be given a
 specific name. It could then manage reads and write ... except it can't
-do this without a connext and a device; and since `OpenclNode` already
+do this without a context and a device; and since `OpenclNode` already
 has this, then may as well have `OpenclNode` do that management. So
 no new Node is needed.
 
@@ -126,7 +126,7 @@ An `OpenclKernelLink` is needed to manage the specific kernel that is to
 be run. The current API is muddled: we need to be able to declare the
 following:
  * "Here's a vector in RAM; the kernel needs read access to it."
-   (Who is responsible for uploading it? SVM impies that explicit
+   (Who is responsible for uploading it? SVM implies that explicit
    upload is not needed!?)
  * "Here's a vector you already have, the kernel will update it."
    (Does not imply a download, or an upload; so perhaps it's already
@@ -143,7 +143,7 @@ important.
 
 Great! This brings up back to the original `RuleLink` vs. `Section` flow
 description. Each specific `OpenclKernelNode` needs to have an
-adjoinging declaration of what it's valid inputs and outputs are.
+adjoining declaration of what it's valid inputs and outputs are.
 We have two choices for providing this description. The old-fashioned,
 traditional description would be to have a `VariableList` of
 `TypedVariable` indicating what it's inputs are. The problem here is
@@ -172,7 +172,7 @@ direction (sex). The type declaration can be complicated, in principle:
         (SignatureLink ...)
         (Sex "input"))
 ```
-with the usual richenesss of Signatures allowed.
+with the usual richness of Signatures allowed.
 
 The current `vec_add` kernel in the demos then has the following form:
 ```
@@ -187,7 +187,7 @@ The current `vec_add` kernel in the demos then has the following form:
 Note that the order of the connectors in the `ConnectorSeq` must match
 the c/c++ code in the program.
 
-The `size` connector is interesting. In pricniple, it could be implicit,
+The `size` connector is interesting. In principle, it could be implicit,
 guessed from the sizes of the vectors. In practice, it seems to be a
 required part of the kernel API: the kernel needs to be told what the
 length of the vectors are, explicitly so.
@@ -206,7 +206,7 @@ What happens when
 is sent? Well, the `*-write-*` method has to validate that the data
 is actually of the format defined in the `Section` declaration. If not,
 it throws an error. (We throw, instead of silently failing, to ease
-debuggability.)
+debugability.)
 
 Here's the logic for the (implicit) type conversions in the data stream:
 
@@ -230,8 +230,8 @@ ctor time.
 
 A `cl::Buffer` created read-only cannot be converted to read-write.
 
-The current demo allows the output ector to be specified as a
-`(TypeNode 'FloatVector)`, after which it implicitly creates the
+The current demo allows the output vector to be specified as a
+`(TypeNode 'FloatValue)`, after which it implicitly creates the
 required `OpenclFloatValue` and sets it to the correct size, and then
 returns it with the `*-read-*` method. This is OK, I guess, unless there
 are two outputs, in which case `*-read-*` needs to return a `LinkValue`
