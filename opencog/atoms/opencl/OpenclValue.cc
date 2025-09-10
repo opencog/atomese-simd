@@ -29,6 +29,7 @@ OpenclValue::OpenclValue(void) :
 	_have_ctxt(false),
 	_have_buffer(false),
 	_wait_for_update(false),
+	_device{},
 	_context{},
 	_buffer{}
 {
@@ -37,15 +38,18 @@ OpenclValue::OpenclValue(void) :
 OpenclValue::~OpenclValue()
 {
 	_context = {};
+	_device = {};
 }
 
-void OpenclValue::set_context(const cl::Context& ctxt)
+void OpenclValue::set_context(const cl::Device& ocldev,
+                              const cl::Context& ctxt)
 {
 	if (_have_ctxt and _context != ctxt)
 		throw RuntimeException(TRACE_INFO,
 			"Context already set!");
 
 	_have_ctxt = true;
+	_device = ocldev;
 	_context = ctxt;
 }
 

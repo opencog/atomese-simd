@@ -49,10 +49,11 @@ protected:
 	bool _have_buffer;
 	bool _wait_for_update;
 
+	cl::Device _device;
 	cl::Context _context;
 	mutable cl::Buffer _buffer;
 
-	void set_context(const cl::Context&);
+	void set_context(const cl::Device&, const cl::Context&);
 
 	void to_gpu(size_t vec_bytes, void* vec);
 	void from_gpu(size_t);
