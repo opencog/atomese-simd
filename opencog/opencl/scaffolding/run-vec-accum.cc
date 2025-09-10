@@ -12,7 +12,7 @@
 // the other is constantly changing.
 void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 {
-	size_t vec_dim = 64;
+	size_t vec_dim = 6;
 	std::vector<double> accum(vec_dim);
 	std::vector<double> b(vec_dim);
 
@@ -23,7 +23,7 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	// The SVM (Shared Virtual Memory) extension avoids copyin,
 	// but SVM requires OpenCL 2.0 for support.
 	cl::Buffer vecaccum(context,
-		CL_MEM_READWRITE, vec_bytes);
+		CL_MEM_READ_WRITE, vec_bytes);
 
 	cl::Buffer vecb(context,
 		CL_MEM_READ_ONLY, vec_bytes);
@@ -43,6 +43,9 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	// Set up the stream.
 	for (size_t i=0; i<vec_dim; i++)
 		b[i] = 1.0;
+
+	queue.enqueueWriteBuffer(vecb, CL_TRUE, 0,
+		vec_bytes, b.data(), nullptr, &event_handler);
 
 	// The program to run on the GPU, and the arguments it takes.
 	cl::Kernel kernel(program, "vec_add");
