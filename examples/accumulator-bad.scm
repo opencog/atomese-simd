@@ -52,7 +52,7 @@
 ; it can be found.
 (cog-set-value!
 	(Anchor "some place") (Predicate "accumulator")
-	(FloatValue 0 0 0 0 0))
+	(OpenclFloatValue 0 0 0 0 0))
 
 ; When executed, this will return the current accumulator value.
 (define accum-location
@@ -67,7 +67,7 @@
 	(Anchor "some place") (Predicate "accum task")
 	(SectionValue
 		(OpenclKernel clnode (Predicate "vec_add"))
-		(LinkValue accum-location (RandomStream 3))))
+		(LinkValue accum-location accum-location (RandomStream 3))))
 
 ; Define a pair of functions. The first runs the kernel, defined above,
 ; and the second downloads the results. Calling this pair in succession

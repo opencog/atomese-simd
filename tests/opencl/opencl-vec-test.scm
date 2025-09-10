@@ -118,7 +118,7 @@
 
 (cog-set-value!
 	(Anchor "some data") (Predicate "accumulator")
-	(FloatValue (make-list vec-size 0)))
+	(OpenclFloatValue (make-list vec-size 0)))
 
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
@@ -127,7 +127,7 @@
 	(Anchor "some data") (Predicate "accum task")
 	(SectionValue
 		(OpenclKernel clnode (Predicate "vec_add"))
-		(LinkValue (Type 'FloatValue)
+		(LinkValue accum-location
 			accum-location (RandomStream vec-size))))
 
 ; Define a feedback loop.
@@ -135,14 +135,12 @@
 	(SetValue clnode (Predicate "*-write-*")
 		(ValueOf (Anchor "some data") (Predicate "accum task"))))
 
-(define update-data
-	(SetValue
-		(Anchor "some data") (Predicate "accumulator")
-		(ValueOf clnode (Predicate "*-read-*"))))
+(define get-result
+	(ValueOf clnode (Predicate "*-read-*")))
 
 ; Run it once ...
 (cog-execute! run-kernel)
-(define acc1 (cog-execute! update-data))
+(define acc1 (cog-execute! get-result))
 (test-assert "acc1 type" (cog-subtype? 'SectionValue (cog-type acc1)))
 (define args1 (cog-value-ref acc1 1))
 (test-assert "args1 type" (cog-subtype? 'LinkValue (cog-type args1)))
@@ -156,11 +154,11 @@
 (for-each
 	(lambda (x)
 		(cog-execute! run-kernel)
-		(cog-execute! update-data))
+		(cog-execute! get-result))
 	(iota run-len 0))
 
 (cog-execute! run-kernel)
-(define accn (cog-execute!  update-data))
+(define accn (cog-execute!  get-result))
 (test-assert "accn type" (cog-subtype? 'SectionValue (cog-type accn)))
 (define argsn (cog-value-ref accn 1))
 (test-assert "argsn type" (cog-subtype? 'LinkValue (cog-type argsn)))
