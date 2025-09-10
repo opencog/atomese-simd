@@ -72,6 +72,32 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	printf("The accumulator is:\n");
 	for (size_t i=0; i<vec_dim; i++)
 		printf("%ld = %f\n", i, accum[i]);
+
+	// -------------------------------------------------------------
+	// Do it again
+	// Set up the stream.
+	for (size_t i=0; i<vec_dim/2; i++)
+		b[i] = 2.0;
+
+	queue.enqueueWriteBuffer(vecb, CL_TRUE, 0,
+		vec_bytes, b.data(), nullptr, &event_handler);
+
+	// Launch
+	queue.enqueueNDRangeKernel(kernel,
+		cl::NullRange,
+		cl::NDRange(vec_dim),
+		cl::NullRange,
+		nullptr, &event_handler);
+
+	event_handler.wait();
+	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
+		vec_bytes, accum.data(), nullptr, &event_handler);
+	event_handler.wait();
+	printf("The accumulator is:\n");
+	for (size_t i=0; i<vec_dim; i++)
+		printf("%ld = %f\n", i, accum[i]);
+
+
 }
 
 // Run code on the GPU's.
