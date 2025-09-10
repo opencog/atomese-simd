@@ -53,7 +53,6 @@ public:
 	virtual ~OpenclFloatValue() {}
 
 	const std::vector<double>& value() const { update(); return _value; }
-	void* data() { return _value.data(); }
 	size_t size() const { return _value.size(); }
 
 	void set_arg(cl::Kernel&, size_t pos, bool dirfrom);
