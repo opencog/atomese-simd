@@ -43,8 +43,21 @@ OpenclFloatValue::OpenclFloatValue(std::vector<double>&& v) :
 {
 }
 
+// Right now, we will read from the GPU *every time*. Is this the
+// right thing to do? Well, as envisioned in the Value subsystem
+// design five years ago, the answer is "yes". Is this still the
+// right answer? So far, seems to still be "yes". ...
 void OpenclFloatValue::update(void) const
 {
+	if (not _have_buffer or not _have_ctxt) return;
+
+	size_t numbytes = sizeof(double) * _value.size();
+	void* bytes = (void*) _value.data();
+
+	cl::Event event_handler;
+	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
+		numbytes, bytes, nullptr, &event_handler);
+	event_handler.wait();
 }
 
 void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos, bool dirfrom)
