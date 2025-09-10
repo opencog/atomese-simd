@@ -60,12 +60,9 @@ void OpenclFloatValue::update(void) const
 	event_handler.wait();
 }
 
-void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos, bool dirfrom)
+void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos)
 {
-	if (dirfrom)
-		from_gpu(sizeof(double)*size());
-	else
-		to_gpu(sizeof(double)*size(), _value.data());
+	alloc_buffer(sizeof(double)*size());
 	kern.setArg(pos, _buffer);
 }
 

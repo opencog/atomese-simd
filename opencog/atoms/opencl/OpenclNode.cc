@@ -380,7 +380,7 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 		ofv = createOpenclFloatValue(*vals);
 
 	ofv->set_context(_device, _context);
-	ofv->set_arg(kern, pos, from_gpu);
+	ofv->set_arg(kern, pos);
 	pos ++;
 	return ofv;
 }

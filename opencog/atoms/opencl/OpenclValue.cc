@@ -28,7 +28,6 @@ using namespace opencog;
 OpenclValue::OpenclValue(void) :
 	_have_ctxt(false),
 	_have_buffer(false),
-	_wait_for_update(false),
 	_device{},
 	_context{},
 	_queue{},
@@ -55,7 +54,7 @@ void OpenclValue::set_context(const cl::Device& ocldev,
 	_queue = cl::CommandQueue(_context, _device);
 }
 
-void OpenclValue::from_gpu(size_t nbytes)
+void OpenclValue::alloc_buffer(size_t nbytes)
 {
 	// FIXME. probably OK if its already set!?
 	// XXX what it its already set? ??? I think its OK
@@ -64,24 +63,8 @@ void OpenclValue::from_gpu(size_t nbytes)
 		throw RuntimeException(TRACE_INFO,
 			"Bytevec already set!");
 
-	_wait_for_update = true;
 	_have_buffer = true;
 	_buffer = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
-}
-
-void OpenclValue::to_gpu(size_t nbytes, void* vec)
-{
-	// XXX what it its already set? ??? I think its OK
-	// as long as we also OR in the needed flags ???
-	if (_have_buffer)
-		throw RuntimeException(TRACE_INFO,
-			"Bytevec already set!");
-
-	_wait_for_update = false;
-	_have_buffer = true;
-	_buffer = cl::Buffer(_context,
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		nbytes, vec);
 }
 
 // ==============================================================

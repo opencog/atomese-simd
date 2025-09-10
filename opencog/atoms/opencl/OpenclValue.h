@@ -47,7 +47,6 @@ protected:
 
 	bool _have_ctxt;
 	bool _have_buffer;
-	bool _wait_for_update;
 
 	cl::Device _device;
 	cl::Context _context;
@@ -55,19 +54,11 @@ protected:
 	mutable cl::Buffer _buffer;
 
 	void set_context(const cl::Device&, const cl::Context&);
-
-	void to_gpu(size_t vec_bytes, void* vec);
-	void from_gpu(size_t);
+	void alloc_buffer(size_t);
 
 public:
 	virtual ~OpenclValue();
-	virtual void set_arg(cl::Kernel&, size_t pos, bool dirfrom) = 0;
-
-	// XXX hack alert ... remove this from the API when ready.
-	// this is temp scaffolding
-	cl::Buffer& get_buffer() { return _buffer; }
-
-	bool is_output(void) { return _wait_for_update; }
+	virtual void set_arg(cl::Kernel&, size_t pos) = 0;
 };
 
 /** @}*/
