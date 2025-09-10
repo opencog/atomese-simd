@@ -123,7 +123,7 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	// -------------------------------------------------------------
 	// Lots of times, now.
 
-	for (int j=0; j<10; j++)
+	for (int j=0; j<10000; j++)
 	{
 		for (size_t i=0; i<vec_dim; i++)
 			b[i] = ((double) rand()) / RAND_MAX;
