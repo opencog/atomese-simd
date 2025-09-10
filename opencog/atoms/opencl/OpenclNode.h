@@ -84,7 +84,7 @@ protected:
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;
 
-	cl::Kernel get_kernel(ValuePtr) const;
+	ValuePtr get_kernel(ValuePtr) const;
 	size_t get_vec_len(const ValueSeq&, bool&) const;
 	ValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t) const;
 	ValueSeq make_vectors(ValuePtr, cl::Kernel&, size_t&) const;

@@ -265,7 +265,7 @@ ValuePtr OpenclNode::read(void) const
 
 // ==============================================================
 
-cl::Kernel
+ValuePtr
 OpenclNode::get_kernel (ValuePtr kvec) const
 {
 	Handle hkl;
@@ -288,8 +288,7 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 			"Cross-site scripting!: this %s\nthat: %s",
 			to_string().c_str(), hkl->to_string().c_str());
 
-	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
-	return okp->get_kernel();
+	return hkl;
 }
 
 // ==============================================================
@@ -497,18 +496,17 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
-	// XXX Hardwired assumption about argument order.
-	// FIXME... We're almost there, with Section but not quite.
-
-	cl::Kernel kern = get_kernel(kvec);
+	ValuePtr hkl = get_kernel(kvec);
+	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
+	cl::Kernel kern = okp->get_kernel();
 
 	size_t dim = 0;
 	ValueSeq flovecs = make_vectors (kvec, kern, dim);
-	ValuePtr jobvec = createLinkValue(SECTION_VALUE, flovecs);
+	ValuePtr args = createLinkValue(flovecs);
+	ValuePtr jobvec = createLinkValue(SECTION_VALUE, ValueSeq{hkl, args});
 
 	job_t kjob;
 	kjob._kvec = jobvec;
-	kjob._kern = kern;
 	kjob._vecdim = dim;
 
 	// Send everything off to the GPU.
