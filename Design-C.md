@@ -243,4 +243,26 @@ A later read can retrieve individual outputs, as required.
 
 OK, I think that's a plan. Lets do it.
 
+Open Discussion
+---------------
+Some philosophical questions remain as to "object permanence". Vectors
+and the `cl::Buffer` that wrap them disappear when the last reference to
+the enclosing `OpenclFloatValue` disappears. Thus, such storage locatins
+were impermanent: at play for the duration of the duration of the
+calculation, and then gone. This is analogous to both the CPU hardware
+and compiler ideas of "register retirement": they're gone, once the
+computations needing those values are done.
+
+By contrast, the `OpenclKernelNode` is an Atom, not a Value, and thus
+persists indefinitely, until removed from the AtomSpace.  This seems
+reasonable for now, but raises the question of what sorts of objects
+deserve long lifetimes, and which ones don't.
+
+The last question can be partly answered: the vectors are "out there",
+outside of the local agent, in the GPU. The kernel is a part of the
+"world model", knowledge of how the world works, and thus is "in here",
+part of the agent. The kernel is a tool that the agent can deploy to
+control the external world (the GPU being the "external world" in this
+case.)
+
 ----
