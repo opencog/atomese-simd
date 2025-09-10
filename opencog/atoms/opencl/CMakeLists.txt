@@ -23,6 +23,7 @@ INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
 )
 
 INSTALL (FILES
+	opencl-headers.h
 	OpenclFloatValue.h
 	OpenclNode.h
 	OpenclValue.h

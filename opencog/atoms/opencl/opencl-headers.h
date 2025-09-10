@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclKernelNode.h
+ * opencog/atoms/opencl/opencl-headers.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,40 +20,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_KERNEL_NODE_H
-#define _OPENCOG_OPENCL_KERNEL_NODE_H
+#ifndef _OPENCOG_OPENCL_HEADERS_H
+#define _OPENCOG_OPENCL_HEADERS_H
 
-#include <opencog/atoms/opencl/opencl-headers.h>
-#include <opencog/atoms/base/Node.h>
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION 300
 
-namespace opencog
-{
+#if defined __has_include
+	#if __has_include(<CL/opencl.hpp>)
+		#include <CL/opencl.hpp>
+	#else
+		#include <CL/cl.hpp>
+	#endif
+#else
+	#include <CL/opencl.hpp>
+#endif
 
-/** \addtogroup grp_atomspace
- *  @{
- */
-
-/**
- * OpenclKernelNodes hold an ordered vector of doubles.
- */
-class OpenclKernelNode
-	: public Node
-{
-protected:
-
-	cl::Kernel _kern;
-public:
-	OpenclKernelNode(const std::string&&);
-	OpenclKernelNode(Type t, const std::string&&);
-	virtual ~OpenclKernelNode();
-
-	static Handle factory(const Handle&);
-};
-
-NODE_PTR_DECL(OpenclKernelNode)
-#define createOpenclKernelNode CREATE_DECL(OpenclKernelNode)
-
-/** @}*/
-} // namespace opencog
-
-#endif // _OPENCOG_OPENCL_KERNEL_NODE_H
+#endif // _OPENCOG_OPENCL_HEADERS_H

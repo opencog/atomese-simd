@@ -23,19 +23,7 @@
 #ifndef _OPENCOG_OPENCL_VALUE_H
 #define _OPENCOG_OPENCL_VALUE_H
 
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_TARGET_OPENCL_VERSION 300
-
-#if defined __has_include
-	#if __has_include(<CL/opencl.hpp>)
-		#include <CL/opencl.hpp>
-	#else
-		#include <CL/cl.hpp>
-	#endif
-#else
-	#include <CL/opencl.hpp>
-#endif
-
+#include <opencog/atoms/opencl/opencl-headers.h>
 
 namespace opencog
 {
