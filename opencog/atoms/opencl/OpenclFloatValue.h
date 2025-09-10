@@ -45,9 +45,9 @@ protected:
 
 	OpenclFloatValue(Type t) : FloatValue(t) {}
 	OpenclFloatValue(Type t, const std::vector<double>& v) : FloatValue(t, v) {}
-	virtual size_t reserve_size(void) {
+	virtual size_t reserve_size(void) const {
 		return sizeof(double) * _value.size(); }
-	virtual const void* data(void) { return _value.data(); }
+	virtual void* data(void) const { return _value.data(); }
 
 public:
 	OpenclFloatValue(size_t);

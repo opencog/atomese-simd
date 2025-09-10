@@ -57,8 +57,8 @@ void OpenclValue::set_context(const cl::Device& ocldev,
 	_buffer = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
 }
 
-/// Send data to the GPU
-void OpenclValue::send_buffer(void)
+/// Synchronously send data to the GPU
+void OpenclValue::send_buffer(void) const
 {
 	if (not _have_ctxt)
 		throw RuntimeException(TRACE_INFO,
@@ -69,6 +69,22 @@ void OpenclValue::send_buffer(void)
 	const void* bytes = data();
 
 	_queue.enqueueWriteBuffer(_buffer, CL_TRUE, 0,
+		nbytes, bytes, nullptr, &event_handler);
+	event_handler.wait();
+}
+
+/// Synchronously get data from the GPU
+void OpenclValue::fetch_buffer(void) const
+{
+	if (not _have_ctxt)
+		throw RuntimeException(TRACE_INFO,
+			"No buffer!");
+
+	cl::Event event_handler;
+	size_t nbytes = reserve_size();
+	void* bytes = data();
+
+	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
 		nbytes, bytes, nullptr, &event_handler);
 	event_handler.wait();
 }

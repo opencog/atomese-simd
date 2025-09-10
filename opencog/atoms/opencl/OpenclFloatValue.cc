@@ -50,14 +50,7 @@ OpenclFloatValue::OpenclFloatValue(std::vector<double>&& v) :
 void OpenclFloatValue::update(void) const
 {
 	if (not _have_ctxt) return;
-
-	size_t numbytes = sizeof(double) * _value.size();
-	void* bytes = (void*) _value.data();
-
-	cl::Event event_handler;
-	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
-		numbytes, bytes, nullptr, &event_handler);
-	event_handler.wait();
+	fetch_buffer();
 }
 
 void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos)

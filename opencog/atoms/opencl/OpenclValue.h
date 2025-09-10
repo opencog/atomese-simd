@@ -52,9 +52,10 @@ protected:
 	mutable cl::Buffer _buffer;
 
 	void set_context(const cl::Device&, const cl::Context&);
-	virtual size_t reserve_size(void) = 0;
-	virtual const void* data(void) = 0;
-	void send_buffer(void);
+	virtual size_t reserve_size(void) const = 0;
+	virtual void* data(void) const = 0;
+	void send_buffer(void) const;
+	void fetch_buffer(void) const;
 
 public:
 	virtual ~OpenclValue();
