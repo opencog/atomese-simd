@@ -58,7 +58,7 @@ void OpenclValue::set_context(const cl::Device& ocldev,
 }
 
 /// Send data to the GPU
-void OpenclValue::send_buffer(const void* bytes)
+void OpenclValue::send_buffer(void)
 {
 	if (not _have_ctxt)
 		throw RuntimeException(TRACE_INFO,
@@ -66,6 +66,8 @@ void OpenclValue::send_buffer(const void* bytes)
 
 	cl::Event event_handler;
 	size_t nbytes = reserve_size();
+	const void* bytes = data();
+
 	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
 		nbytes, (void*) bytes, nullptr, &event_handler);
 	event_handler.wait();
