@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclKernelNode.h
+ * opencog/atoms/opencl/OpenclKernelLink.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,11 +20,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_KERNEL_NODE_H
-#define _OPENCOG_OPENCL_KERNEL_NODE_H
+#ifndef _OPENCOG_OPENCL_KERNEL_LINK_H
+#define _OPENCOG_OPENCL_KERNEL_LINK_H
 
 #include <opencog/atoms/opencl/opencl-headers.h>
-#include <opencog/atoms/base/Node.h>
+#include <opencog/atoms/base/Link.h>
 
 namespace opencog
 {
@@ -34,12 +34,12 @@ namespace opencog
  */
 
 /**
- * OpenclKernelNodes hold an ordered vector of doubles.
+ * OpenclKernelLinks hold an ordered vector of doubles.
  */
-class OpenclKernelNode
-	: public Node
+class OpenclKernelLink
+	: public Link
 {
-	friend class OpenclNode;
+	friend class OpenclLink;
 
 protected:
 	bool _have_kernel;
@@ -49,17 +49,19 @@ protected:
 	cl::Kernel get_kernel(cl::Program&);
 
 public:
-	OpenclKernelNode(const std::string&&);
-	OpenclKernelNode(Type t, const std::string&&);
-	virtual ~OpenclKernelNode();
+	// The argument is on stack very nearly 100% of the time,
+	// so using the move ctor does not seem to make any sense.
+	// OpenclKernelLink(HandleSeq&&, Type=OPENCL_KERNEL_LINK);
+	OpenclKernelLink(HandleSeq, Type=OPENCL_KERNEL_LINK);
+	virtual ~OpenclKernelLink();
 
 	static Handle factory(const Handle&);
 };
 
-NODE_PTR_DECL(OpenclKernelNode)
-#define createOpenclKernelNode CREATE_DECL(OpenclKernelNode)
+LINK_PTR_DECL(OpenclKernelLink)
+#define createOpenclKernelLink CREATE_DECL(OpenclKernelLink)
 
 /** @}*/
 } // namespace opencog
 
-#endif // _OPENCOG_OPENCL_KERNEL_NODE_H
+#endif // _OPENCOG_OPENCL_KERNEL_LINK_H

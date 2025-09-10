@@ -291,6 +291,10 @@ should close as well. Kind of icky, but it works.
 
 I don't see any other ways that are reasonable and consistent.
 
+What should `OpenclKernelLink` inherit from? It could inherit from
+`Connector` (gasp!) but that seems to muddle what a `Connector` is
+suppose to be. Perhaps `TagLink` ...
+
 Open Discussion
 ---------------
 Some philosophical questions remain as to "object permanence". Vectors

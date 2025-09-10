@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclKernelNode.cc
+ * opencog/atoms/opencl/OpenclKernelLink.cc
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -27,54 +27,41 @@
 #include <opencog/util/Logger.h>
 #include <opencog/util/oc_assert.h>
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/atoms/base/Link.h>
-#include <opencog/atoms/base/Node.h>
-#include <opencog/atoms/core/NumberNode.h>
-#include <opencog/atoms/value/FloatValue.h>
-#include <opencog/atoms/value/LinkValue.h>
-#include <opencog/atoms/value/StringValue.h>
-#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
-#include "OpenclFloatValue.h"
-#include "OpenclKernelNode.h"
+#include "OpenclKernelLink.h"
 
 using namespace opencog;
 
-OpenclKernelNode::OpenclKernelNode(const std::string&& str) :
-	Node(OPENCL_KERNEL_NODE, std::move(str)),
+OpenclKernelLink::OpenclKernelLink(HandleSeq oset, Type t) :
+	Link(std::move(oset), t),
 	_have_kernel(false),
 	_kernel{}
 {
-}
-
-OpenclKernelNode::OpenclKernelNode(Type t, const std::string&& str) :
-	Node(t, std::move(str)),
-	_have_kernel(false),
-	_kernel{}
-{
-	if (not nameserver().isA(t, OPENCL_KERNEL_NODE))
+	if (not nameserver().isA(t, OPENCL_KERNEL_LINK))
 		throw RuntimeException(TRACE_INFO,
-			"Expecting OpenclKernelNode, got %s\n", to_string().c_str());
+			"Expecting OpenclKernelLink, got %s\n", to_string().c_str());
 }
 
-OpenclKernelNode::~OpenclKernelNode()
+OpenclKernelLink::~OpenclKernelLink()
 {
 }
 
 // ==============================================================
 
 cl::Kernel
-OpenclKernelNode::get_kernel(cl::Program& proggy)
+OpenclKernelLink::get_kernel(cl::Program& proggy)
 {
 	if (_have_kernel) return _kernel;
 
+#if 0
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier
 	// error message.
 	_kernel = cl::Kernel(proggy, get_name().c_str());
+#endif
 
 	_have_kernel = true;
 	return _kernel;
@@ -83,6 +70,6 @@ OpenclKernelNode::get_kernel(cl::Program& proggy)
 // ==============================================================
 
 // Adds factory when library is loaded.
-DEFINE_NODE_FACTORY(OpenclKernelNode, OPENCL_KERNEL_NODE);
+DEFINE_LINK_FACTORY(OpenclKernelLink, OPENCL_KERNEL_LINK);
 
 // ====================================================================
