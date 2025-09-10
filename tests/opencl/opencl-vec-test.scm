@@ -64,7 +64,11 @@
 (cog-execute! kernel-runner)
 (define kern-m1
 	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
-(test-assert "mult one" (equal? (FloatValue 2 4 6 8 10) kern-m1))
+(define args-m1 (cog-value-ref kern-m1 1))
+(define out-m1 (cog-value-ref args-m1 0))
+; Force out-m1 OpenclFloatValue to download from GPU by printing!!!
+(format #t "Result out-m1=~A" out-m1)
+(test-assert "mult one" (equal? (FloatValue 2 4 6 8 10) out-m1))
 
 ; ---------------------------------------------------------------
 ; Run it again, different data
@@ -80,8 +84,12 @@
 (cog-execute! krun-2)
 (define kern-m3
 	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
+(define args-m3 (cog-value-ref kern-m3 1))
+(define out-m3 (cog-value-ref args-m3 0))
+; Force out-m3 OpenclFloatValue to download from GPU by printing!!!
+(format #t "Result out-m3=~A" out-m3)
 (test-assert "mult three"
-	(equal? (FloatValue 2 6 12 20 30 30 28 24 18 10 0) kern-m3))
+	(equal? (FloatValue 2 6 12 20 30 30 28 24 18 10 0) out-m3))
 
 ; ---------------------------------------------------------------
 ; Run it again, with a different kernel
@@ -97,8 +105,12 @@
 (cog-execute! krun-3)
 (define kern-m5
 	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
+(define args-m5 (cog-value-ref kern-m5 1))
+(define out-m5 (cog-value-ref args-m5 0))
+; Force out-m5 OpenclFloatValue to download from GPU by printing!!!
+(format #t "Result out-m5=~A" out-m5)
 (test-assert "mult five"
-	(equal? (FloatValue 3 5 7 9 11 11 11 11 11 11 11) kern-m5))
+	(equal? (FloatValue 3 5 7 9 11 11 11 11 11 11 11) out-m5))
 
 ; ---------------------------------------------------------------
 ; Initialize the accumulator
