@@ -53,6 +53,7 @@ protected:
 
 	void set_context(const cl::Device&, const cl::Context&);
 	virtual size_t reserve_size(void) = 0;
+	void send_buffer(const void*);
 
 public:
 	virtual ~OpenclValue();

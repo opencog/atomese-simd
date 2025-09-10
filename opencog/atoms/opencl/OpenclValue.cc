@@ -40,6 +40,7 @@ OpenclValue::~OpenclValue()
 	_device = {};
 }
 
+/// Set up info about the GPU for this instance.
 void OpenclValue::set_context(const cl::Device& ocldev,
                               const cl::Context& ctxt)
 {
@@ -54,6 +55,20 @@ void OpenclValue::set_context(const cl::Device& ocldev,
 
 	size_t nbytes = reserve_size();
 	_buffer = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
+}
+
+/// Send data to the GPU
+void OpenclValue::send_buffer(const void* bytes)
+{
+	if (not _have_ctxt)
+		throw RuntimeException(TRACE_INFO,
+			"No buffer!");
+
+	cl::Event event_handler;
+	size_t nbytes = reserve_size();
+	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
+		nbytes, (void*) bytes, nullptr, &event_handler);
+	event_handler.wait();
 }
 
 // ==============================================================

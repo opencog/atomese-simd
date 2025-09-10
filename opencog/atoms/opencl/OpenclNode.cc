@@ -370,7 +370,7 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 		zero.resize(dim);
 		ofv = createOpenclFloatValue(zero);
 	}
-	else if (vals->size() < dim)
+	else if (vals->size() != dim)
 	{
 		std::vector<double> cpy(*vals);
 		cpy.resize(dim);
@@ -381,6 +381,8 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 
 	ofv->set_context(_device, _context);
 	ofv->set_arg(kern, pos);
+	if (not from_gpu)
+		ofv->send_buffer(vals->data());
 	pos ++;
 	return ofv;
 }
