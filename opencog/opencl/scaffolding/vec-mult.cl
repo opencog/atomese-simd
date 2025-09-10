@@ -7,6 +7,18 @@
 #  error double precision is not supported
 #endif
 
+// Sum of two vectors.
+kernel void vec_add(global double *sum,
+                    global const double *a,
+                    global const double *b,
+                    const unsigned long sz)
+{
+	size_t i = get_global_id(0);
+
+	if (i < sz)
+		sum[i] = a[i] + b[i];
+}
+
 // Product of two vectors.
 kernel void vec_mult(global double *prod,
                      global const double *a,

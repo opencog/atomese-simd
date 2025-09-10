@@ -6,12 +6,10 @@ ADD_EXECUTABLE(show-ocl-hw show-ocl-hw.cc scaffolding.cc)
 ADD_EXECUTABLE(run-hello-world run-hello-world.cc scaffolding.cc)
 ADD_EXECUTABLE(run-vec-mult run-vec-mult.cc scaffolding.cc)
 ADD_EXECUTABLE(run-flow-vec run-flow-vec.cc scaffolding.cc)
+ADD_EXECUTABLE(run-vec-accum run-vec-accum.cc scaffolding.cc)
 
 # TARGET_LINK_LIBRARIES(show-ocl-hw ${OPENCL_LIBRARIES})
-TARGET_LINK_LIBRARIES(show-ocl-hw OpenCL::OpenCL)
-TARGET_LINK_LIBRARIES(run-hello-world OpenCL::OpenCL)
-TARGET_LINK_LIBRARIES(run-vec-mult OpenCL::OpenCL)
-TARGET_LINK_LIBRARIES(run-flow-vec OpenCL::OpenCL)
+LINK_LIBRARIES(OpenCL::OpenCL)
 
 # Perform an "offline build" of the demo sources.
 # Do this only if clang and llvm-spirv are installed.
