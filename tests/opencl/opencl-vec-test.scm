@@ -149,6 +149,7 @@
 (define out1 (cog-value-ref args1 0))
 (test-assert "out1 type" (cog-subtype? 'FloatValue (cog-type out1)))
 (test-assert "out1 size" (equal? vec-size (length (cog-value->list out1))))
+(flush-all-ports)
 
 ; Run it lots ...
 (define run-len 5123)
