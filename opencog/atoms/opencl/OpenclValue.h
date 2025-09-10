@@ -44,9 +44,7 @@ class OpenclValue
 	friend class OpenclNode;
 protected:
 	OpenclValue(void);
-
 	bool _have_ctxt;
-	bool _have_buffer;
 
 	cl::Device _device;
 	cl::Context _context;
@@ -54,7 +52,7 @@ protected:
 	mutable cl::Buffer _buffer;
 
 	void set_context(const cl::Device&, const cl::Context&);
-	void alloc_buffer(size_t);
+	virtual size_t reserve_size(void) = 0;
 
 public:
 	virtual ~OpenclValue();

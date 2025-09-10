@@ -49,7 +49,7 @@ OpenclFloatValue::OpenclFloatValue(std::vector<double>&& v) :
 // right answer? So far, seems to still be "yes". ...
 void OpenclFloatValue::update(void) const
 {
-	if (not _have_buffer or not _have_ctxt) return;
+	if (not _have_ctxt) return;
 
 	size_t numbytes = sizeof(double) * _value.size();
 	void* bytes = (void*) _value.data();
@@ -62,7 +62,6 @@ void OpenclFloatValue::update(void) const
 
 void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos)
 {
-	alloc_buffer(sizeof(double)*size());
 	kern.setArg(pos, _buffer);
 }
 
