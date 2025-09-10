@@ -42,6 +42,8 @@ namespace opencog
 class OpenclNode
 	: public StreamNode
 {
+	friend class OpenclKernelLink;
+
 protected:
 	void init(void);
 
@@ -68,6 +70,7 @@ protected:
 	void build_kernel(void);
 	void load_kernel(void);
 	cl::Program _program;
+	const cl::Program& get_program(void) { return _program; }
 
 	// Kernel I/O. Using cl:Buffer for now.
 	// Need to create a derived class that will use SVM.
@@ -104,7 +107,6 @@ public:
 	OpenclNode(const std::string&&);
 	OpenclNode(Type t, const std::string&&);
 	virtual ~OpenclNode();
-
 
 	static Handle factory(const Handle&);
 };

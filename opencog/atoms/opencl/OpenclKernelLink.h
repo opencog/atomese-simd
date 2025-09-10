@@ -45,11 +45,9 @@ protected:
 	bool _have_kernel;
 	cl::Kernel _kernel;
 
-	// XXX FIXME hacky API for staging.
-	cl::Kernel get_kernel(const cl::Program&);
+	cl::Kernel get_kernel(void);
 
 	const std::string& get_kern_name (void) const;
-
 
 public:
 	// The argument is on stack very nearly 100% of the time,

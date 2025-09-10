@@ -282,10 +282,14 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 		throw RuntimeException(TRACE_INFO,
 			"Expecting an OpenclKernelLink: got %s\n", kvec->to_string().c_str());
 
-// XXX FIXME instead of telling the program, it should be asking us for
-// the program...
+	// Bofus should be bof be me.
+	if (this != hkl->getOutgoingAtom(0).get())
+		throw RuntimeException(TRACE_INFO,
+			"Cross-site scripting!: this %s\nthat: %s",
+			to_string().c_str(), hkl->to_string().c_str());
+
 	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
-	return okp->get_kernel(_program);
+	return okp->get_kernel();
 }
 
 // ==============================================================

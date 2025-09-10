@@ -33,6 +33,7 @@
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
 #include "OpenclKernelLink.h"
+#include "OpenclNode.h"
 
 using namespace opencog;
 
@@ -87,9 +88,12 @@ OpenclKernelLink::get_kern_name (void) const
 // ==============================================================
 
 cl::Kernel
-OpenclKernelLink::get_kernel(const cl::Program& proggy)
+OpenclKernelLink::get_kernel(void)
 {
 	if (_have_kernel) return _kernel;
+
+	// Get our program from our OpenclNode.
+	const cl::Program& proggy = OpenclNodeCast(_outgoing[0])->get_program();
 
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier
