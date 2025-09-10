@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (opencl-atoms SHARED
 	OpenclFloatValue.cc
+	OpenclKernelNode.cc
 	OpenclNode.cc
 	OpenclValue.cc
 )
@@ -25,6 +26,7 @@ INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
 INSTALL (FILES
 	opencl-headers.h
 	OpenclFloatValue.h
+	OpenclKernelNode.h
 	OpenclNode.h
 	OpenclValue.h
 	DESTINATION "include/opencog/atoms/opencl/"
