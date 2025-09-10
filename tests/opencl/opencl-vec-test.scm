@@ -143,8 +143,12 @@
 ; Run it once ...
 (cog-execute! run-kernel)
 (define acc1 (cog-execute! update-data))
-(test-assert "acc1 type" (cog-subtype? 'FloatValue (cog-type acc1)))
-(test-assert "acc1 size" (equal? vec-size (length (cog-value->list acc1))))
+(test-assert "acc1 type" (cog-subtype? 'SectionValue (cog-type acc1)))
+(define args1 (cog-value-ref acc1 1))
+(test-assert "args1 type" (cog-subtype? 'LinkValue (cog-type args1)))
+(define out1 (cog-value-ref args1 0))
+(test-assert "out1 type" (cog-subtype? 'FloatValue (cog-type out1)))
+(test-assert "out1 size" (equal? vec-size (length (cog-value->list out1))))
 
 ; Run it lots ...
 (define run-len 5123)
@@ -156,8 +160,12 @@
 
 (cog-execute! run-kernel)
 (define accn (cog-execute!  update-data))
-(test-assert "accn type" (cog-subtype? 'FloatValue (cog-type accn)))
-(test-assert "accn size" (equal? vec-size (length (cog-value->list accn))))
+(test-assert "accn type" (cog-subtype? 'SectionValue (cog-type accn)))
+(define argsn (cog-value-ref accn 1))
+(test-assert "argsn type" (cog-subtype? 'LinkValue (cog-type argsn)))
+(define outn (cog-value-ref argsn 0))
+(test-assert "outn type" (cog-subtype? 'FloatValue (cog-type outn)))
+(test-assert "outn size" (equal? vec-size (length (cog-value->list outn))))
 
 ; Result of repeated executation should be a large number,
 ; approx equal to 0.5 of vec-size * run-len by the central limit theorem
