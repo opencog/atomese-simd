@@ -68,8 +68,8 @@ void OpenclValue::send_buffer(void)
 	size_t nbytes = reserve_size();
 	const void* bytes = data();
 
-	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
-		nbytes, (void*) bytes, nullptr, &event_handler);
+	_queue.enqueueWriteBuffer(_buffer, CL_TRUE, 0,
+		nbytes, bytes, nullptr, &event_handler);
 	event_handler.wait();
 }
 
