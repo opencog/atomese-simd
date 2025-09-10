@@ -16,3 +16,7 @@ OPENCL_LINK_VALUE <- OPENCL_VALUE,LINK_VALUE
 
 // Provide the basic Sensory API
 OPENCL_NODE <- STREAM_NODE
+
+// Wrapper for cl::Kernel; but what should it inherit from?
+// Could be a LexicalNode, too ... ?? Or something else?
+OPENCL_KERNEL_NODE <- PREDICATE_NODE
