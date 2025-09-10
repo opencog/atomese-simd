@@ -51,6 +51,7 @@ protected:
 
 	cl::Device _device;
 	cl::Context _context;
+	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
 
 	void set_context(const cl::Device&, const cl::Context&);

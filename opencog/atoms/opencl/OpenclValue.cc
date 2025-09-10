@@ -31,6 +31,7 @@ OpenclValue::OpenclValue(void) :
 	_wait_for_update(false),
 	_device{},
 	_context{},
+	_queue{},
 	_buffer{}
 {
 }
@@ -51,6 +52,7 @@ void OpenclValue::set_context(const cl::Device& ocldev,
 	_have_ctxt = true;
 	_device = ocldev;
 	_context = ctxt;
+	_queue = cl::CommandQueue(_context, _device);
 }
 
 void OpenclValue::from_gpu(size_t nbytes)
