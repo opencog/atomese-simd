@@ -44,12 +44,16 @@
 using namespace opencog;
 
 OpenclKernelNode::OpenclKernelNode(const std::string&& str) :
-	Node(OPENCL_KERNEL_NODE, std::move(str))
+	Node(OPENCL_KERNEL_NODE, std::move(str)),
+	_have_kernel(false),
+	_kernel{}
 {
 }
 
 OpenclKernelNode::OpenclKernelNode(Type t, const std::string&& str) :
-	Node(t, std::move(str))
+	Node(t, std::move(str)),
+	_have_kernel(false),
+	_kernel{}
 {
 	if (not nameserver().isA(t, OPENCL_KERNEL_NODE))
 		throw RuntimeException(TRACE_INFO,
@@ -62,50 +66,19 @@ OpenclKernelNode::~OpenclKernelNode()
 
 // ==============================================================
 
-#if 0
-
-/// Unwrap kernel name.
-const std::string&
-OpenclKernelNode::get_kern_name (ValuePtr vp) const
-{
-	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute();
-
-	if (vp->is_node())
-		return HandleCast(vp)->get_name();
-
-	if (vp->is_type(STRING_VALUE))
-		return StringValueCast(vp)->value()[0];
-
-	throw RuntimeException(TRACE_INFO,
-		"Expecting Value with kernel name, got %s\n",
-		vp->to_string().c_str());
-}
-
 cl::Kernel
-OpenclKernelNode::get_kernel (ValuePtr kvec) const
+OpenclKernelNode::get_kernel(cl::Program& proggy)
 {
-	// Unpack kernel name.
-	std::string kern_name;
-
-	if (kvec->is_type(SECTION))
-		kern_name = get_kern_name(HandleCast(kvec)->getOutgoingAtom(0));
-	else
-	if (kvec->is_type(SECTION_VALUE))
-	{
-		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		kern_name = get_kern_name(vsq[0]);
-	}
-	else
-		throw RuntimeException(TRACE_INFO,
-			"Unknown data type: got %s\n", kvec->to_string().c_str());
+	if (_have_kernel) return _kernel;
 
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier
 	// error message.
-	return cl::Kernel(_program, kern_name.c_str());
+	_kernel = cl::Kernel(proggy, get_name().c_str());
+
+	_have_kernel = true;
+	return _kernel;
 }
-#endif
 
 // ==============================================================
 

@@ -39,9 +39,15 @@ namespace opencog
 class OpenclKernelNode
 	: public Node
 {
-protected:
+	friend class OpenclNode;
 
-	cl::Kernel _kern;
+protected:
+	bool _have_kernel;
+	cl::Kernel _kernel;
+
+	// XXX FIXME hacky API for staging.
+	cl::Kernel get_kernel(cl::Program&);
+
 public:
 	OpenclKernelNode(const std::string&&);
 	OpenclKernelNode(Type t, const std::string&&);
