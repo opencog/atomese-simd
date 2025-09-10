@@ -55,7 +55,7 @@
 (define kernel-runner
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel "vec_mult") ; Must be name of kernel
+			(OpenclKernel clnode (Predicate "vec_mult"))
 			(ConnectorSeq
 				(Type 'FloatValue)
 				(Number 1 2 3 4 5)
@@ -71,7 +71,7 @@
 (define krun-2
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel "vec_mult") ; Must be name of kernel
+			(OpenclKernel clnode (Predicate "vec_mult"))
 			(ConnectorSeq
 				(Type 'FloatValue)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -88,7 +88,7 @@
 (define krun-3
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel "vec_add") ; Must be name of kernel
+			(OpenclKernel clnode (Predicate "vec_add"))
 			(ConnectorSeq
 				(Type 'FloatValue)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -114,7 +114,7 @@
 (cog-set-value!
 	(Anchor "some data") (Predicate "accum task")
 	(SectionValue
-		(OpenclKernel "vec_add")
+		(OpenclKernel clnode (Predicate "vec_add"))
 		(LinkValue (Type 'FloatValue)
 			accum-location (RandomStream vec-size))))
 

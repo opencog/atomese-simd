@@ -66,7 +66,7 @@
 (cog-set-value!
 	(Anchor "some place") (Predicate "accum task")
 	(SectionValue
-		(OpenclKernel "vec_add")
+		(OpenclKernel clnode (Predicate "vec_add"))
 		(LinkValue accum-location (RandomStream 3))))
 
 ; Define a pair of functions. The first runs the kernel, defined above,
