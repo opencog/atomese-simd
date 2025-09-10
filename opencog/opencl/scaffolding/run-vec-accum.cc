@@ -118,12 +118,9 @@ void run_accum(cl::Device& ocldev, cl::Context& context, cl::Program& program)
 		nullptr, &event_handler);
 
 	event_handler.wait();
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	printf("One more time, the accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
+
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+		"One more time, the accumulator is:\n");
 
 	// -------------------------------------------------------------
 	// Lots of times, now.
@@ -145,14 +142,9 @@ void run_accum(cl::Device& ocldev, cl::Context& context, cl::Program& program)
 	}
 
 	event_handler.wait();
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	printf("The random accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
 
-
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+		"The random accumulator is:\n");
 }
 
 // Run code on the GPU's.
