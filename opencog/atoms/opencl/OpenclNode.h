@@ -77,14 +77,9 @@ protected:
 	// Jobs run in their own thread, so that the GPU doesn't block us.
 	typedef struct
 	{
-		// This struct is access in a different thread the main thread.
-		// Thus, we keep a pointer to the Value, so that it does not
-		// get dtored before we access it.
 		ValuePtr _kvec;
 		cl::Kernel _kern;
 		size_t _vecdim;
-		ValueSeq _flovecs;
-		OpenclFloatValuePtr _outvec;
 	} job_t;
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;

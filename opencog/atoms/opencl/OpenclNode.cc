@@ -369,13 +369,13 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 	{
 		std::vector<double> zero;
 		zero.resize(dim);
-		ofv = createOpenclFloatValue(std::move(zero));
+		ofv = createOpenclFloatValue(zero);
 	}
 	else if (vals->size() < dim)
 	{
 		std::vector<double> cpy(*vals);
 		cpy.resize(dim);
-		ofv = createOpenclFloatValue(std::move(cpy));
+		ofv = createOpenclFloatValue(cpy);
 	}
 	else
 		ofv = createOpenclFloatValue(*vals);
@@ -448,16 +448,21 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-	// Launch kernel
-	cl::Event event_handler;
-	_queue.enqueueNDRangeKernel(kjob._kern,
-		cl::NullRange,
-		cl::NDRange(kjob._vecdim),
-		cl::NullRange,
-		nullptr, &event_handler);
+	if (kjob._kvec->is_type(SECTION_VALUE))
+	{
+		// Launch kernel
+		cl::Event event_handler;
+		_queue.enqueueNDRangeKernel(kjob._kern,
+			cl::NullRange,
+			cl::NDRange(kjob._vecdim),
+			cl::NullRange,
+			nullptr, &event_handler);
 
-	event_handler.wait();
+		event_handler.wait();
+		_qvp->add(kjob._kvec);
+	}
 
+#if 0
 	// ------------------------------------------------------
 	// Wait for results
 	size_t vec_bytes = kjob._vecdim * sizeof(double);
@@ -470,6 +475,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 	// the user knows who these results belong to. I guess using an
 	// ArrowLink, right?
 	_qvp->add(kjob._outvec);
+#endif
 }
 
 // ==============================================================
@@ -498,16 +504,15 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 	size_t dim = 0;
 	ValueSeq flovecs = make_vectors (kvec, kern, dim);
+	ValuePtr jobvec = createLinkValue(SECTION_VALUE, flovecs);
 
 	job_t kjob;
-	kjob._kvec = kvec;
+	kjob._kvec = jobvec;
 	kjob._kern = kern;
 	kjob._vecdim = dim;
-	kjob._flovecs = flovecs;
-	kjob._outvec = OpenclFloatValueCast(flovecs[0]);
 
 	// Send everything off to the GPU.
-	_dispatch_queue.enqueue(std::move(kjob));
+	_dispatch_queue.enqueue(kjob);
 }
 
 // ==============================================================
