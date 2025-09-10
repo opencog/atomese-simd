@@ -243,6 +243,48 @@ A later read can retrieve individual outputs, as required.
 
 OK, I think that's a plan. Lets do it.
 
+Bugs/Issues
+-----------
+The actual `cl::Kernel` depends on the `cl::Program`, which is currently
+managed by the `OpenclNode`. If there were two different `OpenclNode`s
+with two different programs, but having some of the same names for the
+kernels, then there's a clash, because `OpenclKernelNode` would get
+bound to the first one.
+
+One solution is to encode the full URL into the kernel name. Thus:
+```
+    (OpenclKernel "opencl://Clover:AMD Radeon/some/where/some-prog.cl?kern_name")
+```
+but this is a very long string that forces URL processing out of scope.
+It works, it's unambiguous, its annoyingly verbose and possibly
+error-prone. It also encourages storing the `OpenclNode` inside the
+`OpenclKernelNode` which turns it into a defacto link type thing. Yuck.
+
+The only clean way of saying "do this in this-and-such a context" in
+Atomese is to use a `Link`. This suggests the following:
+```
+    (OpenclKernelLink
+        (Opencl "opencl://Clover:AMD Radeon/some/where/some-prog.cl")
+        (Predicate "kernel_name"))
+```
+The super-long URL is now split in two, and the context is clearly
+established.  The only drwback here is that the write message becomes
+dorky:
+```
+    (cog-set-value!
+        (Opencl "opencl://foo.cl")
+        (Predicate "*-write-")
+        (Section
+            (OpenclKernelLink
+                (Opencl "opencl://foo.cl")
+                (Predicate "kernel_name"))
+            ...))
+```
+The `OpenClNode` gets specified twice. The second feels superfluous,
+because it's indirectly knowable from the target of the write. But
+still..
+
+
 Open Discussion
 ---------------
 Some philosophical questions remain as to "object permanence". Vectors
