@@ -29,14 +29,14 @@ OpenclValue::OpenclValue(void) :
 	_have_ctxt(false),
 	_have_buffer(false),
 	_wait_for_update(false),
-	_context(nullptr),
-	_buffer(nullptr)
+	_context{},
+	_buffer{}
 {
 }
 
 OpenclValue::~OpenclValue()
 {
-	_context = nullptr;
+	_context = {};
 }
 
 void OpenclValue::set_context(const cl::Context& ctxt)
