@@ -39,6 +39,7 @@
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
 #include "OpenclFloatValue.h"
+#include "OpenclKernelLink.h"
 #include "OpenclNode.h"
 
 using namespace opencog;
@@ -238,44 +239,9 @@ void OpenclNode::close(const ValuePtr& ignore)
 	_qvp = nullptr;
 
 	// XXX more to do here. FIXME
+	// One of the TODO's is to crawl over the icoming set, look for
+	// OpenclKernelLinks and tell them to shut down too.
 }
-
-// ==============================================================
-
-#if LATER_SOMEDAY
-Handle _global_desc = Handle::UNDEFINED;
-
-void OpenclNode::do_describe(void)
-{
-	if (_global_desc) return;
-
-	HandleSeq cmds;
-
-	// Describe exactly how to Open this stream.
-	// It needs no special arguments.
-	Handle open_cmd =
-		make_description("Open connection to GPU",
-		                 "OpenLink", "OpenclNode");
-	cmds.emplace_back(open_cmd);
-
-	// Write  XXX this is wrong.
-	Handle write_cmd =
-		make_description("Write kernel and data to GPU",
-		                 "WriteLink", "ItemNode");
-	cmds.emplace_back(write_cmd);
-
-	_global_desc = createLink(cmds, CHOICE_LINK);
-}
-
-// This is totally bogus because it is unused.
-// This should be class static member
-ValuePtr OpenclNode::describe(AtomSpace* as, bool silent)
-{
-	if (_description) return as->add_atom(_description);
-	_description = as->add_atom(_global_desc);
-	return _description;
-}
-#endif
 
 // ==============================================================
 
@@ -299,46 +265,27 @@ ValuePtr OpenclNode::read(void) const
 
 // ==============================================================
 
-/// Unwrap kernel name.
-const std::string&
-OpenclNode::get_kern_name (ValuePtr vp) const
-{
-	if (vp->is_atom() and HandleCast(vp)->is_executable())
-		vp = HandleCast(vp)->execute();
-
-	if (vp->is_node())
-		return HandleCast(vp)->get_name();
-
-	if (vp->is_type(STRING_VALUE))
-		return StringValueCast(vp)->value()[0];
-
-	throw RuntimeException(TRACE_INFO,
-		"Expecting Value with kernel name, got %s\n",
-		vp->to_string().c_str());
-}
-
 cl::Kernel
 OpenclNode::get_kernel (ValuePtr kvec) const
 {
-	// Unpack kernel name.
-	std::string kern_name;
-
+	Handle hkl;
 	if (kvec->is_type(SECTION))
-		kern_name = get_kern_name(HandleCast(kvec)->getOutgoingAtom(0));
+		hkl = HandleCast(kvec)->getOutgoingAtom(0);
 	else
 	if (kvec->is_type(SECTION_VALUE))
 	{
 		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		kern_name = get_kern_name(vsq[0]);
+		hkl = HandleCast(vsq[0]);
 	}
-	else
-		throw RuntimeException(TRACE_INFO,
-			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
-	// XXX TODO this will throw exception if user mis-typed the
-	// kernel name. We should catch this and print a friendlier
-	// error message.
-	return cl::Kernel(_program, kern_name.c_str());
+	if (nullptr == hkl or not hkl->is_type(OPENCL_KERNEL_LINK))
+		throw RuntimeException(TRACE_INFO,
+			"Expecting an OpenclKernelLink: got %s\n", kvec->to_string().c_str());
+
+// XXX FIXME instead of telling the program, it should be asking us for
+// the program...
+	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
+	return okp->get_kernel(_program);
 }
 
 // ==============================================================

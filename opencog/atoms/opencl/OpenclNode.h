@@ -86,7 +86,6 @@ protected:
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;
 
-	const std::string& get_kern_name(ValuePtr) const;
 	cl::Kernel get_kernel(ValuePtr) const;
 	size_t get_vec_len(const ValueSeq&, bool&) const;
 	ValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t) const;
