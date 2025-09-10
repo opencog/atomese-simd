@@ -268,7 +268,7 @@ Atomese is to use a `Link`. This suggests the following:
         (Predicate "kernel_name"))
 ```
 The super-long URL is now split in two, and the context is clearly
-established.  The only drwback here is that the write message becomes
+established.  The only drawback here is that the write message becomes
 dorky:
 ```
     (cog-set-value!
@@ -282,8 +282,14 @@ dorky:
 ```
 The `OpenClNode` gets specified twice. The second feels superfluous,
 because it's indirectly knowable from the target of the write. But
-still..
+still...
 
+A different issue is that the the `OpenclNode` could be sent the
+`*-close-*` message. This would require it to do a `getIncomingByType`
+and notify each of the `OpenclKernelLink` in it's incoming set that they
+should close as well. Kind of icky, but it works.
+
+I don't see any other ways that are reasonable and consistent.
 
 Open Discussion
 ---------------
