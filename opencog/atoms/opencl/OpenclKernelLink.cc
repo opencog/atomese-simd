@@ -45,7 +45,7 @@ OpenclKernelLink::OpenclKernelLink(HandleSeq oset, Type t) :
 		throw RuntimeException(TRACE_INFO,
 			"Expecting OpenclKernelLink, got %s\n", to_string().c_str());
 
-	if (2 != oset.size())
+	if (2 != _outgoing.size())
 		throw RuntimeException(TRACE_INFO,
 			"Expecting an OpenclNode and a kernel; got %s\n", to_string().c_str());
 
