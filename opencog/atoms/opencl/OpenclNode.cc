@@ -507,6 +507,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 
 	job_t kjob;
 	kjob._kvec = jobvec;
+	kjob._kern = kern;
 	kjob._vecdim = dim;
 
 	// Send everything off to the GPU.
