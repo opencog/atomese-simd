@@ -11,7 +11,8 @@
 
 void read_result(cl::Context& context, cl::Device& ocldev,
                  size_t vec_bytes, size_t vec_dim,
-                 cl::Buffer& vecaccum, std::vector<double>* accum)
+                 cl::Buffer& vecaccum, std::vector<double>* accum,
+                 const char* msg)
 {
 	cl::CommandQueue queue(context, ocldev);
 	cl::Event event_handler;
@@ -19,7 +20,7 @@ void read_result(cl::Context& context, cl::Device& ocldev,
 		vec_bytes, accum->data(), nullptr, &event_handler);
 	event_handler.wait();
 
-	fprintf(stderr, "The accumulator is:\n");
+	fprintf(stderr, msg);
 	for (size_t i=0; i<vec_dim; i++)
 		printf("%ld = %f\n", i, (*accum)[i]);
 }
@@ -78,8 +79,8 @@ void run_accum(cl::Device& ocldev, cl::Context& context, cl::Program& program)
 		nullptr, &event_handler);
 
 	event_handler.wait();
-	fprintf(stderr, "Well read accumulator\n");
-	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum);
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+               "The accumulator is:\n");
 
 	// -------------------------------------------------------------
 	// Do it again
@@ -97,12 +98,9 @@ void run_accum(cl::Device& ocldev, cl::Context& context, cl::Program& program)
 		nullptr, &event_handler);
 
 	event_handler.wait();
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	printf("Again, the accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
+
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+               "Again, the accumulator is:\n");
 
 	// -------------------------------------------------------------
 	// One more time to be sure.
