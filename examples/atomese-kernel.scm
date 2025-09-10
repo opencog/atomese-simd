@@ -59,7 +59,7 @@
 (define kernel-runner
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_mult") ; Must be name of kernel
+			(OpenclKernel "vec_mult") ; Must be name of kernel
 			(ConnectorSeq
 				(Type 'Number)
 				(Number 1 2 3 4 5)
@@ -77,7 +77,7 @@
 (cog-execute!
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_mult") ; Must be name of kernel
+			(OpenclKernel "vec_mult") ; Must be name of kernel
 			(ConnectorSeq
 				(Type 'Number)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -92,7 +92,7 @@
 (cog-execute!
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_add") ; Must be name of kernel
+			(OpenclKernel "vec_add") ; Must be name of kernel
 			(ConnectorSeq
 				(Type 'Number)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -116,7 +116,7 @@
 (cog-set-value!
 	(Anchor "some data") (Predicate "some stream")
 	(SectionValue
-		(Predicate "vec_add")
+		(OpenclKernel "vec_add")
 		LinkValue
 			(Type 'FloatValue)
 			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
