@@ -7,6 +7,7 @@
  */
 
 #include "scaffolding.h"
+#include <stdlib.h>
 
 // Declare two floating point vectors. One acts as an accumulator;
 // the other is constantly changing.
@@ -92,7 +93,7 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
 		vec_bytes, accum.data(), nullptr, &event_handler);
 	event_handler.wait();
-	printf("The accumulator is:\n");
+	printf("Again, the accumulator is:\n");
 	for (size_t i=0; i<vec_dim; i++)
 		printf("%ld = %f\n", i, accum[i]);
 
@@ -115,7 +116,34 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
 		vec_bytes, accum.data(), nullptr, &event_handler);
 	event_handler.wait();
-	printf("The accumulator is:\n");
+	printf("One more time, the accumulator is:\n");
+	for (size_t i=0; i<vec_dim; i++)
+		printf("%ld = %f\n", i, accum[i]);
+
+	// -------------------------------------------------------------
+	// Lots of times, now.
+
+	for (int j=0; j<10; j++)
+	{
+		for (size_t i=0; i<vec_dim; i++)
+			b[i] = ((double) rand()) / RAND_MAX;
+
+		queue.enqueueWriteBuffer(vecb, CL_TRUE, 0,
+			vec_bytes, b.data(), nullptr, &event_handler);
+
+		// Launch
+		queue.enqueueNDRangeKernel(kernel,
+			cl::NullRange,
+			cl::NDRange(vec_dim),
+			cl::NullRange,
+			nullptr, &event_handler);
+	}
+
+	event_handler.wait();
+	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
+		vec_bytes, accum.data(), nullptr, &event_handler);
+	event_handler.wait();
+	printf("The random accumulator is:\n");
 	for (size_t i=0; i<vec_dim; i++)
 		printf("%ld = %f\n", i, accum[i]);
 
