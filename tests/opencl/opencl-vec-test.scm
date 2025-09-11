@@ -123,6 +123,10 @@
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
 
+; Send the zeroed-out accumulator up to the GPU.
+(cog-set-value! clnode (Predicate "*-write-*") accum-location)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+
 (cog-set-value!
 	(Anchor "some data") (Predicate "accum task")
 	(SectionValue
