@@ -34,7 +34,6 @@
 #include <opencog/sensory/types/atom_types.h>
 #include "OpenclFloatValue.h"
 #include "OpenclJobValue.h"
-#include "OpenclKernelLink.h"
 #include "OpenclNode.h"
 
 using namespace opencog;

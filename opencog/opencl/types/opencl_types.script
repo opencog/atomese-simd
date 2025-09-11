@@ -19,6 +19,3 @@ OPENCL_JOB_VALUE <- SECTION_VALUE
 
 // Provide the basic Sensory API
 OPENCL_NODE <- STREAM_NODE
-
-// Wrapper for cl::Kernel. TAG_LINK seems to be the correct base class.
-OPENCL_KERNEL_LINK <- TAG_LINK

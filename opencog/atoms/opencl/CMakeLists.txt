@@ -6,7 +6,6 @@ ADD_LIBRARY (opencl-atoms SHARED
 	OpenclDataValue.cc
 	OpenclFloatValue.cc
 	OpenclJobValue.cc
-	OpenclKernelLink.cc
 	OpenclNode.cc
 )
 
@@ -29,7 +28,6 @@ INSTALL (FILES
 	OpenclDataValue.h
 	OpenclFloatValue.h
 	OpenclJobValue.h
-	OpenclKernelLink.h
 	OpenclNode.h
 	DESTINATION "include/opencog/atoms/opencl/"
 )
