@@ -22,7 +22,9 @@
 
 #include <opencog/util/exceptions.h>
 #include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/NumberNode.h>
+#include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 #include <opencog/opencl/types/atom_types.h>
 
@@ -51,11 +53,10 @@ OpenclJobValue::~OpenclJobValue()
 const std::string&
 OpenclJobValue::get_kern_name (void) const
 {
-#if 0
-	Handle kh = _outgoing[1];
-	ValuePtr vp = kh;
-	if (kh->is_executable())
-		vp = kh->execute();
+	Handle hk = _definition->getOutgoingAtom(0);
+	ValuePtr vp = hk;
+	if (hk->is_executable())
+		vp = hk->execute();
 
 	if (vp->is_node())
 		return HandleCast(vp)->get_name();
@@ -66,8 +67,6 @@ OpenclJobValue::get_kern_name (void) const
 	throw RuntimeException(TRACE_INFO,
 		"Expecting Value with kernel name, got %s\n",
 		vp->to_string().c_str());
-#endif
-	return std::string{};
 }
 
 // ==============================================================
@@ -90,28 +89,6 @@ OpenclJobValue::get_kernelx(void)
 	return _kernel;
 #endif
 	return cl::Kernel{};
-}
-
-// ==============================================================
-
-ValuePtr
-OpenclJobValue::get_kernel (ValuePtr kvec) const
-{
-	Handle hkl;
-	if (kvec->is_type(SECTION))
-		hkl = HandleCast(kvec)->getOutgoingAtom(0);
-	else
-	if (kvec->is_type(OPENCL_JOB_VALUE))
-	{
-		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		hkl = HandleCast(vsq[0]);
-	}
-
-	if (nullptr == hkl)
-		throw RuntimeException(TRACE_INFO,
-			"Expecting an OpenclKernelLink, got: %s", kvec->to_string().c_str());
-
-	return hkl;
 }
 
 // ==============================================================
@@ -254,6 +231,15 @@ OpenclJobValue::make_vectors(ValuePtr kvec, size_t& dim) const
 
 void OpenclJobValue::build(const Handle& oclno)
 {
+	if (not oclno->is_type(OPENCL_NODE))
+		throw RuntimeException(TRACE_INFO,
+			"Expecting OpenclNode, got: %s", oclno->to_string().c_str());
+
+printf("duuude enter builder for %s\n",
+_definition->to_string().c_str());
+	std::string kname = get_kern_name();
+printf("duuude builder kern %s\n", kname.c_str());
+
 #if 0
 	ValuePtr hkl = get_kernel(kvec);
 	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
