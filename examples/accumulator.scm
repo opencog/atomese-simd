@@ -125,11 +125,11 @@
 ; The execute and the status check do not have to be done sequentially.
 (define (run-loopy N)
 	(cog-execute! run-kernel)
-	(if (< 0 N) (loopy (- N 1))))
+	(if (< 0 N) (run-loopy (- N 1))))
 
 (define (status-loopy N)
 	(cog-execute! get-status)
-	(if (< 0 N) (loopy (- N 1))))
+	(if (< 0 N) (status-loopy (- N 1))))
 
 (run-loopy 101)
 (status-loopy 101)
