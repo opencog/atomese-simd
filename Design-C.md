@@ -243,8 +243,8 @@ A later read can retrieve individual outputs, as required.
 
 OK, I think that's a plan. Lets do it.
 
-Bugs/Issues
------------
+Bug: Which kernel?
+------------------
 The actual `cl::Kernel` depends on the `cl::Program`, which is currently
 managed by the `OpenclNode`. If there were two different `OpenclNode`s
 with two different programs, but having some of the same names for the
@@ -294,6 +294,21 @@ I don't see any other ways that are reasonable and consistent.
 What should `OpenclKernelLink` inherit from? It could inherit from
 `Connector` (gasp!) but that seems to muddle what a `Connector` is
 suppose to be. Perhaps `TagLink` ...
+
+Bug/Issue: Actions/Operations
+-----------------------------
+The above design has another flaw: it binds a single instance of
+`cl::Kernel` to `OpenclKernelLink`. That's wrong; it should be a single
+instance of `cl::Kernel` per job, with each job having different
+inputs and outputs. What's needed is something like `OpenclSectionValue`
+to bind together one instance of `cl::Kernel` with all the calls to
+`cl::Kernel::setArg()` to tie thhem all together. Once all bound up,
+then it can be launched.
+
+Several sub-issues: (1) who creates it? (2) How can user get a handle to
+it, in case they want to run it repeatedly? (3) is there a better name
+than `OpenclSectionValue`? Something like "run job" or "do operation"
+or "perform action", so maybe `OpenclActionValue` ...
 
 Open Discussion
 ---------------
