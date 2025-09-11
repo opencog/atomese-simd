@@ -42,7 +42,11 @@ class OpenclJobValue :
 protected:
 	OpenclJobValue(Type t) : LinkValue(t) {}
 
+	Handle _definition;
 	cl::Kernel _kernel;
+
+	void build(const Handle&);
+	void run(void);
 
 	ValuePtr get_kernel(ValuePtr) const;
 	size_t get_vec_len(const ValueSeq&, bool&) const;
@@ -50,7 +54,7 @@ protected:
 	ValueSeq make_vectors(ValuePtr, size_t&) const;
 
 public:
-	OpenclJobValue(ValueSeq&&);
+	OpenclJobValue(Handle);
 	virtual ~OpenclJobValue();
 };
 

@@ -31,10 +31,14 @@
 
 using namespace opencog;
 
-OpenclJobValue::OpenclJobValue(ValueSeq&& vals) :
-	LinkValue(OPENCL_JOB_VALUE, vals),
+OpenclJobValue::OpenclJobValue(Handle defn) :
+	LinkValue(OPENCL_JOB_VALUE),
 	_kernel{}
 {
+	if (not defn->is_type(SECTION))
+		throw RuntimeException(TRACE_INFO,
+			"Expecting Section, got: %s", defn->to_string().c_str());
+	_definition = defn;
 }
 
 OpenclJobValue::~OpenclJobValue()
@@ -59,7 +63,7 @@ OpenclJobValue::get_kernel (ValuePtr kvec) const
 
 	if (nullptr == hkl or not hkl->is_type(OPENCL_KERNEL_LINK))
 		throw RuntimeException(TRACE_INFO,
-			"Expecting an OpenclKernelLink: got %s\n", kvec->to_string().c_str());
+			"Expecting an OpenclKernelLink, got: %s", kvec->to_string().c_str());
 
 	return hkl;
 }
@@ -121,20 +125,6 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
 	{
-#if NOT_NOW
-		// dim should match specified dim...
-		// Why bother checking? I dunno.
-		Handle hc = HandleCast(vp);
-		if (1 != hc.size())
-			throw RuntimeException(TRACE_INFO,
-				"Expecting dimension, got %s", hc->to_string().c_str();
-
-		Handle hd = HandleCast(vp)->getOutgoingAtom(0);
-		if (not hd->is_type(NUMBER_NODE))
-			throw RuntimeException(TRACE_INFO,
-				"Expecting number, got %s", hc->to_string().c_str();
-#endif
-
 		Handle hd = HandleCast(createNumberNode(dim));
 		return createLink(CONNECTOR, hd);
 	}
@@ -216,20 +206,9 @@ OpenclJobValue::make_vectors(ValuePtr kvec, size_t& dim) const
 
 // ==============================================================
 
+void OpenclJobValue::build(const Handle& oclno)
+{
 #if 0
-		// Launch kernel
-		cl::Event event_handler;
-		_queue.enqueueNDRangeKernel(kjob._kern,
-			cl::NullRange,
-			cl::NDRange(kjob._vecdim),
-			cl::NullRange,
-			nullptr, &event_handler);
-
-		event_handler.wait();
-		_qvp->add(kjob._kvec);
-		return;
-
-
 	ValuePtr hkl = get_kernel(kvec);
 	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
 	cl::Kernel kern = okp->get_kernel();
@@ -248,18 +227,28 @@ OpenclJobValue::make_vectors(ValuePtr kvec, size_t& dim) const
 			kern.setArg(pos, dim);
 		pos++;
 	}
-
-	job_t kjob;
-	kjob._kvec = jobvec;
-	kjob._kern = kern;
-	kjob._vecdim = dim;
-
-	// Send everything off to the GPU.
-	_dispatch_queue.enqueue(kjob);
 #endif
+}
+
+void OpenclJobValue::run(void)
+{
+#if 0
+		// Launch kernel
+		cl::Event event_handler;
+		_queue.enqueueNDRangeKernel(kjob._kern,
+			cl::NullRange,
+			cl::NDRange(kjob._vecdim),
+			cl::NullRange,
+			nullptr, &event_handler);
+
+		event_handler.wait();
+		_qvp->add(kjob._kvec);
+		return;
+#endif
+}
 
 // ==============================================================
 
 // Adds factory when the library is loaded.
 DEFINE_VALUE_FACTORY(OPENCL_JOB_VALUE,
-                     createOpenclJobValue, ValueSeq)
+                     createOpenclJobValue, Handle)
