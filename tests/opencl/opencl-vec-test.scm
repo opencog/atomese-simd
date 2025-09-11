@@ -173,7 +173,7 @@
 ; Result of repeated executation should be a large number,
 ; approx equal to 0.5 of vec-size * run-len by the central limit theorem
 ; and with stddev of sqrt of num samples.
-(define vsum (fold + 0 (cog-value->list accn)))
+(define vsum (fold + 0 (cog-value->list outn)))
 (define vlen (* vec-size run-len))
 (define vmean (/ vsum vlen))
 (define vsigma (/ 1 (sqrt vlen)))
