@@ -282,7 +282,6 @@ void OpenclNode::queue_job(const ValuePtr& vp)
 	if (vp->is_type(OPENCL_DATA_VALUE))
 	{
 		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
-		ofv->set_context(_device, _context);
 		ofv->send_buffer();
 		_qvp->add(ofv);
 		return;
@@ -305,9 +304,18 @@ void OpenclNode::write_one(const ValuePtr& kvec)
 void OpenclNode::do_write(const ValuePtr& vp)
 {
 	// Ready-to-go. Dispatch.
-	if (vp->is_type(OPENCL_DATA_VALUE) or
-	    vp->is_type(OPENCL_JOB_VALUE))
+	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
+		_dispatch_queue.enqueue(vp);
+		return;
+	}
+
+	// There's a chance that vectors haven't been attached yet.
+	// Do that now with set_context.
+	if (vp->is_type(OPENCL_DATA_VALUE))
+	{
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
+		ofv->set_context(get_handle());
 		_dispatch_queue.enqueue(vp);
 		return;
 	}

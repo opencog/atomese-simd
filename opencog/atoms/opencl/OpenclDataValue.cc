@@ -21,7 +21,8 @@
  */
 
 #include <opencog/util/exceptions.h>
-#include <opencog/atoms/opencl/OpenclDataValue.h>
+#include "OpenclDataValue.h"
+#include "OpenclNode.h"
 
 using namespace opencog;
 
@@ -37,16 +38,23 @@ OpenclDataValue::~OpenclDataValue()
 }
 
 /// Set up info about the GPU for this instance.
-void OpenclDataValue::set_context(const cl::Device& ocldev,
-                                  const cl::Context& ctxt)
+void OpenclDataValue::set_context(const Handle& oclno)
 {
 	if (_have_buff) return;
-
 	_have_buff = true;
-	_queue = cl::CommandQueue(ctxt, ocldev);
+
+	OpenclNodePtr onp = OpenclNodeCast(oclno);
+
+	// We could have our own queue, or we can share. I don't
+	// know which is better.
+#if LOCAL_QUEUE
+	_queue = cl::CommandQueue(onp->get_context(), onp->get_device());
+#else
+	_queue = onp->get_queue();
+#endif
 
 	size_t nbytes = reserve_size();
-	_buffer = cl::Buffer(ctxt, CL_MEM_READ_WRITE, nbytes);
+	_buffer = cl::Buffer(onp->get_context(), CL_MEM_READ_WRITE, nbytes);
 }
 
 /// Synchronously send data to the GPU

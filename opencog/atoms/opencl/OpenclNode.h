@@ -42,6 +42,7 @@ namespace opencog
 class OpenclNode
 	: public StreamNode
 {
+	friend class OpenclDataValue;
 	friend class OpenclJobValue;
 
 protected:
@@ -57,14 +58,17 @@ protected:
 	void find_device(void);
 	cl::Platform _platform;
 	cl::Device _device;
+	const cl::Device& get_device(void) { return _device; }
 
 	// Execution context.
 	// (TODO: I guess we could have several of these per device!?)
 	cl::Context _context;
+	const cl::Context& get_context(void) { return _context; }
 
 	// Async I/O queue to the execution context.
 	// (TODO: I guess we could have several of these per context!?)
 	cl::CommandQueue _queue;
+	const cl::CommandQueue& get_queue(void) { return _queue; }
 
 	// Kernel compilation
 	void build_kernel(void);

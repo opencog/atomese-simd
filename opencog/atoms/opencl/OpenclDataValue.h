@@ -24,6 +24,7 @@
 #define _OPENCOG_OPENCL_DATA_VALUE_H
 
 #include <opencog/atoms/opencl/opencl-headers.h>
+#include <opencog/atoms/base/Handle.h>
 
 namespace opencog
 {
@@ -50,7 +51,7 @@ protected:
 	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
 
-	void set_context(const cl::Device&, const cl::Context&);
+	void set_context(const Handle&);
 	virtual size_t reserve_size(void) const = 0;
 	virtual void* data(void) const = 0;
 	void send_buffer(void) const;
