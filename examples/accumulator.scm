@@ -122,5 +122,25 @@
 ; accumulate about 0.5 on average, each run.
 (cog-execute! accum-location)
 
+; The execute and the status check do not have to be done sequentially.
+(define (run-loopy N)
+	(cog-execute! run-kernel)
+	(if (< 0 N) (loopy (- N 1))))
+
+(define (status-loopy N)
+	(cog-execute! get-status)
+	(if (< 0 N) (loopy (- N 1))))
+
+(run-loopy 101)
+(status-loopy 101)
+(cog-execute! accum-location)
+
+; ATTENTION! If you try to get the status more times than you've run
+; the kernel, the status checker will block the current thread, waiting
+; for a result that will never arrrive. If you plan in advance, and
+; create several threads, then, yes, you can run the exec in one thread,
+; and check the status in the other. In such a design, you want the
+; status checker to block until the job is done. But for this
+; single-thread demo, you'll just .. hang if you do this.
 
 ; --------- The End! That's All, Folks! --------------

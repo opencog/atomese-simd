@@ -72,6 +72,13 @@
 ; Get the result.
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
+; CAUTION: Do not try to get the result twice! The second call will
+; hang. This is intentional, and designed for multi-threaded async
+; operation: the *-read-* waits for the earlier *-write-* to complete.
+; If you do this in multiple threads, it all works correctly, with the
+; reader waiting for the writer to finish. However, for this single-
+; threaed demo, a second read will just hang, and you'll be sorry.
+
 ; ---------------------------------------------------------------
 ; Run it again, with different data.
 (cog-execute!
@@ -98,7 +105,7 @@
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
 				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
-; Get the result
+; Get the result.
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
