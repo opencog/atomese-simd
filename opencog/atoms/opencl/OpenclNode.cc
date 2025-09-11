@@ -475,22 +475,18 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 		event_handler.wait();
 		_qvp->add(kjob._kvec);
+		return;
 	}
 
-#if 0
-	// ------------------------------------------------------
-	// Wait for results
-	size_t vec_bytes = kjob._vecdim * sizeof(double);
-	_queue.enqueueReadBuffer(kjob._outvec->get_buffer(),
-		CL_TRUE, 0, vec_bytes, kjob._outvec->data(),
-		nullptr, &event_handler);
-	event_handler.wait();
-
-	// XXX TODO: we should probably wrap this with the kvec, so that
-	// the user knows who these results belong to. I guess using an
-	// ArrowLink, right?
-	_qvp->add(kjob._outvec);
-#endif
+	// If told to write a vector, then we upload that vector data
+	// to the GPU.
+	if (kjob._kvec->is_type(OPENCL_VALUE))
+	{
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(kjob._kvec);
+		ofv->send_buffer();
+		_qvp->add(ofv);
+		return;
+	}
 }
 
 // ==============================================================
