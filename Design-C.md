@@ -310,6 +310,14 @@ it, in case they want to run it repeatedly? (3) is there a better name
 than `OpenclSectionValue`? Something like "run job" or "do operation"
 or "perform action", so maybe `OpenclActionValue` ...
 
+* Call it `OpenclJobValue`.
+* Use `*-write-*` `Section` to digest the `Section` and convert it to an
+  equivalent `OpenclJobValue`.
+* Run it. The first `*-read-*` returns the `OpenclJobValue`.
+* Sending `*-write-*` `OpenclJobValue` runs it. No return value.
+* Drop support for `SectionValue`.
+* Git rid of `OpenclKernelLink`.
+
 Open Discussion
 ---------------
 Some philosophical questions remain as to "object permanence". Vectors
