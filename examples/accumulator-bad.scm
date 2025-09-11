@@ -59,6 +59,9 @@
 	(ValueOf (Anchor "some place") (Predicate "accumulator")))
 (cog-execute! accum-location)
 
+; Sent the zeroed-out accumulator up to the GPU.
+(cog-set-value! clnode (Predicate "*-write-*") accum-location)
+
 ; Bind the vector-add GPU kernel to a pair of input vectors. The first
 ; vector is the accumulator, and the second one is a vector of three
 ; random numbers. Note that these random numbers change with every

@@ -508,6 +508,16 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
+	if (kvec->is_type(OPENCL_VALUE))
+	{
+		job_t kjob;
+		kjob._kvec = kvec;
+
+		// Send everything off to the GPU.
+		_dispatch_queue.enqueue(kjob);
+		return;
+	}
+
 	ValuePtr hkl = get_kernel(kvec);
 	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
 	cl::Kernel kern = okp->get_kernel();
