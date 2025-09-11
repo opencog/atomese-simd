@@ -27,19 +27,13 @@
 #include <opencog/util/Logger.h>
 #include <opencog/util/oc_assert.h>
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/atoms/core/NumberNode.h>
-#include <opencog/atoms/value/FloatValue.h>
-#include <opencog/atoms/value/LinkValue.h>
-#include <opencog/atoms/value/StringValue.h>
-#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
 #include "OpenclFloatValue.h"
-#include "OpenclKernelLink.h"
+#include "OpenclJobValue.h"
 #include "OpenclNode.h"
 
 using namespace opencog;
@@ -265,225 +259,31 @@ ValuePtr OpenclNode::read(void) const
 
 // ==============================================================
 
-ValuePtr
-OpenclNode::get_kernel (ValuePtr kvec) const
-{
-	Handle hkl;
-	if (kvec->is_type(SECTION))
-		hkl = HandleCast(kvec)->getOutgoingAtom(0);
-	else
-	if (kvec->is_type(SECTION_VALUE))
-	{
-		const ValueSeq& vsq = LinkValueCast(kvec)->value();
-		hkl = HandleCast(vsq[0]);
-	}
-
-	if (nullptr == hkl or not hkl->is_type(OPENCL_KERNEL_LINK))
-		throw RuntimeException(TRACE_INFO,
-			"Expecting an OpenclKernelLink: got %s\n", kvec->to_string().c_str());
-
-	// Bofus should be bof be me.
-	if (this != hkl->getOutgoingAtom(0).get())
-		throw RuntimeException(TRACE_INFO,
-			"Cross-site scripting!: this %s\nthat: %s",
-			to_string().c_str(), hkl->to_string().c_str());
-
-	return hkl;
-}
-
-// ==============================================================
-
-/// Find the vector length.
-/// Look either for a length specification embedded in the list,
-/// else obtain the shortest of all the vectors.
-size_t
-OpenclNode::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
-{
-	have_size_spec = false;
-	size_t dim = UINT_MAX;
-	for (const ValuePtr& vp : vsq)
-	{
-		if (vp->is_type(TYPE_NODE)) continue;
-
-		if (vp->is_type(NUMBER_NODE))
-		{
-			size_t sz = NumberNodeCast(vp)->size();
-			if (sz < dim) dim = sz;
-			continue;
-		}
-
-		if (vp->is_type(FLOAT_VALUE))
-		{
-			size_t sz = FloatValueCast(vp)->size();
-			if (sz < dim) dim = sz;
-			continue;
-		}
-
-		// Assume the length specification is wrapped like so:
-		// (Connector (Number 42))
-		// XXX FIXME check for insane structures here.
-		if (vp->is_type(CONNECTOR))
-		{
-			have_size_spec = true;
-			const Handle& h = HandleCast(vp)->getOutgoingAtom(0);
-			double sz = NumberNodeCast(h)->get_value();
-			if (sz < 0.0) continue;
-
-			// round, just in case.
-			return (size_t) (sz+0.5);
-		}
-	}
-
-	return dim;
-}
-
-/// Unwrap vector.
-ValuePtr
-OpenclNode::get_floats(ValuePtr vp, size_t dim) const
-{
-	// If we're already the right format, we're done. Do nothing.
-	if (vp->is_type(OPENCL_DATA_VALUE))
-		return vp;
-
-	// Special-case location of the vector length specification.
-	if (vp->is_type(CONNECTOR))
-	{
-#if NOT_NOW
-		// dim should match specified dim...
-		// Why bother checking? I dunno.
-		Handle hc = HandleCast(vp);
-		if (1 != hc.size())
-			throw RuntimeException(TRACE_INFO,
-				"Expecting dimension, got %s", hc->to_string().c_str();
-
-		Handle hd = HandleCast(vp)->getOutgoingAtom(0);
-		if (not hd->is_type(NUMBER_NODE))
-			throw RuntimeException(TRACE_INFO,
-				"Expecting number, got %s", hc->to_string().c_str();
-#endif
-
-		Handle hd = HandleCast(createNumberNode(dim));
-		return _atom_space->add_link(CONNECTOR, hd);
-	}
-
-	// XXX For now, we ignore the type. FIXME
-	// XXX this API is a bad API. Neds rethinking.
-	if (vp->is_type(TYPE_NODE))
-	{
-		std::vector<double> zero;
-		zero.resize(dim);
-		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
-		ofv->set_context(_device, _context);
-		return ofv;
-	}
-
-	const std::vector<double>* vals = nullptr;
-	if (vp->is_type(NUMBER_NODE))
-		vals = &(NumberNodeCast(vp)->value());
-
-	if (vp->is_type(FLOAT_VALUE))
-		vals = &(FloatValueCast(vp)->value());
-
-	OpenclFloatValuePtr ofv;
-	if (vals->size() != dim)
-	{
-		std::vector<double> cpy(*vals);
-		cpy.resize(dim);
-		ofv = createOpenclFloatValue(cpy);
-	}
-	else
-		ofv = createOpenclFloatValue(*vals);
-
-	ofv->set_context(_device, _context);
-	ofv->send_buffer();
-	return ofv;
-}
-
-ValueSeq
-OpenclNode::make_vectors(ValuePtr kvec, size_t& dim) const
-{
-	// Unpack kernel arguments
-	ValueSeq vsq;
-	if (kvec->is_type(SECTION))
-	{
-		const Handle& conseq = HandleCast(kvec)->getOutgoingAtom(1);
-		const HandleSeq& oset = conseq->getOutgoingSet();
-
-		// Find the shortest vector.
-		for (const Handle& oh : oset)
-		{
-			if (oh->is_executable())
-				vsq.emplace_back(oh->execute());
-			else
-				vsq.push_back(oh);
-		}
-	}
-	else
-	if (kvec->is_type(SECTION_VALUE))
-	{
-		const ValueSeq& sex = LinkValueCast(kvec)->value();
-		const ValueSeq& vsx = LinkValueCast(sex[1])->value();
-		for (const ValuePtr& v: vsx)
-		{
-			if (v->is_atom() and HandleCast(v)->is_executable())
-				vsq.emplace_back(HandleCast(v)->execute());
-			else
-				vsq.push_back(v);
-		}
-	}
-	else
-		throw RuntimeException(TRACE_INFO,
-			"Unknown data type: got %s\n", kvec->to_string().c_str());
-
-	// Find the shortest vector.
-	bool have_size_spec = false;
-	dim = get_vec_len(vsq, have_size_spec);
-	ValueSeq flovec;
-	for (const ValuePtr& v: vsq)
-		flovec.emplace_back(get_floats(v, dim));
-
-	// If the user never specified an explicit location in which to pass
-	// the vector size, assume it is the last location. Set it now.
-	// Is this a good idea? I dunno. More thinking needed.
-	if (not have_size_spec)
-	{
-		Handle hd = HandleCast(createNumberNode(dim));
-		flovec.emplace_back(_atom_space->add_link(CONNECTOR, hd));
-	}
-
-	return flovec;
-}
-
-// ==============================================================
-
 // This job handler runs in a different thread than the main thread.
 // It finishes the setup of the assorted buffers that OpenCL expects,
 // sends things to the GPU, and then waits for a reply. When a reply
 // is received, its turned into a FloatValue or NumberNode and handed
 // to the QueueValue, where main thread can find it.
-void OpenclNode::queue_job(const job_t& kjob)
+void OpenclNode::queue_job(const ValuePtr& vp)
 {
-	if (kjob._kvec->is_type(SECTION_VALUE))
+	// XXX TODO All of these should probably share the same
+	// cl::Event (even though they can run on different queues.)
+	// Or maybe one Queue would be better ...
+	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
-		// Launch kernel
+		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
 		cl::Event event_handler;
-		_queue.enqueueNDRangeKernel(kjob._kern,
-			cl::NullRange,
-			cl::NDRange(kjob._vecdim),
-			cl::NullRange,
-			nullptr, &event_handler);
-
+		ojv->run(_queue, event_handler);
 		event_handler.wait();
-		_qvp->add(kjob._kvec);
+		_qvp->add(ojv);
 		return;
 	}
 
 	// If told to write a vector, then we upload that vector data
 	// to the GPU.
-	if (kjob._kvec->is_type(OPENCL_DATA_VALUE))
+	if (vp->is_type(OPENCL_DATA_VALUE))
 	{
-		OpenclFloatValuePtr ofv = OpenclFloatValueCast(kjob._kvec);
-		ofv->set_context(_device, _context);
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
 		ofv->send_buffer();
 		_qvp->add(ofv);
 		return;
@@ -503,48 +303,35 @@ void OpenclNode::write_one(const ValuePtr& kvec)
 // being thrown, i.e. due to user errors (e.g. badly written Atomese)
 // The actual communications with the GPU is done in a distinct thread,
 // so that the main thread does not hang, waiting for results to arrive.
-void OpenclNode::do_write(const ValuePtr& kvec)
+void OpenclNode::do_write(const ValuePtr& vp)
 {
-	if (0 == kvec->size())
-		throw RuntimeException(TRACE_INFO,
-			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
-
-	if (kvec->is_type(OPENCL_DATA_VALUE))
+	// Ready-to-go. Dispatch.
+	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
-		job_t kjob;
-		kjob._kvec = kvec;
-
-		// Send everything off to the GPU.
-		_dispatch_queue.enqueue(kjob);
+		_dispatch_queue.enqueue(vp);
 		return;
 	}
 
-	ValuePtr hkl = get_kernel(kvec);
-	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
-	cl::Kernel kern = okp->get_kernel();
-
-	size_t dim = 0;
-	ValueSeq flovecs = make_vectors (kvec, dim);
-	ValuePtr args = createLinkValue(flovecs);
-	ValuePtr jobvec = createLinkValue(SECTION_VALUE, ValueSeq{hkl, args});
-
-	size_t pos = 0;
-	for (const ValuePtr& v: flovecs)
+	// There's a chance that vectors haven't been attached yet.
+	// Do that now with set_context.
+	if (vp->is_type(OPENCL_DATA_VALUE))
 	{
-		if (v->is_type(OPENCL_FLOAT_VALUE))
-			OpenclFloatValueCast(v)->set_arg(kern, pos);
-		else
-			kern.setArg(pos, dim);
-		pos++;
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
+		ofv->set_context(get_handle());
+		_dispatch_queue.enqueue(vp);
+		return;
 	}
 
-	job_t kjob;
-	kjob._kvec = jobvec;
-	kjob._kern = kern;
-	kjob._vecdim = dim;
+	if (vp->is_type(SECTION))
+	{
+		OpenclJobValuePtr kern = createOpenclJobValue(HandleCast(vp));
+		kern->build(get_handle());
+		_dispatch_queue.enqueue(kern);
+		return;
+	}
 
-	// Send everything off to the GPU.
-	_dispatch_queue.enqueue(kjob);
+	throw RuntimeException(TRACE_INFO,
+		"Expecting data or a job, got %s\n", vp->to_string().c_str());
 }
 
 // ==============================================================

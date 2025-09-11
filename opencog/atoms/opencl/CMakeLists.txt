@@ -3,10 +3,10 @@
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (opencl-atoms SHARED
-	OpenclFloatValue.cc
-	OpenclKernelLink.cc
-	OpenclNode.cc
 	OpenclDataValue.cc
+	OpenclFloatValue.cc
+	OpenclJobValue.cc
+	OpenclNode.cc
 )
 
 # Without this, parallel make will race and crap up the generated files.
@@ -25,9 +25,9 @@ INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
 
 INSTALL (FILES
 	opencl-headers.h
-	OpenclFloatValue.h
-	OpenclKernelLink.h
-	OpenclNode.h
 	OpenclDataValue.h
+	OpenclFloatValue.h
+	OpenclJobValue.h
+	OpenclNode.h
 	DESTINATION "include/opencog/atoms/opencl/"
 )

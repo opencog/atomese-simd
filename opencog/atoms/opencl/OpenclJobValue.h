@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclKernelLink.h
+ * opencog/atoms/opencl/OpenclJobValue.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,11 +20,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_KERNEL_LINK_H
-#define _OPENCOG_OPENCL_KERNEL_LINK_H
+#ifndef _OPENCOG_OPENCL_JOB_VALUE_H
+#define _OPENCOG_OPENCL_JOB_VALUE_H
 
 #include <opencog/atoms/opencl/opencl-headers.h>
-#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/value/LinkValue.h>
 
 namespace opencog
 {
@@ -34,35 +34,38 @@ namespace opencog
  */
 
 /**
- * OpenclKernelLinks hold an ordered vector of doubles.
+ * OpenclJobValues hold OpenCL kernels bound to thier arguments.
  */
-class OpenclKernelLink
-	: public Link
+class OpenclJobValue :
+	public LinkValue
 {
 	friend class OpenclNode;
 
 protected:
-	bool _have_kernel;
-	cl::Kernel _kernel;
+	OpenclJobValue(Type t) : LinkValue(t) {}
 
-	cl::Kernel get_kernel(void);
+	Handle _definition;
+	cl::Kernel _kernel;
+	size_t _dim;
+
+	void build(const Handle&);
+	void run(cl::CommandQueue&, cl::Event&);
 
 	const std::string& get_kern_name (void) const;
+	bool get_vec_len(const ValueSeq&);
+	ValuePtr get_floats(const Handle&, ValuePtr);
+	ValueSeq make_vectors(const Handle&);
 
 public:
-	// The argument is on stack very nearly 100% of the time,
-	// so using the move ctor does not seem to make any sense.
-	// OpenclKernelLink(HandleSeq&&, Type=OPENCL_KERNEL_LINK);
-	OpenclKernelLink(HandleSeq, Type=OPENCL_KERNEL_LINK);
-	virtual ~OpenclKernelLink();
-
-	static Handle factory(const Handle&);
+	OpenclJobValue(Handle);
+	virtual ~OpenclJobValue();
 };
 
-LINK_PTR_DECL(OpenclKernelLink)
-#define createOpenclKernelLink CREATE_DECL(OpenclKernelLink)
+VALUE_PTR_DECL(OpenclJobValue);
+CREATE_VALUE_DECL(OpenclJobValue);
 
 /** @}*/
 } // namespace opencog
 
-#endif // _OPENCOG_OPENCL_KERNEL_LINK_H
+
+#endif // _OPENCOG_OPENCL_JOB_VALUE_H

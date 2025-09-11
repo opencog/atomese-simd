@@ -113,7 +113,12 @@ Steps:
   Maybe more; depends on your distro and hardware.
 * Optional: Install `clang-14` and `llvm-spirv-14`
   Demos can use "offline-compiled" (pre-built) kernels.
-* `sudo usermod -a -G video <user_id>`
+* User *must* have permission to write the device(s) located in
+  `/dev/dri`; typically `/dev/dri/renderD128` or similar.
+```
+    sudo usermod -a -G video <user_id>
+    sudo usermod -a -G render <user_id>
+```
 * Build and install cogutils, the AtomSpace, sensory and then the code
   here.  This uses the same build style as all other OpenCog projects:
   `mkdir build; cd build; cmake ..; make; sudo make install`

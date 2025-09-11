@@ -55,9 +55,9 @@
 (define kernel-runner
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel clnode (Predicate "vec_mult"))
+			(Predicate "vec_mult")
 			(ConnectorSeq
-				(Type 'FloatValue)
+				(Number 0 0 0 0 0)
 				(Number 1 2 3 4 5)
 				(Number 2 2 2 2 2 2 3 42 999)))))
 
@@ -75,9 +75,9 @@
 (define krun-2
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel clnode (Predicate "vec_mult"))
+			(Predicate "vec_mult")
 			(ConnectorSeq
-				(Type 'FloatValue)
+				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
 				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
@@ -96,9 +96,9 @@
 (define krun-3
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel clnode (Predicate "vec_add"))
+			(Predicate "vec_add")
 			(ConnectorSeq
-				(Type 'FloatValue)
+				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
 				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
@@ -117,34 +117,39 @@
 (define vec-size 130)
 
 (cog-set-value!
-	(Anchor "some data") (Predicate "accumulator")
+	(Anchor "some place") (Predicate "accumulator")
 	(OpenclFloatValue (make-list vec-size 0)))
 
 (define accum-location
-	(ValueOf (Anchor "some data") (Predicate "accumulator")))
+	(ValueOf (Anchor "some place") (Predicate "accumulator")))
 
-; Send the zeroed-out accumulator up to the GPU.
+; Upload the accumulator to the GPU.
 (cog-set-value! clnode (Predicate "*-write-*") accum-location)
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
+; ---------------------------------------------------------------
+; Set the data source.
 (cog-set-value!
-	(Anchor "some data") (Predicate "accum task")
-	(SectionValue
-		(OpenclKernel clnode (Predicate "vec_add"))
-		(LinkValue accum-location
-			accum-location (RandomStream vec-size))))
+	(Anchor "some place") (Predicate "data source")
+	(RandomStream vec-size))
+
+(define source-location
+	(ValueOf (Anchor "some place") (Predicate "data source")))
 
 ; Define a feedback loop.
 (define run-kernel
 	(SetValue clnode (Predicate "*-write-*")
-		(ValueOf (Anchor "some data") (Predicate "accum task"))))
+	(Section
+		(Predicate "vec_add")
+		(ConnectorSeq accum-location
+			accum-location source-location))))
 
-(define get-result
+(define get-status
 	(ValueOf clnode (Predicate "*-read-*")))
 
 ; Run it once ...
 (cog-execute! run-kernel)
-(define acc1 (cog-execute! get-result))
+(define acc1 (cog-execute! get-status))
 (test-assert "acc1 type" (cog-subtype? 'SectionValue (cog-type acc1)))
 (define args1 (cog-value-ref acc1 1))
 (test-assert "args1 type" (cog-subtype? 'LinkValue (cog-type args1)))
@@ -154,15 +159,16 @@
 (flush-all-ports)
 
 ; Run it lots ...
+(define (loopy N)
+   (cog-execute! run-kernel)
+   (cog-execute! get-status)
+   (if (< 0 N) (loopy (- N 1))))
+
 (define run-len 5123)
-(for-each
-	(lambda (x)
-		(cog-execute! run-kernel)
-		(cog-execute! get-result))
-	(iota run-len 0))
+(loopy run-len)
 
 (cog-execute! run-kernel)
-(define accn (cog-execute!  get-result))
+(define accn (cog-execute!  get-status))
 (test-assert "accn type" (cog-subtype? 'SectionValue (cog-type accn)))
 (define argsn (cog-value-ref accn 1))
 (test-assert "argsn type" (cog-subtype? 'LinkValue (cog-type argsn)))

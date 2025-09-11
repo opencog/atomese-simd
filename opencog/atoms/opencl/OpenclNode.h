@@ -42,7 +42,8 @@ namespace opencog
 class OpenclNode
 	: public StreamNode
 {
-	friend class OpenclKernelLink;
+	friend class OpenclDataValue;
+	friend class OpenclJobValue;
 
 protected:
 	void init(void);
@@ -57,14 +58,17 @@ protected:
 	void find_device(void);
 	cl::Platform _platform;
 	cl::Device _device;
+	const cl::Device& get_device(void) { return _device; }
 
 	// Execution context.
 	// (TODO: I guess we could have several of these per device!?)
 	cl::Context _context;
+	const cl::Context& get_context(void) { return _context; }
 
 	// Async I/O queue to the execution context.
 	// (TODO: I guess we could have several of these per context!?)
 	cl::CommandQueue _queue;
+	const cl::CommandQueue& get_queue(void) { return _queue; }
 
 	// Kernel compilation
 	void build_kernel(void);
@@ -72,22 +76,9 @@ protected:
 	cl::Program _program;
 	const cl::Program& get_program(void) { return _program; }
 
-	// Kernel I/O. Using cl:Buffer for now.
-	// Need to create a derived class that will use SVM.
 	// Jobs run in their own thread, so that the GPU doesn't block us.
-	typedef struct
-	{
-		ValuePtr _kvec;
-		cl::Kernel _kern;
-		size_t _vecdim;
-	} job_t;
-	void queue_job(const job_t&);
-	async_caller<OpenclNode, job_t> _dispatch_queue;
-
-	ValuePtr get_kernel(ValuePtr) const;
-	size_t get_vec_len(const ValueSeq&, bool&) const;
-	ValuePtr get_floats(ValuePtr, size_t) const;
-	ValueSeq make_vectors(ValuePtr, size_t&) const;
+	void queue_job(const ValuePtr&);
+	async_caller<OpenclNode, ValuePtr> _dispatch_queue;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

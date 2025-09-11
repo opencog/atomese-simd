@@ -19,7 +19,6 @@
 ;   stored in the AtomSpace. This means they don't take up storage
 ;   space. This also means they are a bit harder to use, since they're
 ;   ephemeral, and disappear if not attached to an anchor point.
-; * A demo of a feedback loop, implementing an accumulator.
 ;
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
@@ -60,9 +59,9 @@
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
 			; Must be name of kernel defined inside of the clnode.
-			(OpenclKernel clnode (Predicate "vec_mult"))
+			(Predicate "vec_mult")
 			(ConnectorSeq
-				(Type 'Number)
+				(Number 0 0 0 0 0)
 				(Number 1 2 3 4 5)
 				(Number 2 2 2 2 2 2 3 42 999)
 				(Connector (Number -1))))))
@@ -73,14 +72,21 @@
 ; Get the result.
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
+; CAUTION: Do not try to get the result twice! The second call will
+; hang. This is intentional, and designed for multi-threaded async
+; operation: the *-read-* waits for the earlier *-write-* to complete.
+; If you do this in multiple threads, it all works correctly, with the
+; reader waiting for the writer to finish. However, for this single-
+; threaed demo, a second read will just hang, and you'll be sorry.
+
 ; ---------------------------------------------------------------
 ; Run it again, with different data.
 (cog-execute!
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel clnode (Predicate "vec_mult"))
+			(Predicate "vec_mult")
 			(ConnectorSeq
-				(Type 'Number)
+				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
 				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
@@ -93,13 +99,13 @@
 (cog-execute!
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(OpenclKernel clnode (Predicate "vec_add"))
+			(Predicate "vec_add")
 			(ConnectorSeq
-				(Type 'Number)
+				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
-				(Number 2 3 4 5 6 5 4 3 2 1 0))))
+				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
-; Get the result
+; Get the result.
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; ---------------------------------------------------------------
@@ -109,28 +115,48 @@
 ; Which is great, as usually there are lots of them.
 ; The trade-off is that the Values have to be put somewhere where they
 ; can be found. i.e. anchored "some where".
-;
+
+(cog-set-value!
+	(Anchor "some place") (Predicate "first vector")
+	(FloatValue 0 10 20 30 40 50 60 70 80 90))
+
+(define first-vec-location
+	(ValueOf (Anchor "some place") (Predicate "first vector")))
+
 ; (RandomStream N) creates a vector of N random numbers. These numbers
 ; change with every access (which is why it is called a "stream" instead
 ; of a "vector".)
-;
+
 (cog-set-value!
-	(Anchor "some data") (Predicate "some stream")
-	(SectionValue
-		(OpenclKernel clnode (Predicate "vec_add"))
-		LinkValue
-			(Type 'FloatValue)
-			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
-			(RandomStream 3))))
+	(Anchor "some place") (Predicate "second vector")
+	(RandomStream 10)))
+
+(define second-vec-location
+	(ValueOf (Anchor "some place") (Predicate "second vector")))
+
+(cog-set-value!
+	(Anchor "some place") (Predicate "result vector")
+	(OpenclFloatValue 0 0 0 0 0 0 0 0 0 0))
+
+(define result-location
+	(ValueOf (Anchor "some place") (Predicate "result vector")))
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
 	(SetValue clnode (Predicate "*-write-*")
-		(ValueOf (Anchor "some data") (Predicate "some stream"))))
+		(Section
+			(Predicate "vec_add")
+			(ConnectorSeq
+				result-location
+				first-vec-location
+				second-vec-location))))
 
 ; Run it once ...
 (cog-execute! vector-stream)
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+
+; The result can be directly examined.
+(cog-execute! result-location)
 
 ; Run it again ...
 (cog-execute! vector-stream)

@@ -24,6 +24,7 @@
 #define _OPENCOG_OPENCL_DATA_VALUE_H
 
 #include <opencog/atoms/opencl/opencl-headers.h>
+#include <opencog/atoms/base/Handle.h>
 
 namespace opencog
 {
@@ -41,6 +42,7 @@ namespace opencog
  */
 class OpenclDataValue
 {
+	friend class OpenclJobValue;
 	friend class OpenclNode;
 protected:
 	OpenclDataValue(void);
@@ -48,8 +50,9 @@ protected:
 
 	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
+	const cl::Buffer& get_buffer(void) { return _buffer; }
 
-	void set_context(const cl::Device&, const cl::Context&);
+	void set_context(const Handle&);
 	virtual size_t reserve_size(void) const = 0;
 	virtual void* data(void) const = 0;
 	void send_buffer(void) const;
@@ -57,7 +60,6 @@ protected:
 
 public:
 	virtual ~OpenclDataValue();
-	virtual void set_arg(cl::Kernel&, size_t pos);
 };
 
 /** @}*/
