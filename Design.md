@@ -11,7 +11,10 @@ actual design.
 * [Design-A](./Design-A.md) provides notes about OpenCL interfaces and
   how they impact Atomese design.
 * [Design-B](./Design-B.md) examines the Sensory Version Half port.
-* [Design-C](./Design-C.md) reviews wiring, composability and flow.
+* [Design-C](./Design-C.md) reviews the major design goals: wiring,
+  composability and flow and how they might get solved. These remain
+  as major TODO issues.
+* [Design-D](./Design-D.md) catalogs some minor design issues, all solved.
 
 Structuralism Overview
 ----------------------

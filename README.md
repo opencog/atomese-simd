@@ -73,7 +73,7 @@ thought of what it means "to perceive and move".
 
 Status
 -----
-***Version 0.0.8.*** --
+***Version 0.0.9.*** --
 Basic proof-of-concept, showing how to use Atomese to open a connection
 to an OpenCL compute device (i.e. a GPU), load and invoke compute
 kernels, and have those kernels work with floating-point vector data
