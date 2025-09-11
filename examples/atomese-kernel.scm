@@ -97,7 +97,7 @@
 			(ConnectorSeq
 				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
-				(Number 2 3 4 5 6 5 4 3 2 1 0))))
+				(Number 2 3 4 5 6 5 4 3 2 1 0)))))
 
 ; Get the result
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
@@ -121,7 +121,7 @@
 		LinkValue
 			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
 			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
-			(RandomStream 3))))
+			(RandomStream 3)))
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
