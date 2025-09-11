@@ -342,7 +342,7 @@ ValuePtr
 OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 {
 	// If we're already the right format, we're done. Do nothing.
-	if (vp->is_type(OPENCL_VALUE))
+	if (vp->is_type(OPENCL_DATA_VALUE))
 		return vp;
 
 	// Special-case location of the vector length specification.
@@ -480,7 +480,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 
 	// If told to write a vector, then we upload that vector data
 	// to the GPU.
-	if (kjob._kvec->is_type(OPENCL_VALUE))
+	if (kjob._kvec->is_type(OPENCL_DATA_VALUE))
 	{
 		OpenclFloatValuePtr ofv = OpenclFloatValueCast(kjob._kvec);
 		ofv->set_context(_device, _context);
@@ -509,7 +509,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
-	if (kvec->is_type(OPENCL_VALUE))
+	if (kvec->is_type(OPENCL_DATA_VALUE))
 	{
 		job_t kjob;
 		kjob._kvec = kvec;
