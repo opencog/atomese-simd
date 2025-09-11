@@ -49,7 +49,7 @@ protected:
 	size_t _dim;
 
 	void build(const Handle&);
-	void run(cl::CommandQueue&, cl::Event&);
+	void run(const Handle&);
 
 	const std::string& get_kern_name (void) const;
 	bool get_vec_len(const ValueSeq&);

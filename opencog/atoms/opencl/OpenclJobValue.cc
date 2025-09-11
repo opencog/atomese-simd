@@ -242,14 +242,19 @@ void OpenclJobValue::build(const Handle& oclno)
 	}
 }
 
-void OpenclJobValue::run(cl::CommandQueue& q, cl::Event& ev)
+void OpenclJobValue::run(const Handle& oclno)
 {
+	OpenclNodePtr onp = OpenclNodeCast(oclno);
+
 	// Launch kernel
-	q.enqueueNDRangeKernel(_kernel,
+	cl::CommandQueue& queue = onp->get_queue();
+	cl::Event& event_handler = onp->get_handler();
+
+	queue.enqueueNDRangeKernel(_kernel,
 		cl::NullRange,
 		cl::NDRange(_dim),
 		cl::NullRange,
-		nullptr, &ev);
+		nullptr, &event_handler);
 }
 
 // ==============================================================

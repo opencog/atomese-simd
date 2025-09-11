@@ -274,7 +274,7 @@ void OpenclNode::queue_job(const ValuePtr& vp)
 	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
 		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
-		ojv->run(_queue, _event_handler);
+		ojv->run(get_handle());
 		_event_handler.wait();
 		_qvp->add(ojv);
 		return;
@@ -286,6 +286,7 @@ void OpenclNode::queue_job(const ValuePtr& vp)
 	{
 		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
 		ofv->send_buffer(get_handle());
+		_event_handler.wait();
 		_qvp->add(ofv);
 		return;
 	}
