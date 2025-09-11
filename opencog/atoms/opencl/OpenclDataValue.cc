@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclValue.cc
+ * opencog/atoms/opencl/OpenclDataValue.cc
  *
  * Copyright (C) 2015 Linas Vepstas
  * All Rights Reserved
@@ -21,11 +21,11 @@
  */
 
 #include <opencog/util/exceptions.h>
-#include <opencog/atoms/opencl/OpenclValue.h>
+#include <opencog/atoms/opencl/OpenclDataValue.h>
 
 using namespace opencog;
 
-OpenclValue::OpenclValue(void) :
+OpenclDataValue::OpenclDataValue(void) :
 	_have_ctxt(false),
 	_device{},
 	_context{},
@@ -34,14 +34,14 @@ OpenclValue::OpenclValue(void) :
 {
 }
 
-OpenclValue::~OpenclValue()
+OpenclDataValue::~OpenclDataValue()
 {
 	_context = {};
 	_device = {};
 }
 
 /// Set up info about the GPU for this instance.
-void OpenclValue::set_context(const cl::Device& ocldev,
+void OpenclDataValue::set_context(const cl::Device& ocldev,
                               const cl::Context& ctxt)
 {
 	if (_have_ctxt)
@@ -62,7 +62,7 @@ void OpenclValue::set_context(const cl::Device& ocldev,
 }
 
 /// Synchronously send data to the GPU
-void OpenclValue::send_buffer(void) const
+void OpenclDataValue::send_buffer(void) const
 {
 	if (not _have_ctxt)
 		throw RuntimeException(TRACE_INFO,
@@ -78,7 +78,7 @@ void OpenclValue::send_buffer(void) const
 }
 
 /// Synchronously get data from the GPU
-void OpenclValue::fetch_buffer(void) const
+void OpenclDataValue::fetch_buffer(void) const
 {
 	if (not _have_ctxt)
 		throw RuntimeException(TRACE_INFO,
@@ -93,7 +93,7 @@ void OpenclValue::fetch_buffer(void) const
 	event_handler.wait();
 }
 
-void OpenclValue::set_arg(cl::Kernel& kern, size_t pos)
+void OpenclDataValue::set_arg(cl::Kernel& kern, size_t pos)
 {
 	kern.setArg(pos, _buffer);
 }

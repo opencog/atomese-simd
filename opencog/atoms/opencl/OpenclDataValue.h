@@ -1,5 +1,5 @@
 /*
- * opencog/atoms/opencl/OpenclValue.h
+ * opencog/atoms/opencl/OpenclDataValue.h
  *
  * Copyright (C) 2025 Linas Vepstas
  * All Rights Reserved
@@ -20,8 +20,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_OPENCL_VALUE_H
-#define _OPENCOG_OPENCL_VALUE_H
+#ifndef _OPENCOG_OPENCL_DATA_VALUE_H
+#define _OPENCOG_OPENCL_DATA_VALUE_H
 
 #include <opencog/atoms/opencl/opencl-headers.h>
 
@@ -33,17 +33,17 @@ namespace opencog
  */
 
 /**
- * OpenclValues hold cl::Buffers that are needed to talk to the GPU/
+ * OpenclDataValues hold cl::Buffers that are needed to talk to the GPU/
  * Formally, these inherit from Value, but we don't want to actually
  * do this in C++, because the diamond inhertaince pattern will kill
  * kill us. We do not actually need anything that class Value provides.
  * We only need the OpenCL infrastructure.
  */
-class OpenclValue
+class OpenclDataValue
 {
 	friend class OpenclNode;
 protected:
-	OpenclValue(void);
+	OpenclDataValue(void);
 	bool _have_ctxt;
 
 	cl::Device _device;
@@ -58,11 +58,11 @@ protected:
 	void fetch_buffer(void) const;
 
 public:
-	virtual ~OpenclValue();
+	virtual ~OpenclDataValue();
 	virtual void set_arg(cl::Kernel&, size_t pos);
 };
 
 /** @}*/
 } // namespace opencog
 
-#endif // _OPENCOG_OPENCL_VALUE_H
+#endif // _OPENCOG_OPENCL_DATA_VALUE_H

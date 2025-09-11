@@ -6,7 +6,7 @@ ADD_LIBRARY (opencl-atoms SHARED
 	OpenclFloatValue.cc
 	OpenclKernelLink.cc
 	OpenclNode.cc
-	OpenclValue.cc
+	OpenclDataValue.cc
 )
 
 # Without this, parallel make will race and crap up the generated files.
@@ -28,6 +28,6 @@ INSTALL (FILES
 	OpenclFloatValue.h
 	OpenclKernelLink.h
 	OpenclNode.h
-	OpenclValue.h
+	OpenclDataValue.h
 	DESTINATION "include/opencog/atoms/opencl/"
 )

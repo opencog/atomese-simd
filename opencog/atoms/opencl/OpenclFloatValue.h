@@ -25,7 +25,7 @@
 
 #include <vector>
 #include <opencog/atoms/value/FloatValue.h>
-#include <opencog/atoms/opencl/OpenclValue.h>
+#include <opencog/atoms/opencl/OpenclDataValue.h>
 
 namespace opencog
 {
@@ -38,7 +38,7 @@ namespace opencog
  * OpenclFloatValues hold an ordered vector of doubles.
  */
 class OpenclFloatValue
-	: public FloatValue, public OpenclValue
+	: public FloatValue, public OpenclDataValue
 {
 protected:
 	virtual void update() const;
