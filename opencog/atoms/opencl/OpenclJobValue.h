@@ -24,6 +24,7 @@
 #define _OPENCOG_OPENCL_JOB_VALUE_H
 
 #include <opencog/atoms/opencl/opencl-headers.h>
+#include <opencog/atoms/value/LinkValue.h>
 
 namespace opencog
 {
@@ -35,18 +36,24 @@ namespace opencog
 /**
  * OpenclJobValues hold OpenCL kernels bound to thier arguments.
  */
-class OpenclJobValue
+class OpenclJobValue :
+	public LinkValue
 {
 protected:
-	OpenclJobValue(void);
+	OpenclJobValue(Type t) : LinkValue(t) {}
 
 	cl::Kernel _kernel;
 
 public:
+	OpenclJobValue(ValueSeq&&);
 	virtual ~OpenclJobValue();
 };
 
+VALUE_PTR_DECL(OpenclJobValue);
+CREATE_VALUE_DECL(OpenclJobValue);
+
 /** @}*/
 } // namespace opencog
+
 
 #endif // _OPENCOG_OPENCL_JOB_VALUE_H

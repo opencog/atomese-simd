@@ -21,15 +21,25 @@
  */
 
 #include <opencog/util/exceptions.h>
+#include <opencog/atoms/value/ValueFactory.h>
 #include <opencog/atoms/opencl/OpenclJobValue.h>
+#include <opencog/opencl/types/atom_types.h>
 
 using namespace opencog;
 
-OpenclJobValue::OpenclJobValue(void) :
+OpenclJobValue::OpenclJobValue(ValueSeq&& vals) :
+	LinkValue(OPENCL_JOB_VALUE, vals),
 	_kernel{}
 {
 }
 
 OpenclJobValue::~OpenclJobValue()
 {
+	_kernel = {};
 }
+
+// ==============================================================
+
+// Adds factory when the library is loaded.
+DEFINE_VALUE_FACTORY(OPENCL_JOB_VALUE,
+                     createOpenclJobValue, ValueSeq)
