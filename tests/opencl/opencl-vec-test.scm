@@ -123,6 +123,12 @@
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
 
+; Upload the accumulator to the GPU.
+(cog-set-value! clnode (Predicate "*-write-*") accum-location)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+
+; ---------------------------------------------------------------
+; Set the data source.
 (cog-set-value!
 	(Anchor "some data") (Predicate "data source")
 	(RandomStream vec-size))
@@ -153,12 +159,13 @@
 (flush-all-ports)
 
 ; Run it lots ...
+(define (loopy N)
+   (cog-execute! run-kernel)
+   (cog-execute! get-result)
+   (if (< 0 N) (loopy (- N 1))))
+
 (define run-len 5123)
-(for-each
-	(lambda (x)
-		(cog-execute! run-kernel)
-		(cog-execute! get-result))
-	(iota run-len 0))
+(loopy run-len)
 
 (cog-execute! run-kernel)
 (define accn (cog-execute!  get-result))

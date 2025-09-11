@@ -148,6 +148,7 @@
 (cog-execute! vector-stream)
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
+; The result can be directly examined.
 (cog-execute! result-location)
 
 ; Run it again ...
