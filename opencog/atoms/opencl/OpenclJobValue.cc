@@ -48,6 +48,52 @@ OpenclJobValue::~OpenclJobValue()
 
 // ==============================================================
 
+const std::string&
+OpenclJobValue::get_kern_name (void) const
+{
+#if 0
+	Handle kh = _outgoing[1];
+	ValuePtr vp = kh;
+	if (kh->is_executable())
+		vp = kh->execute();
+
+	if (vp->is_node())
+		return HandleCast(vp)->get_name();
+
+	if (vp->is_type(STRING_VALUE))
+		return StringValueCast(vp)->value()[0];
+
+	throw RuntimeException(TRACE_INFO,
+		"Expecting Value with kernel name, got %s\n",
+		vp->to_string().c_str());
+#endif
+	return std::string{};
+}
+
+// ==============================================================
+
+cl::Kernel
+OpenclJobValue::get_kernelx(void)
+{
+#if 0
+	if (_have_kernel) return _kernel;
+
+	// Get our program from our OpenclNode.
+	const cl::Program& proggy = OpenclNodeCast(_outgoing[0])->get_program();
+
+	// XXX TODO this will throw exception if user mis-typed the
+	// kernel name. We should catch this and print a friendlier
+	// error message.
+	_kernel = cl::Kernel(proggy, get_kern_name().c_str());
+
+	_have_kernel = true;
+	return _kernel;
+#endif
+	return cl::Kernel{};
+}
+
+// ==============================================================
+
 ValuePtr
 OpenclJobValue::get_kernel (ValuePtr kvec) const
 {
@@ -61,7 +107,7 @@ OpenclJobValue::get_kernel (ValuePtr kvec) const
 		hkl = HandleCast(vsq[0]);
 	}
 
-	if (nullptr == hkl or not hkl->is_type(OPENCL_KERNEL_LINK))
+	if (nullptr == hkl)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting an OpenclKernelLink, got: %s", kvec->to_string().c_str());
 

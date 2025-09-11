@@ -50,6 +50,8 @@ protected:
 	void build(const Handle&);
 	void run(void);
 
+	const std::string& get_kern_name (void) const;
+	cl::Kernel get_kernelx(void);
 	ValuePtr get_kernel(ValuePtr) const;
 	size_t get_vec_len(const ValueSeq&, bool&) const;
 	ValuePtr get_floats(ValuePtr, size_t) const;
