@@ -140,7 +140,7 @@ void OpenclNode::find_device(void)
 
 // ==============================================================
 
-void OpenclNode::build_kernel(void)
+void OpenclNode::build_program(void)
 {
 	// Copy in source code. Must be a better way!?
 	std::ifstream srcfm(_filepath);
@@ -176,7 +176,7 @@ void OpenclNode::build_kernel(void)
 
 // ==============================================================
 
-void OpenclNode::load_kernel(void)
+void OpenclNode::load_program(void)
 {
 	// Copy in SPV file. Must be a better way!?
 	std::ifstream spvfm(_filepath);
@@ -214,9 +214,9 @@ void OpenclNode::open(const ValuePtr& out_type)
 
 	// Try to load source or spv file
 	if (_is_spv)
-		load_kernel();
+		load_program();
 	else
-		build_kernel();
+		build_program();
 
 	_qvp = createQueueValue();
 }

@@ -73,9 +73,9 @@ protected:
 	cl::Event _event_handler;
 	cl::Event& get_handler(void) { return _event_handler; }
 
-	// Kernel compilation
-	void build_kernel(void);
-	void load_kernel(void);
+	// Program loading and compilation.
+	void build_program(void);
+	void load_program(void);
 	cl::Program _program;
 	const cl::Program& get_program(void) { return _program; }
 
