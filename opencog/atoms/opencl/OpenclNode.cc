@@ -381,7 +381,7 @@ OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 }
 
 ValueSeq
-OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
+OpenclNode::make_vectors(ValuePtr kvec, size_t& dim) const
 {
 	// Unpack kernel arguments
 	ValueSeq vsq;
@@ -430,16 +430,6 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 	{
 		Handle hd = HandleCast(createNumberNode(dim));
 		flovec.emplace_back(_atom_space->add_link(CONNECTOR, hd));
-	}
-
-	size_t pos = 0;
-	for (const ValuePtr& v: flovec)
-	{
-		if (v->is_type(OPENCL_FLOAT_VALUE))
-			OpenclFloatValueCast(v)->set_arg(kern, pos);
-		else
-			kern.setArg(pos, dim);
-		pos++;
 	}
 
 	return flovec;
@@ -508,9 +498,19 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	cl::Kernel kern = okp->get_kernel();
 
 	size_t dim = 0;
-	ValueSeq flovecs = make_vectors (kvec, kern, dim);
+	ValueSeq flovecs = make_vectors (kvec, dim);
 	ValuePtr args = createLinkValue(flovecs);
 	ValuePtr jobvec = createLinkValue(SECTION_VALUE, ValueSeq{hkl, args});
+
+	size_t pos = 0;
+	for (const ValuePtr& v: flovecs)
+	{
+		if (v->is_type(OPENCL_FLOAT_VALUE))
+			OpenclFloatValueCast(v)->set_arg(kern, pos);
+		else
+			kern.setArg(pos, dim);
+		pos++;
+	}
 
 	job_t kjob;
 	kjob._kvec = jobvec;
