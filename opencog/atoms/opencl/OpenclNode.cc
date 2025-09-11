@@ -483,6 +483,7 @@ void OpenclNode::queue_job(const job_t& kjob)
 	if (kjob._kvec->is_type(OPENCL_VALUE))
 	{
 		OpenclFloatValuePtr ofv = OpenclFloatValueCast(kjob._kvec);
+		ofv->set_context(_device, _context);
 		ofv->send_buffer();
 		_qvp->add(ofv);
 		return;

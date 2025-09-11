@@ -44,9 +44,13 @@ OpenclValue::~OpenclValue()
 void OpenclValue::set_context(const cl::Device& ocldev,
                               const cl::Context& ctxt)
 {
-	if (_have_ctxt and _context != ctxt)
-		throw RuntimeException(TRACE_INFO,
-			"Context already set!");
+	if (_have_ctxt)
+	{
+		if (_context != ctxt)
+			throw RuntimeException(TRACE_INFO,
+				"Context already set to something else!");
+		return;
+	}
 
 	_have_ctxt = true;
 	_device = ocldev;
