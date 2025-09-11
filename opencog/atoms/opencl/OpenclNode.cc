@@ -345,9 +345,6 @@ OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 	if (vp->is_type(OPENCL_VALUE))
 		return vp;
 
-	bool from_gpu = false;
-	const std::vector<double>* vals = nullptr;
-
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
 	{
@@ -369,24 +366,26 @@ OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 		return _atom_space->add_link(CONNECTOR, hd);
 	}
 
+	// XXX For now, we ignore the type. FIXME
+	// XXX this API is a bad API. Neds rethinking.
+	if (vp->is_type(TYPE_NODE))
+	{
+		std::vector<double> zero;
+		zero.resize(dim);
+		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
+		ofv->set_context(_device, _context);
+		return ofv;
+	}
+
+	const std::vector<double>* vals = nullptr;
 	if (vp->is_type(NUMBER_NODE))
 		vals = &(NumberNodeCast(vp)->value());
 
 	if (vp->is_type(FLOAT_VALUE))
 		vals = &(FloatValueCast(vp)->value());
 
-	// XXX For now, we ignore the type. FIXME
-	if (vp->is_type(TYPE_NODE))
-		from_gpu = true;
-
 	OpenclFloatValuePtr ofv;
-	if (nullptr == vals)
-	{
-		std::vector<double> zero;
-		zero.resize(dim);
-		ofv = createOpenclFloatValue(zero);
-	}
-	else if (vals->size() != dim)
+	if (vals->size() != dim)
 	{
 		std::vector<double> cpy(*vals);
 		cpy.resize(dim);
@@ -396,8 +395,7 @@ OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 		ofv = createOpenclFloatValue(*vals);
 
 	ofv->set_context(_device, _context);
-	if (not from_gpu)
-		ofv->send_buffer();
+	ofv->send_buffer();
 	return ofv;
 }
 
