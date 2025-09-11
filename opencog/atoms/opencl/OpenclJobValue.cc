@@ -123,8 +123,15 @@ ValuePtr
 OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp)
 {
 	// If we're already the right format, we're done. Do nothing.
+	// Well, almost nothing. Make sure that the vector knows it's
+	// context. It might not know, if the user created it and did
+	// not explicitly do a *-write-* with it.
 	if (vp->is_type(OPENCL_DATA_VALUE))
+	{
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
+		ofv->set_context(oclno);
 		return vp;
+	}
 
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
