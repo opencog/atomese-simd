@@ -45,8 +45,13 @@ void OpenclDataValue::set_context(const Handle& oclno)
 
 	OpenclNodePtr onp = OpenclNodeCast(oclno);
 
-	// We could have our own queue, or we can share. I don't
-	// know which is better.
+	// We use our own queue and event handler. This allows data to
+	// be up and downloaded asynchronously, in different threads,
+	// without accidentally getting blocked in some other queue
+	// doing something else (e.g. getting blocked in the main
+	// OpenclNode::_queue which is running kernels, and might
+	// be busy for a long time.
+#define LOCAL_QUEUE 1
 #if LOCAL_QUEUE
 	_queue = cl::CommandQueue(onp->get_context(), onp->get_device());
 #else
