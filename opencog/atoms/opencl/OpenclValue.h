@@ -44,28 +44,22 @@ class OpenclValue
 	friend class OpenclNode;
 protected:
 	OpenclValue(void);
-
 	bool _have_ctxt;
-	bool _have_buffer;
-	bool _wait_for_update;
 
+	cl::Device _device;
 	cl::Context _context;
+	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
 
-	void set_context(const cl::Context&);
-
-	void to_gpu(size_t vec_bytes, void* vec);
-	void from_gpu(size_t);
+	void set_context(const cl::Device&, const cl::Context&);
+	virtual size_t reserve_size(void) const = 0;
+	virtual void* data(void) const = 0;
+	void send_buffer(void) const;
+	void fetch_buffer(void) const;
 
 public:
 	virtual ~OpenclValue();
-	virtual void set_arg(cl::Kernel&, size_t pos, bool dirfrom) = 0;
-
-	// XXX hack alert ... remove this from the API when ready.
-	// this is temp scaffolding
-	cl::Buffer& get_buffer() { return _buffer; }
-
-	bool is_output(void) { return _wait_for_update; }
+	virtual void set_arg(cl::Kernel&, size_t pos);
 };
 
 /** @}*/

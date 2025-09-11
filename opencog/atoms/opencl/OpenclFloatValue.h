@@ -45,6 +45,10 @@ protected:
 
 	OpenclFloatValue(Type t) : FloatValue(t) {}
 	OpenclFloatValue(Type t, const std::vector<double>& v) : FloatValue(t, v) {}
+	virtual size_t reserve_size(void) const {
+		return sizeof(double) * _value.size(); }
+	virtual void* data(void) const { return _value.data(); }
+
 public:
 	OpenclFloatValue(size_t);
 	OpenclFloatValue(const std::vector<double>&);
@@ -53,10 +57,8 @@ public:
 	virtual ~OpenclFloatValue() {}
 
 	const std::vector<double>& value() const { update(); return _value; }
-	void* data() { return _value.data(); }
 	size_t size() const { return _value.size(); }
 
-	void set_arg(cl::Kernel&, size_t pos, bool dirfrom);
 	void resize(size_t dim) { _value.resize(dim); }
 };
 

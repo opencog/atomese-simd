@@ -64,7 +64,11 @@
 (cog-execute! kernel-runner)
 (define kern-m1
 	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
-(test-assert "mult one" (equal? (FloatValue 2 4 6 8 10) kern-m1))
+(define args-m1 (cog-value-ref kern-m1 1))
+(define out-m1 (cog-value-ref args-m1 0))
+; Force out-m1 OpenclFloatValue to download from GPU by printing!!!
+(format #t "Result out-m1=~A" out-m1)
+(test-assert "mult one" (equal? (FloatValue 2 4 6 8 10) out-m1))
 
 ; ---------------------------------------------------------------
 ; Run it again, different data
@@ -80,8 +84,12 @@
 (cog-execute! krun-2)
 (define kern-m3
 	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
+(define args-m3 (cog-value-ref kern-m3 1))
+(define out-m3 (cog-value-ref args-m3 0))
+; Force out-m3 OpenclFloatValue to download from GPU by printing!!!
+(format #t "Result out-m3=~A" out-m3)
 (test-assert "mult three"
-	(equal? (FloatValue 2 6 12 20 30 30 28 24 18 10 0) kern-m3))
+	(equal? (FloatValue 2 6 12 20 30 30 28 24 18 10 0) out-m3))
 
 ; ---------------------------------------------------------------
 ; Run it again, with a different kernel
@@ -97,8 +105,12 @@
 (cog-execute! krun-3)
 (define kern-m5
 	(cog-execute! (ValueOf clnode (Predicate "*-read-*"))))
+(define args-m5 (cog-value-ref kern-m5 1))
+(define out-m5 (cog-value-ref args-m5 0))
+; Force out-m5 OpenclFloatValue to download from GPU by printing!!!
+(format #t "Result out-m5=~A" out-m5)
 (test-assert "mult five"
-	(equal? (FloatValue 3 5 7 9 11 11 11 11 11 11 11) kern-m5))
+	(equal? (FloatValue 3 5 7 9 11 11 11 11 11 11 11) out-m5))
 
 ; ---------------------------------------------------------------
 ; Initialize the accumulator
@@ -106,16 +118,20 @@
 
 (cog-set-value!
 	(Anchor "some data") (Predicate "accumulator")
-	(FloatValue (make-list vec-size 0)))
+	(OpenclFloatValue (make-list vec-size 0)))
 
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
+
+; Send the zeroed-out accumulator up to the GPU.
+(cog-set-value! clnode (Predicate "*-write-*") accum-location)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 (cog-set-value!
 	(Anchor "some data") (Predicate "accum task")
 	(SectionValue
 		(OpenclKernel clnode (Predicate "vec_add"))
-		(LinkValue (Type 'FloatValue)
+		(LinkValue accum-location
 			accum-location (RandomStream vec-size))))
 
 ; Define a feedback loop.
@@ -123,34 +139,41 @@
 	(SetValue clnode (Predicate "*-write-*")
 		(ValueOf (Anchor "some data") (Predicate "accum task"))))
 
-(define update-data
-	(SetValue
-		(Anchor "some data") (Predicate "accumulator")
-		(ValueOf clnode (Predicate "*-read-*"))))
+(define get-result
+	(ValueOf clnode (Predicate "*-read-*")))
 
 ; Run it once ...
 (cog-execute! run-kernel)
-(define acc1 (cog-execute! update-data))
-(test-assert "acc1 type" (cog-subtype? 'FloatValue (cog-type acc1)))
-(test-assert "acc1 size" (equal? vec-size (length (cog-value->list acc1))))
+(define acc1 (cog-execute! get-result))
+(test-assert "acc1 type" (cog-subtype? 'SectionValue (cog-type acc1)))
+(define args1 (cog-value-ref acc1 1))
+(test-assert "args1 type" (cog-subtype? 'LinkValue (cog-type args1)))
+(define out1 (cog-value-ref args1 0))
+(test-assert "out1 type" (cog-subtype? 'FloatValue (cog-type out1)))
+(test-assert "out1 size" (equal? vec-size (length (cog-value->list out1))))
+(flush-all-ports)
 
 ; Run it lots ...
 (define run-len 5123)
 (for-each
 	(lambda (x)
 		(cog-execute! run-kernel)
-		(cog-execute! update-data))
+		(cog-execute! get-result))
 	(iota run-len 0))
 
 (cog-execute! run-kernel)
-(define accn (cog-execute!  update-data))
-(test-assert "accn type" (cog-subtype? 'FloatValue (cog-type accn)))
-(test-assert "accn size" (equal? vec-size (length (cog-value->list accn))))
+(define accn (cog-execute!  get-result))
+(test-assert "accn type" (cog-subtype? 'SectionValue (cog-type accn)))
+(define argsn (cog-value-ref accn 1))
+(test-assert "argsn type" (cog-subtype? 'LinkValue (cog-type argsn)))
+(define outn (cog-value-ref argsn 0))
+(test-assert "outn type" (cog-subtype? 'FloatValue (cog-type outn)))
+(test-assert "outn size" (equal? vec-size (length (cog-value->list outn))))
 
 ; Result of repeated executation should be a large number,
 ; approx equal to 0.5 of vec-size * run-len by the central limit theorem
 ; and with stddev of sqrt of num samples.
-(define vsum (fold + 0 (cog-value->list accn)))
+(define vsum (fold + 0 (cog-value->list outn)))
 (define vlen (* vec-size run-len))
 (define vmean (/ vsum vlen))
 (define vsigma (/ 1 (sqrt vlen)))

@@ -52,12 +52,16 @@
 ; it can be found.
 (cog-set-value!
 	(Anchor "some place") (Predicate "accumulator")
-	(FloatValue 0 0 0 0 0))
+	(OpenclFloatValue 0 0 0 0 0))
 
 ; When executed, this will return the current accumulator value.
 (define accum-location
 	(ValueOf (Anchor "some place") (Predicate "accumulator")))
 (cog-execute! accum-location)
+
+; Send the zeroed-out accumulator up to the GPU.
+(cog-set-value! clnode (Predicate "*-write-*") accum-location)
+(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
 
 ; Bind the vector-add GPU kernel to a pair of input vectors. The first
 ; vector is the accumulator, and the second one is a vector of three
@@ -67,7 +71,7 @@
 	(Anchor "some place") (Predicate "accum task")
 	(SectionValue
 		(OpenclKernel clnode (Predicate "vec_add"))
-		(LinkValue accum-location (RandomStream 3))))
+		(LinkValue accum-location accum-location (RandomStream 3))))
 
 ; Define a pair of functions. The first runs the kernel, defined above,
 ; and the second downloads the results. Calling this pair in succession
@@ -76,23 +80,19 @@
 	(SetValue clnode (Predicate "*-write-*")
 		(ValueOf (Anchor "some place") (Predicate "accum task"))))
 
-(define update-data
-	(SetValue
-		(Anchor "some place") (Predicate "accumulator")
-		(ValueOf clnode (Predicate "*-read-*"))))
 
 ; Run it once ...
 (cog-execute! run-kernel)
-(cog-execute! update-data)
+(cog-execute! get-result)
 
 ; And again and again ...
 (cog-execute! run-kernel)
-(cog-execute! update-data)
+(cog-execute! get-result)
 
 (cog-execute! run-kernel)
-(cog-execute! update-data)
+(cog-execute! get-result)
 
 (cog-execute! run-kernel)
-(cog-execute! update-data)
+(cog-execute! get-result)
 
 ; --------- The End! That's All, Folks! --------------

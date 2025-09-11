@@ -265,7 +265,7 @@ ValuePtr OpenclNode::read(void) const
 
 // ==============================================================
 
-cl::Kernel
+ValuePtr
 OpenclNode::get_kernel (ValuePtr kvec) const
 {
 	Handle hkl;
@@ -288,8 +288,7 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 			"Cross-site scripting!: this %s\nthat: %s",
 			to_string().c_str(), hkl->to_string().c_str());
 
-	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
-	return okp->get_kernel();
+	return hkl;
 }
 
 // ==============================================================
@@ -340,54 +339,68 @@ OpenclNode::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 
 /// Unwrap vector.
 ValuePtr
-OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
-                       size_t& pos, size_t dim) const
+OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 {
-	bool from_gpu = false;
-	const std::vector<double>* vals = nullptr;
+	// If we're already the right format, we're done. Do nothing.
+	if (vp->is_type(OPENCL_VALUE))
+		return vp;
 
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
 	{
-		kern.setArg(pos, dim);
-		pos ++;
-		return vp;
+#if NOT_NOW
+		// dim should match specified dim...
+		// Why bother checking? I dunno.
+		Handle hc = HandleCast(vp);
+		if (1 != hc.size())
+			throw RuntimeException(TRACE_INFO,
+				"Expecting dimension, got %s", hc->to_string().c_str();
+
+		Handle hd = HandleCast(vp)->getOutgoingAtom(0);
+		if (not hd->is_type(NUMBER_NODE))
+			throw RuntimeException(TRACE_INFO,
+				"Expecting number, got %s", hc->to_string().c_str();
+#endif
+
+		Handle hd = HandleCast(createNumberNode(dim));
+		return _atom_space->add_link(CONNECTOR, hd);
 	}
 
+	// XXX For now, we ignore the type. FIXME
+	// XXX this API is a bad API. Neds rethinking.
+	if (vp->is_type(TYPE_NODE))
+	{
+		std::vector<double> zero;
+		zero.resize(dim);
+		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
+		ofv->set_context(_device, _context);
+		return ofv;
+	}
+
+	const std::vector<double>* vals = nullptr;
 	if (vp->is_type(NUMBER_NODE))
 		vals = &(NumberNodeCast(vp)->value());
 
 	if (vp->is_type(FLOAT_VALUE))
 		vals = &(FloatValueCast(vp)->value());
 
-	// XXX For now, we ignore the type. FIXME
-	if (vp->is_type(TYPE_NODE))
-		from_gpu = true;
-
 	OpenclFloatValuePtr ofv;
-	if (nullptr == vals)
-	{
-		std::vector<double> zero;
-		zero.resize(dim);
-		ofv = createOpenclFloatValue(std::move(zero));
-	}
-	else if (vals->size() < dim)
+	if (vals->size() != dim)
 	{
 		std::vector<double> cpy(*vals);
 		cpy.resize(dim);
-		ofv = createOpenclFloatValue(std::move(cpy));
+		ofv = createOpenclFloatValue(cpy);
 	}
 	else
 		ofv = createOpenclFloatValue(*vals);
 
-	ofv->set_context(_context);
-	ofv->set_arg(kern, pos, from_gpu);
-	pos ++;
+	ofv->set_context(_device, _context);
+	ofv->send_buffer();
 	return ofv;
 }
 
 ValueSeq
-OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
+OpenclNode::make_vectors(ValuePtr kvec, size_t& dim) const
 {
 	// Unpack kernel arguments
 	ValueSeq vsq;
@@ -425,16 +438,18 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 	// Find the shortest vector.
 	bool have_size_spec = false;
 	dim = get_vec_len(vsq, have_size_spec);
-	size_t pos = 0;
 	ValueSeq flovec;
 	for (const ValuePtr& v: vsq)
-		flovec.emplace_back(get_floats(v, kern, pos, dim));
+		flovec.emplace_back(get_floats(v, dim));
 
 	// If the user never specified an explicit location in which to pass
 	// the vector size, assume it is the last location. Set it now.
 	// Is this a good idea? I dunno. More thinking needed.
 	if (not have_size_spec)
-		kern.setArg(pos, dim);
+	{
+		Handle hd = HandleCast(createNumberNode(dim));
+		flovec.emplace_back(_atom_space->add_link(CONNECTOR, hd));
+	}
 
 	return flovec;
 }
@@ -448,28 +463,31 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-	// Launch kernel
-	cl::Event event_handler;
-	_queue.enqueueNDRangeKernel(kjob._kern,
-		cl::NullRange,
-		cl::NDRange(kjob._vecdim),
-		cl::NullRange,
-		nullptr, &event_handler);
+	if (kjob._kvec->is_type(SECTION_VALUE))
+	{
+		// Launch kernel
+		cl::Event event_handler;
+		_queue.enqueueNDRangeKernel(kjob._kern,
+			cl::NullRange,
+			cl::NDRange(kjob._vecdim),
+			cl::NullRange,
+			nullptr, &event_handler);
 
-	event_handler.wait();
+		event_handler.wait();
+		_qvp->add(kjob._kvec);
+		return;
+	}
 
-	// ------------------------------------------------------
-	// Wait for results
-	size_t vec_bytes = kjob._vecdim * sizeof(double);
-	_queue.enqueueReadBuffer(kjob._outvec->get_buffer(),
-		CL_TRUE, 0, vec_bytes, kjob._outvec->data(),
-		nullptr, &event_handler);
-	event_handler.wait();
-
-	// XXX TODO: we should probably wrap this with the kvec, so that
-	// the user knows who these results belong to. I guess using an
-	// ArrowLink, right?
-	_qvp->add(kjob._outvec);
+	// If told to write a vector, then we upload that vector data
+	// to the GPU.
+	if (kjob._kvec->is_type(OPENCL_VALUE))
+	{
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(kjob._kvec);
+		ofv->set_context(_device, _context);
+		ofv->send_buffer();
+		_qvp->add(ofv);
+		return;
+	}
 }
 
 // ==============================================================
@@ -491,23 +509,42 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting a kernel name, got %s\n", kvec->to_string().c_str());
 
-	// XXX Hardwired assumption about argument order.
-	// FIXME... We're almost there, with Section but not quite.
+	if (kvec->is_type(OPENCL_VALUE))
+	{
+		job_t kjob;
+		kjob._kvec = kvec;
 
-	cl::Kernel kern = get_kernel(kvec);
+		// Send everything off to the GPU.
+		_dispatch_queue.enqueue(kjob);
+		return;
+	}
+
+	ValuePtr hkl = get_kernel(kvec);
+	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
+	cl::Kernel kern = okp->get_kernel();
 
 	size_t dim = 0;
-	ValueSeq flovecs = make_vectors (kvec, kern, dim);
+	ValueSeq flovecs = make_vectors (kvec, dim);
+	ValuePtr args = createLinkValue(flovecs);
+	ValuePtr jobvec = createLinkValue(SECTION_VALUE, ValueSeq{hkl, args});
+
+	size_t pos = 0;
+	for (const ValuePtr& v: flovecs)
+	{
+		if (v->is_type(OPENCL_FLOAT_VALUE))
+			OpenclFloatValueCast(v)->set_arg(kern, pos);
+		else
+			kern.setArg(pos, dim);
+		pos++;
+	}
 
 	job_t kjob;
-	kjob._kvec = kvec;
+	kjob._kvec = jobvec;
 	kjob._kern = kern;
 	kjob._vecdim = dim;
-	kjob._flovecs = flovecs;
-	kjob._outvec = OpenclFloatValueCast(flovecs[0]);
 
 	// Send everything off to the GPU.
-	_dispatch_queue.enqueue(std::move(kjob));
+	_dispatch_queue.enqueue(kjob);
 }
 
 // ==============================================================

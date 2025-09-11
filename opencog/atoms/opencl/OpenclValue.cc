@@ -27,9 +27,9 @@ using namespace opencog;
 
 OpenclValue::OpenclValue(void) :
 	_have_ctxt(false),
-	_have_buffer(false),
-	_wait_for_update(false),
+	_device{},
 	_context{},
+	_queue{},
 	_buffer{}
 {
 }
@@ -37,45 +37,65 @@ OpenclValue::OpenclValue(void) :
 OpenclValue::~OpenclValue()
 {
 	_context = {};
+	_device = {};
 }
 
-void OpenclValue::set_context(const cl::Context& ctxt)
+/// Set up info about the GPU for this instance.
+void OpenclValue::set_context(const cl::Device& ocldev,
+                              const cl::Context& ctxt)
 {
-	if (_have_ctxt and _context != ctxt)
-		throw RuntimeException(TRACE_INFO,
-			"Context already set!");
+	if (_have_ctxt)
+	{
+		if (_context != ctxt)
+			throw RuntimeException(TRACE_INFO,
+				"Context already set to something else!");
+		return;
+	}
 
 	_have_ctxt = true;
+	_device = ocldev;
 	_context = ctxt;
-}
+	_queue = cl::CommandQueue(_context, _device);
 
-void OpenclValue::from_gpu(size_t nbytes)
-{
-	// FIXME. probably OK if its already set!?
-	// XXX what it its already set? ??? I think its OK
-	// as long as we also OR in the needed flags ???
-	if (_have_buffer)
-		throw RuntimeException(TRACE_INFO,
-			"Bytevec already set!");
-
-	_wait_for_update = true;
-	_have_buffer = true;
+	size_t nbytes = reserve_size();
 	_buffer = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
 }
 
-void OpenclValue::to_gpu(size_t nbytes, void* vec)
+/// Synchronously send data to the GPU
+void OpenclValue::send_buffer(void) const
 {
-	// XXX what it its already set? ??? I think its OK
-	// as long as we also OR in the needed flags ???
-	if (_have_buffer)
+	if (not _have_ctxt)
 		throw RuntimeException(TRACE_INFO,
-			"Bytevec already set!");
+			"No buffer!");
 
-	_wait_for_update = false;
-	_have_buffer = true;
-	_buffer = cl::Buffer(_context,
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		nbytes, vec);
+	cl::Event event_handler;
+	size_t nbytes = reserve_size();
+	const void* bytes = data();
+
+	_queue.enqueueWriteBuffer(_buffer, CL_TRUE, 0,
+		nbytes, bytes, nullptr, &event_handler);
+	event_handler.wait();
+}
+
+/// Synchronously get data from the GPU
+void OpenclValue::fetch_buffer(void) const
+{
+	if (not _have_ctxt)
+		throw RuntimeException(TRACE_INFO,
+			"No buffer!");
+
+	cl::Event event_handler;
+	size_t nbytes = reserve_size();
+	void* bytes = data();
+
+	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
+		nbytes, bytes, nullptr, &event_handler);
+	event_handler.wait();
+}
+
+void OpenclValue::set_arg(cl::Kernel& kern, size_t pos)
+{
+	kern.setArg(pos, _buffer);
 }
 
 // ==============================================================

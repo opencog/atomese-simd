@@ -9,9 +9,25 @@
 #include "scaffolding.h"
 #include <stdlib.h>
 
+void read_result(cl::Context& context, cl::Device& ocldev,
+                 size_t vec_bytes, size_t vec_dim,
+                 cl::Buffer& vecaccum, std::vector<double>* accum,
+                 const char* msg)
+{
+	cl::CommandQueue queue(context, ocldev);
+	cl::Event event_handler;
+	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
+		vec_bytes, accum->data(), nullptr, &event_handler);
+	event_handler.wait();
+
+	fprintf(stderr, msg);
+	for (size_t i=0; i<vec_dim; i++)
+		printf("%ld = %f\n", i, (*accum)[i]);
+}
+
 // Declare two floating point vectors. One acts as an accumulator;
 // the other is constantly changing.
-void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
+void run_accum(cl::Device& ocldev, cl::Context& context, cl::Program& program)
 {
 	size_t vec_dim = 6;
 	std::vector<double> accum(vec_dim);
@@ -63,16 +79,8 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 		nullptr, &event_handler);
 
 	event_handler.wait();
-	fprintf(stderr, "Done waiting on exec\n");
-
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	fprintf(stderr, "Done reading accumulator\n");
-
-	printf("The accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+               "The accumulator is:\n");
 
 	// -------------------------------------------------------------
 	// Do it again
@@ -90,12 +98,9 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 		nullptr, &event_handler);
 
 	event_handler.wait();
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	printf("Again, the accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
+
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+               "Again, the accumulator is:\n");
 
 	// -------------------------------------------------------------
 	// One more time to be sure.
@@ -113,12 +118,9 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 		nullptr, &event_handler);
 
 	event_handler.wait();
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	printf("One more time, the accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
+
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+		"One more time, the accumulator is:\n");
 
 	// -------------------------------------------------------------
 	// Lots of times, now.
@@ -140,14 +142,9 @@ void run_accum(cl::Device ocldev, cl::Context context, cl::Program program)
 	}
 
 	event_handler.wait();
-	queue.enqueueReadBuffer(vecaccum, CL_TRUE, 0,
-		vec_bytes, accum.data(), nullptr, &event_handler);
-	event_handler.wait();
-	printf("The random accumulator is:\n");
-	for (size_t i=0; i<vec_dim; i++)
-		printf("%ld = %f\n", i, accum[i]);
 
-
+	read_result(context, ocldev, vec_bytes, vec_dim, vecaccum, &accum,
+		"The random accumulator is:\n");
 }
 
 // Run code on the GPU's.
