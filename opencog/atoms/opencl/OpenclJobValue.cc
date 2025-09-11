@@ -164,28 +164,24 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 	return ofv;
 }
 
+/// Unpack kernel arguments
 ValueSeq
-OpenclJobValue::make_vectors(ValuePtr kvec, size_t& dim) const
+OpenclJobValue::make_vectors(size_t& dim) const
 {
-	// Unpack kernel arguments
-	ValueSeq vsq;
-	if (kvec->is_type(SECTION))
-	{
-		const Handle& conseq = HandleCast(kvec)->getOutgoingAtom(1);
-		const HandleSeq& oset = conseq->getOutgoingSet();
+	// We could check that conseq is actually of type ConnectorSeq
+	// and throw if not, but I don't see a need to enforce this yet.
+	const Handle& conseq = _definition->getOutgoingAtom(1);
+	const HandleSeq& oset = conseq->getOutgoingSet();
 
-		// Find the shortest vector.
-		for (const Handle& oh : oset)
-		{
-			if (oh->is_executable())
-				vsq.emplace_back(oh->execute());
-			else
-				vsq.push_back(oh);
-		}
+	// Execute any executable connectors...
+	ValueSeq vsq;
+	for (const Handle& oh : oset)
+	{
+		if (oh->is_executable())
+			vsq.emplace_back(oh->execute());
+		else
+			vsq.push_back(oh);
 	}
-	else
-		throw RuntimeException(TRACE_INFO,
-			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
 	// Find the shortest vector.
 	bool have_size_spec = false;
@@ -214,22 +210,25 @@ void OpenclJobValue::build(const Handle& oclno)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting OpenclNode, got: %s", oclno->to_string().c_str());
 
+	std::string kname = get_kern_name();
+
 	// Get our program from the OpenclNode.
 	const cl::Program& proggy = OpenclNodeCast(oclno)->get_program();
 
 	// XXX TODO this will throw exception if user mis-typed the
 	// kernel name. We should catch this and print a friendlier
 	// error message.
-	_kernel = cl::Kernel(proggy, get_kern_name().c_str());
+	_kernel = cl::Kernel(proggy, kname.c_str());
 
-printf("duude starrt kern build\n");
+printf("duude start kern build of %s\n", kname.c_str());
+
+	size_t dim = 0;
+	ValueSeq flovecs = make_vectors (dim);
+	ValuePtr args = createLinkValue(flovecs);
+	Handle kh = createNode(PREDICATE_NODE, kname);
+	ValuePtr jobvec = createLinkValue(OPENCL_JOB_VALUE, ValueSeq{kh, args});
 
 #if 0
-	size_t dim = 0;
-	ValueSeq flovecs = make_vectors (kvec, dim);
-	ValuePtr args = createLinkValue(flovecs);
-	ValuePtr jobvec = createOpenclJobValue(ValueSeq{hkl, args});
-
 	size_t pos = 0;
 	for (const ValuePtr& v: flovecs)
 	{

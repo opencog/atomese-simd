@@ -53,7 +53,7 @@ protected:
 	const std::string& get_kern_name (void) const;
 	size_t get_vec_len(const ValueSeq&, bool&) const;
 	ValuePtr get_floats(ValuePtr, size_t) const;
-	ValueSeq make_vectors(ValuePtr, size_t&) const;
+	ValueSeq make_vectors(size_t&) const;
 
 public:
 	OpenclJobValue(Handle);
