@@ -136,8 +136,7 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
 	// XXX this API is a bad API. Needs rethinking.
 	if (vp->is_type(TYPE_NODE))
 	{
-		std::vector<double> zero;
-		zero.resize(dim);
+		std::vector<double> zero(dim, 0.0);
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
 		ofv->set_context(oclno);
 		return ofv;
