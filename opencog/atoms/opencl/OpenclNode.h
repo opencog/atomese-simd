@@ -86,7 +86,7 @@ protected:
 
 	ValuePtr get_kernel(ValuePtr) const;
 	size_t get_vec_len(const ValueSeq&, bool&) const;
-	ValuePtr get_floats(ValuePtr, cl::Kernel&, size_t&, size_t) const;
+	ValuePtr get_floats(ValuePtr, size_t) const;
 	ValueSeq make_vectors(ValuePtr, cl::Kernel&, size_t&) const;
 
 	QueueValuePtr _qvp;

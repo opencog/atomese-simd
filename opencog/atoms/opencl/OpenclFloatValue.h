@@ -59,7 +59,6 @@ public:
 	const std::vector<double>& value() const { update(); return _value; }
 	size_t size() const { return _value.size(); }
 
-	void set_arg(cl::Kernel&, size_t pos);
 	void resize(size_t dim) { _value.resize(dim); }
 };
 

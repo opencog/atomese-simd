@@ -59,7 +59,7 @@ protected:
 
 public:
 	virtual ~OpenclValue();
-	virtual void set_arg(cl::Kernel&, size_t pos) = 0;
+	virtual void set_arg(cl::Kernel&, size_t pos);
 };
 
 /** @}*/

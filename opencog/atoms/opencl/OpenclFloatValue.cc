@@ -53,11 +53,6 @@ void OpenclFloatValue::update(void) const
 	fetch_buffer();
 }
 
-void OpenclFloatValue::set_arg(cl::Kernel& kern, size_t pos)
-{
-	kern.setArg(pos, _buffer);
-}
-
 // ==============================================================
 
 // Adds factory when the library is loaded.

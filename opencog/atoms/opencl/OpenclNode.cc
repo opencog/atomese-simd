@@ -339,19 +339,14 @@ OpenclNode::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 
 /// Unwrap vector.
 ValuePtr
-OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
-                       size_t& pos, size_t dim) const
+OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 {
 	bool from_gpu = false;
 	const std::vector<double>* vals = nullptr;
 
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
-	{
-		kern.setArg(pos, dim);
-		pos ++;
 		return vp;
-	}
 
 	if (vp->is_type(NUMBER_NODE))
 		vals = &(NumberNodeCast(vp)->value());
@@ -380,10 +375,8 @@ OpenclNode::get_floats(ValuePtr vp, cl::Kernel& kern,
 		ofv = createOpenclFloatValue(*vals);
 
 	ofv->set_context(_device, _context);
-	ofv->set_arg(kern, pos);
 	if (not from_gpu)
 		ofv->send_buffer();
-	pos ++;
 	return ofv;
 }
 
@@ -426,16 +419,28 @@ OpenclNode::make_vectors(ValuePtr kvec, cl::Kernel& kern, size_t& dim) const
 	// Find the shortest vector.
 	bool have_size_spec = false;
 	dim = get_vec_len(vsq, have_size_spec);
-	size_t pos = 0;
 	ValueSeq flovec;
 	for (const ValuePtr& v: vsq)
-		flovec.emplace_back(get_floats(v, kern, pos, dim));
+		flovec.emplace_back(get_floats(v, dim));
 
 	// If the user never specified an explicit location in which to pass
 	// the vector size, assume it is the last location. Set it now.
 	// Is this a good idea? I dunno. More thinking needed.
 	if (not have_size_spec)
-		kern.setArg(pos, dim);
+	{
+		Handle hd = HandleCast(createNumberNode(dim));
+		flovec.emplace_back(_atom_space->add_link(CONNECTOR, hd));
+	}
+
+	size_t pos = 0;
+	for (const ValuePtr& v: flovec)
+	{
+		if (v->is_type(OPENCL_FLOAT_VALUE))
+			OpenclFloatValueCast(v)->set_arg(kern, pos);
+		else
+			kern.setArg(pos, dim);
+		pos++;
+	}
 
 	return flovec;
 }
