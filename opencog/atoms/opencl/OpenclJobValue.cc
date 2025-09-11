@@ -218,10 +218,18 @@ void OpenclJobValue::build(const Handle& oclno)
 	// Get our program from the OpenclNode.
 	const cl::Program& proggy = OpenclNodeCast(oclno)->get_program();
 
-	// XXX TODO this will throw exception if user mis-typed the
-	// kernel name. We should catch this and print a friendlier
-	// error message.
-	_kernel = cl::Kernel(proggy, kname.c_str());
+	// If the user mistyped the kernel name, the `cl:Kernel` will
+	// throw an exception that is not meaningful to most users.
+	// Rewrite it to Atomese standard.
+	try
+	{
+		_kernel = cl::Kernel(proggy, kname.c_str());
+	}
+	catch (const std::exception& ex)
+	{
+		throw RuntimeException(TRACE_INFO,
+			"Unknown kernel name \"%s\" given to %s\n", kname.c_str(), ex.what());
+	}
 
 	// Build the OpenclJobValue itself.
 	ValueSeq flovecs = make_vectors (oclno);
