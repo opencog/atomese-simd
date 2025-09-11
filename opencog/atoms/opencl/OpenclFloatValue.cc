@@ -49,7 +49,6 @@ OpenclFloatValue::OpenclFloatValue(std::vector<double>&& v) :
 // right answer? So far, seems to still be "yes". ...
 void OpenclFloatValue::update(void) const
 {
-	if (not _have_ctxt) return;
 	fetch_buffer();
 }
 

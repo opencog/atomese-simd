@@ -44,10 +44,8 @@ class OpenclDataValue
 	friend class OpenclNode;
 protected:
 	OpenclDataValue(void);
-	bool _have_ctxt;
+	bool _have_buff;
 
-	cl::Device _device;
-	cl::Context _context;
 	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
 

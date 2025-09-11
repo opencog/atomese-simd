@@ -26,9 +26,7 @@
 using namespace opencog;
 
 OpenclDataValue::OpenclDataValue(void) :
-	_have_ctxt(false),
-	_device{},
-	_context{},
+	_have_buff(false),
 	_queue{},
 	_buffer{}
 {
@@ -36,35 +34,25 @@ OpenclDataValue::OpenclDataValue(void) :
 
 OpenclDataValue::~OpenclDataValue()
 {
-	_context = {};
-	_device = {};
 }
 
 /// Set up info about the GPU for this instance.
 void OpenclDataValue::set_context(const cl::Device& ocldev,
-                              const cl::Context& ctxt)
+                                  const cl::Context& ctxt)
 {
-	if (_have_ctxt)
-	{
-		if (_context != ctxt)
-			throw RuntimeException(TRACE_INFO,
-				"Context already set to something else!");
-		return;
-	}
+	if (_have_buff) return;
 
-	_have_ctxt = true;
-	_device = ocldev;
-	_context = ctxt;
-	_queue = cl::CommandQueue(_context, _device);
+	_have_buff = true;
+	_queue = cl::CommandQueue(ctxt, ocldev);
 
 	size_t nbytes = reserve_size();
-	_buffer = cl::Buffer(_context, CL_MEM_READ_WRITE, nbytes);
+	_buffer = cl::Buffer(ctxt, CL_MEM_READ_WRITE, nbytes);
 }
 
 /// Synchronously send data to the GPU
 void OpenclDataValue::send_buffer(void) const
 {
-	if (not _have_ctxt)
+	if (not _have_buff)
 		throw RuntimeException(TRACE_INFO,
 			"No buffer!");
 
@@ -80,9 +68,8 @@ void OpenclDataValue::send_buffer(void) const
 /// Synchronously get data from the GPU
 void OpenclDataValue::fetch_buffer(void) const
 {
-	if (not _have_ctxt)
-		throw RuntimeException(TRACE_INFO,
-			"No buffer!");
+	// No-op if not yet tied to GPU.
+	if (not _have_buff) return;
 
 	cl::Event event_handler;
 	size_t nbytes = reserve_size();
