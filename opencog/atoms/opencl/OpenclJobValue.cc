@@ -132,22 +132,14 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
 		return as->add_link(CONNECTOR, hd);
 	}
 
-	// XXX For now, we ignore the type. FIXME
-	// XXX this API is a bad API. Needs rethinking.
-	if (vp->is_type(TYPE_NODE))
-	{
-		std::vector<double> zero(dim, 0.0);
-		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
-		ofv->set_context(oclno);
-		return ofv;
-	}
-
 	const std::vector<double>* vals = nullptr;
-	if (vp->is_type(NUMBER_NODE))
-		vals = &(NumberNodeCast(vp)->value());
-
 	if (vp->is_type(FLOAT_VALUE))
 		vals = &(FloatValueCast(vp)->value());
+	else if (vp->is_type(NUMBER_NODE))
+		vals = &(NumberNodeCast(vp)->value());
+	else
+		throw RuntimeException(TRACE_INFO,
+			"Expecting vector of floats, got: %s", vp->to_string().c_str());
 
 	OpenclFloatValuePtr ofv;
 	if (vals->size() != dim)
