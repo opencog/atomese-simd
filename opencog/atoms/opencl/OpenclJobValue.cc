@@ -30,6 +30,7 @@
 
 #include "OpenclFloatValue.h"
 #include "OpenclJobValue.h"
+#include "OpenclNode.h"
 
 using namespace opencog;
 
@@ -67,28 +68,6 @@ OpenclJobValue::get_kern_name (void) const
 	throw RuntimeException(TRACE_INFO,
 		"Expecting Value with kernel name, got %s\n",
 		vp->to_string().c_str());
-}
-
-// ==============================================================
-
-cl::Kernel
-OpenclJobValue::get_kernelx(void)
-{
-#if 0
-	if (_have_kernel) return _kernel;
-
-	// Get our program from our OpenclNode.
-	const cl::Program& proggy = OpenclNodeCast(_outgoing[0])->get_program();
-
-	// XXX TODO this will throw exception if user mis-typed the
-	// kernel name. We should catch this and print a friendlier
-	// error message.
-	_kernel = cl::Kernel(proggy, get_kern_name().c_str());
-
-	_have_kernel = true;
-	return _kernel;
-#endif
-	return cl::Kernel{};
 }
 
 // ==============================================================
@@ -235,16 +214,17 @@ void OpenclJobValue::build(const Handle& oclno)
 		throw RuntimeException(TRACE_INFO,
 			"Expecting OpenclNode, got: %s", oclno->to_string().c_str());
 
-printf("duuude enter builder for %s\n",
-_definition->to_string().c_str());
-	std::string kname = get_kern_name();
-printf("duuude builder kern %s\n", kname.c_str());
+	// Get our program from the OpenclNode.
+	const cl::Program& proggy = OpenclNodeCast(oclno)->get_program();
+
+	// XXX TODO this will throw exception if user mis-typed the
+	// kernel name. We should catch this and print a friendlier
+	// error message.
+	_kernel = cl::Kernel(proggy, get_kern_name().c_str());
+
+printf("duude starrt kern build\n");
 
 #if 0
-	ValuePtr hkl = get_kernel(kvec);
-	OpenclKernelLinkPtr okp = OpenclKernelLinkCast(hkl);
-	cl::Kernel kern = okp->get_kernel();
-
 	size_t dim = 0;
 	ValueSeq flovecs = make_vectors (kvec, dim);
 	ValuePtr args = createLinkValue(flovecs);

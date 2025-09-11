@@ -42,7 +42,7 @@ namespace opencog
 class OpenclNode
 	: public StreamNode
 {
-	friend class OpenclKernelLink;
+	friend class OpenclJobValue;
 
 protected:
 	void init(void);

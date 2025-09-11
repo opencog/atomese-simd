@@ -51,7 +51,6 @@ protected:
 	void run(void);
 
 	const std::string& get_kern_name (void) const;
-	cl::Kernel get_kernelx(void);
 	size_t get_vec_len(const ValueSeq&, bool&) const;
 	ValuePtr get_floats(ValuePtr, size_t) const;
 	ValueSeq make_vectors(ValuePtr, size_t&) const;
