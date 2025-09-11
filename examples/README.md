@@ -8,7 +8,7 @@ Two example:
   back into the AtomSpace.  The data is operated on by the kernels
   defined in `vec-kernel.cl`.
 
-* `accumulator-bad.scm` demonstrates how to define a location in the
-  AtomSpace which can be used to hold vector data. The demo is "bad"
-  only in that it performs excessive data movement. But it works, and
-  the point is to show how to move data.
+* `accumulator.scm` demonstrates how to define a location in the
+  AtomSpace which shadows a vector held on the GPU. That is, the vector
+  "lives" on the GPU, and is downloaded back to to the system when
+  it is "examined", e.g. to be printed to stdout.

@@ -3,8 +3,8 @@
 ;
 ; Demo of an accumulator. Demonstrates how to designate a location in
 ; the AtomSpace (i.e. in system RAM) that can hold vector data that
-; shadows what the GPU is working with, while avoiding un-nneded copying
-; of that data between the system and the GPU.
+; shadows what the GPU is working with. The goal is to avoid un-needed
+; copying of that data between the system and the GPU.
 ;
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
@@ -137,7 +137,7 @@
 
 ; ATTENTION! If you try to get the status more times than you've run
 ; the kernel, the status checker will block the current thread, waiting
-; for a result that will never arrrive. If you plan in advance, and
+; for a result that will never arrive. If you plan in advance, and
 ; create several threads, then, yes, you can run the exec in one thread,
 ; and check the status in the other. In such a design, you want the
 ; status checker to block until the job is done. But for this
