@@ -265,30 +265,24 @@ ValuePtr OpenclNode::read(void) const
 // sends things to the GPU, and then waits for a reply. When a reply
 // is received, its turned into a FloatValue or NumberNode and handed
 // to the QueueValue, where main thread can find it.
-void OpenclNode::queue_job(const job_t& kjob)
+void OpenclNode::queue_job(const ValuePtr& vp)
 {
-	if (kjob._kvec->is_type(OPENCL_JOB_VALUE))
+	// XXX TODO All of these should probably share the same
+	// cl::Event (even though they can run on different queues.)
+	// Or maybe one Queue would be better ...
+	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
-#if 0
-		// Launch kernel
-		cl::Event event_handler;
-		_queue.enqueueNDRangeKernel(kjob._kern,
-			cl::NullRange,
-			cl::NDRange(kjob._vecdim),
-			cl::NullRange,
-			nullptr, &event_handler);
-
-		event_handler.wait();
-#endif
-		_qvp->add(kjob._kvec);
+		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
+		ojv->run();
+		_qvp->add(ojv);
 		return;
 	}
 
 	// If told to write a vector, then we upload that vector data
 	// to the GPU.
-	if (kjob._kvec->is_type(OPENCL_DATA_VALUE))
+	if (vp->is_type(OPENCL_DATA_VALUE))
 	{
-		OpenclFloatValuePtr ofv = OpenclFloatValueCast(kjob._kvec);
+		OpenclFloatValuePtr ofv = OpenclFloatValueCast(vp);
 		ofv->set_context(_device, _context);
 		ofv->send_buffer();
 		_qvp->add(ofv);
@@ -309,20 +303,26 @@ void OpenclNode::write_one(const ValuePtr& kvec)
 // being thrown, i.e. due to user errors (e.g. badly written Atomese)
 // The actual communications with the GPU is done in a distinct thread,
 // so that the main thread does not hang, waiting for results to arrive.
-void OpenclNode::do_write(const ValuePtr& kvec)
+void OpenclNode::do_write(const ValuePtr& vp)
 {
-	if (not kvec->is_type(OPENCL_DATA_VALUE) and
-	    not kvec->is_type(OPENCL_JOB_VALUE))
+	// Ready-to-go. Dispatch.
+	if (vp->is_type(OPENCL_DATA_VALUE) or
+	    vp->is_type(OPENCL_JOB_VALUE))
 	{
-		throw RuntimeException(TRACE_INFO,
-			"Expecting data or a job, got %s\n", kvec->to_string().c_str());
+		_dispatch_queue.enqueue(vp);
+		return;
 	}
 
-	job_t kjob;
-	kjob._kvec = kvec;
+	if (vp->is_type(SECTION))
+	{
+		OpenclJobValuePtr kern = createOpenclJobValue(HandleCast(vp));
+		kern->build(get_handle());
+		_dispatch_queue.enqueue(kern);
+		return;
+	}
 
-	// Send everything off to the GPU.
-	_dispatch_queue.enqueue(kjob);
+	throw RuntimeException(TRACE_INFO,
+		"Expecting data or a job, got %s\n", vp->to_string().c_str());
 }
 
 // ==============================================================

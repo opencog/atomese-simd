@@ -72,15 +72,9 @@ protected:
 	cl::Program _program;
 	const cl::Program& get_program(void) { return _program; }
 
-	// Kernel I/O. Using cl:Buffer for now.
-	// Need to create a derived class that will use SVM.
 	// Jobs run in their own thread, so that the GPU doesn't block us.
-	typedef struct
-	{
-		ValuePtr _kvec;
-	} job_t;
-	void queue_job(const job_t&);
-	async_caller<OpenclNode, job_t> _dispatch_queue;
+	void queue_job(const ValuePtr&);
+	async_caller<OpenclNode, ValuePtr> _dispatch_queue;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

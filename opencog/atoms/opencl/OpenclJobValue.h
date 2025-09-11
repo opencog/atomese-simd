@@ -39,6 +39,8 @@ namespace opencog
 class OpenclJobValue :
 	public LinkValue
 {
+	friend class OpenclNode;
+
 protected:
 	OpenclJobValue(Type t) : LinkValue(t) {}
 
