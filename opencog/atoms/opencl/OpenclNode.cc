@@ -272,7 +272,9 @@ void OpenclNode::queue_job(const ValuePtr& vp)
 	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
 		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
-		ojv->run();
+		cl::Event event_handler;
+		ojv->run(_queue, event_handler);
+		event_handler.wait();
 		_qvp->add(ojv);
 		return;
 	}

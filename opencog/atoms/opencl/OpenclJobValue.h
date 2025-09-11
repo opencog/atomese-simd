@@ -46,14 +46,15 @@ protected:
 
 	Handle _definition;
 	cl::Kernel _kernel;
+	size_t _dim;
 
 	void build(const Handle&);
-	void run(void);
+	void run(cl::CommandQueue&, cl::Event&);
 
 	const std::string& get_kern_name (void) const;
-	size_t get_vec_len(const ValueSeq&, bool&) const;
-	ValuePtr get_floats(const Handle&, ValuePtr, size_t) const;
-	ValueSeq make_vectors(const Handle&, size_t&) const;
+	bool get_vec_len(const ValueSeq&);
+	ValuePtr get_floats(const Handle&, ValuePtr);
+	ValueSeq make_vectors(const Handle&);
 
 public:
 	OpenclJobValue(Handle);

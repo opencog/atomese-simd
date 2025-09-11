@@ -75,11 +75,10 @@ OpenclJobValue::get_kern_name (void) const
 /// Find the vector length.
 /// Look either for a length specification embedded in the list,
 /// else obtain the shortest of all the vectors.
-size_t
-OpenclJobValue::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
+bool
+OpenclJobValue::get_vec_len(const ValueSeq& vsq)
 {
-	have_size_spec = false;
-	size_t dim = UINT_MAX;
+	_dim = UINT_MAX;
 	for (const ValuePtr& vp : vsq)
 	{
 		if (vp->is_type(TYPE_NODE)) continue;
@@ -87,14 +86,14 @@ OpenclJobValue::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 		if (vp->is_type(NUMBER_NODE))
 		{
 			size_t sz = NumberNodeCast(vp)->size();
-			if (sz < dim) dim = sz;
+			if (sz < _dim) _dim = sz;
 			continue;
 		}
 
 		if (vp->is_type(FLOAT_VALUE))
 		{
 			size_t sz = FloatValueCast(vp)->size();
-			if (sz < dim) dim = sz;
+			if (sz < _dim) _dim = sz;
 			continue;
 		}
 
@@ -103,22 +102,23 @@ OpenclJobValue::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 		// XXX FIXME check for insane structures here.
 		if (vp->is_type(CONNECTOR))
 		{
-			have_size_spec = true;
 			const Handle& h = HandleCast(vp)->getOutgoingAtom(0);
 			double sz = NumberNodeCast(h)->get_value();
 			if (sz < 0.0) continue;
 
 			// round, just in case.
-			return (size_t) (sz+0.5);
+			_dim = (size_t) (sz+0.5);
+			return true;
 		}
 	}
 
-	return dim;
+	// We had to guess the size.
+	return false;
 }
 
 /// Unwrap vector.
 ValuePtr
-OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
+OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp)
 {
 	// If we're already the right format, we're done. Do nothing.
 	if (vp->is_type(OPENCL_DATA_VALUE))
@@ -127,7 +127,7 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
 	{
-		Handle hd = HandleCast(createNumberNode(dim));
+		Handle hd = HandleCast(createNumberNode(_dim));
 		AtomSpace* as = oclno->getAtomSpace();
 		return as->add_link(CONNECTOR, hd);
 	}
@@ -142,10 +142,10 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
 			"Expecting vector of floats, got: %s", vp->to_string().c_str());
 
 	OpenclFloatValuePtr ofv;
-	if (vals->size() != dim)
+	if (vals->size() != _dim)
 	{
 		std::vector<double> cpy(*vals);
-		cpy.resize(dim);
+		cpy.resize(_dim);
 		ofv = createOpenclFloatValue(cpy);
 	}
 	else
@@ -160,7 +160,7 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
 
 /// Unpack kernel arguments
 ValueSeq
-OpenclJobValue::make_vectors(const Handle& oclno, size_t& dim) const
+OpenclJobValue::make_vectors(const Handle& oclno)
 {
 	// We could check that conseq is actually of type ConnectorSeq
 	// and throw if not, but I don't see a need to enforce this yet.
@@ -178,18 +178,17 @@ OpenclJobValue::make_vectors(const Handle& oclno, size_t& dim) const
 	}
 
 	// Find the shortest vector.
-	bool have_size_spec = false;
-	dim = get_vec_len(vsq, have_size_spec);
+	bool have_size_spec = get_vec_len(vsq);
 	ValueSeq flovec;
 	for (const ValuePtr& v: vsq)
-		flovec.emplace_back(get_floats(oclno, v, dim));
+		flovec.emplace_back(get_floats(oclno, v));
 
 	// If the user never specified an explicit location in which to pass
 	// the vector size, assume it is the last location. Set it now.
 	// Is this a good idea? I dunno. More thinking needed.
 	if (not have_size_spec)
 	{
-		Handle hd = HandleCast(createNumberNode(dim));
+		Handle hd = HandleCast(createNumberNode(_dim));
 		AtomSpace* as = oclno->getAtomSpace();
 		flovec.emplace_back(as->add_link(CONNECTOR, hd));
 	}
@@ -216,8 +215,7 @@ void OpenclJobValue::build(const Handle& oclno)
 	_kernel = cl::Kernel(proggy, kname.c_str());
 
 	// Build the OpenclJobValue itself.
-	size_t dim = 0;
-	ValueSeq flovecs = make_vectors (oclno, dim);
+	ValueSeq flovecs = make_vectors (oclno);
 	ValuePtr args = createLinkValue(flovecs);
 	AtomSpace* as = oclno->getAtomSpace();
 	Handle kh = as->add_node(PREDICATE_NODE, std::move(kname));
@@ -230,26 +228,19 @@ void OpenclJobValue::build(const Handle& oclno)
 		if (v->is_type(OPENCL_DATA_VALUE))
 			_kernel.setArg(pos, OpenclFloatValueCast(v)->get_buffer());
 		else
-			_kernel.setArg(pos, dim);
+			_kernel.setArg(pos, _dim);
 		pos++;
 	}
 }
 
-void OpenclJobValue::run(void)
+void OpenclJobValue::run(cl::CommandQueue& q, cl::Event& ev)
 {
-#if 0
-		// Launch kernel
-		cl::Event event_handler;
-		_queue.enqueueNDRangeKernel(kjob._kern,
-			cl::NullRange,
-			cl::NDRange(kjob._vecdim),
-			cl::NullRange,
-			nullptr, &event_handler);
-
-		event_handler.wait();
-		_qvp->add(kjob._kvec);
-		return;
-#endif
+	// Launch kernel
+	q.enqueueNDRangeKernel(_kernel,
+		cl::NullRange,
+		cl::NDRange(_dim),
+		cl::NullRange,
+		nullptr, &ev);
 }
 
 // ==============================================================
