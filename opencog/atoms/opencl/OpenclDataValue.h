@@ -50,6 +50,7 @@ protected:
 
 	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
+	const cl::Buffer& get_buffer(void) { return _buffer; }
 
 	void set_context(const Handle&);
 	virtual size_t reserve_size(void) const = 0;
@@ -59,7 +60,6 @@ protected:
 
 public:
 	virtual ~OpenclDataValue();
-	virtual void set_arg(cl::Kernel&, size_t pos);
 };
 
 /** @}*/

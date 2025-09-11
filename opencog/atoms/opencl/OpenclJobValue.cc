@@ -224,8 +224,7 @@ void OpenclJobValue::build(const Handle& oclno)
 	// error message.
 	_kernel = cl::Kernel(proggy, kname.c_str());
 
-printf("duude start kern build of %s\n", kname.c_str());
-
+	// Build the OpenclJobValue itself.
 	size_t dim = 0;
 	ValueSeq flovecs = make_vectors (oclno, dim);
 	ValuePtr args = createLinkValue(flovecs);
@@ -233,17 +232,16 @@ printf("duude start kern build of %s\n", kname.c_str());
 	Handle kh = as->add_node(PREDICATE_NODE, std::move(kname));
 	ValuePtr jobvec = createLinkValue(OPENCL_JOB_VALUE, ValueSeq{kh, args});
 
-#if 0
+	// Bind the kernel to the kernel arguments
 	size_t pos = 0;
 	for (const ValuePtr& v: flovecs)
 	{
-		if (v->is_type(OPENCL_FLOAT_VALUE))
-			OpenclFloatValueCast(v)->set_arg(kern, pos);
+		if (v->is_type(OPENCL_DATA_VALUE))
+			_kernel.setArg(pos, OpenclFloatValueCast(v)->get_buffer());
 		else
-			kern.setArg(pos, dim);
+			_kernel.setArg(pos, dim);
 		pos++;
 	}
-#endif
 }
 
 void OpenclJobValue::run(void)

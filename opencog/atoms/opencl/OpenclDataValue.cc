@@ -88,9 +88,4 @@ void OpenclDataValue::fetch_buffer(void) const
 	event_handler.wait();
 }
 
-void OpenclDataValue::set_arg(cl::Kernel& kern, size_t pos)
-{
-	kern.setArg(pos, _buffer);
-}
-
 // ==============================================================
