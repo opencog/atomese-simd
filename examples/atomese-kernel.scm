@@ -19,7 +19,6 @@
 ;   stored in the AtomSpace. This means they don't take up storage
 ;   space. This also means they are a bit harder to use, since they're
 ;   ephemeral, and disappear if not attached to an anchor point.
-; * A demo of a feedback loop, implementing an accumulator.
 ;
 (use-modules (opencog) (opencog exec))
 (use-modules (opencog sensory) (opencog opencl))
