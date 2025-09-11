@@ -78,16 +78,9 @@ protected:
 	typedef struct
 	{
 		ValuePtr _kvec;
-		cl::Kernel _kern;
-		size_t _vecdim;
 	} job_t;
 	void queue_job(const job_t&);
 	async_caller<OpenclNode, job_t> _dispatch_queue;
-
-	ValuePtr get_kernel(ValuePtr) const;
-	size_t get_vec_len(const ValueSeq&, bool&) const;
-	ValuePtr get_floats(ValuePtr, size_t) const;
-	ValueSeq make_vectors(ValuePtr, size_t&) const;
 
 	QueueValuePtr _qvp;
 	virtual void open(const ValuePtr&);

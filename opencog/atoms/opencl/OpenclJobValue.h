@@ -44,6 +44,11 @@ protected:
 
 	cl::Kernel _kernel;
 
+	ValuePtr get_kernel(ValuePtr) const;
+	size_t get_vec_len(const ValueSeq&, bool&) const;
+	ValuePtr get_floats(ValuePtr, size_t) const;
+	ValueSeq make_vectors(ValuePtr, size_t&) const;
+
 public:
 	OpenclJobValue(ValueSeq&&);
 	virtual ~OpenclJobValue();
