@@ -21,8 +21,8 @@
  */
 
 #include <opencog/util/exceptions.h>
+#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
-#include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/core/NumberNode.h>
 #include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
@@ -118,7 +118,7 @@ OpenclJobValue::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 
 /// Unwrap vector.
 ValuePtr
-OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
+OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp, size_t dim) const
 {
 	// If we're already the right format, we're done. Do nothing.
 	if (vp->is_type(OPENCL_DATA_VALUE))
@@ -128,7 +128,8 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 	if (vp->is_type(CONNECTOR))
 	{
 		Handle hd = HandleCast(createNumberNode(dim));
-		return createLink(CONNECTOR, hd);
+		AtomSpace* as = oclno->getAtomSpace();
+		return as->add_link(CONNECTOR, hd);
 	}
 
 	// XXX For now, we ignore the type. FIXME
@@ -138,7 +139,7 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 		std::vector<double> zero;
 		zero.resize(dim);
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
-		// ofv->set_context(_device, _context);
+		ofv->set_context(oclno);
 		return ofv;
 	}
 
@@ -159,14 +160,16 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 	else
 		ofv = createOpenclFloatValue(*vals);
 
-	// ofv->set_context(_device, _context);
-	// ofv->send_buffer();
+	// We created a new createOpenclFloatValue and we know that
+	// the kernel will use it as input. So upload the data now.
+	ofv->set_context(oclno);
+	ofv->send_buffer();
 	return ofv;
 }
 
 /// Unpack kernel arguments
 ValueSeq
-OpenclJobValue::make_vectors(size_t& dim) const
+OpenclJobValue::make_vectors(const Handle& oclno, size_t& dim) const
 {
 	// We could check that conseq is actually of type ConnectorSeq
 	// and throw if not, but I don't see a need to enforce this yet.
@@ -188,7 +191,7 @@ OpenclJobValue::make_vectors(size_t& dim) const
 	dim = get_vec_len(vsq, have_size_spec);
 	ValueSeq flovec;
 	for (const ValuePtr& v: vsq)
-		flovec.emplace_back(get_floats(v, dim));
+		flovec.emplace_back(get_floats(oclno, v, dim));
 
 	// If the user never specified an explicit location in which to pass
 	// the vector size, assume it is the last location. Set it now.
@@ -196,7 +199,8 @@ OpenclJobValue::make_vectors(size_t& dim) const
 	if (not have_size_spec)
 	{
 		Handle hd = HandleCast(createNumberNode(dim));
-		flovec.emplace_back(createLink(CONNECTOR, hd));
+		AtomSpace* as = oclno->getAtomSpace();
+		flovec.emplace_back(as->add_link(CONNECTOR, hd));
 	}
 
 	return flovec;
@@ -223,9 +227,10 @@ void OpenclJobValue::build(const Handle& oclno)
 printf("duude start kern build of %s\n", kname.c_str());
 
 	size_t dim = 0;
-	ValueSeq flovecs = make_vectors (dim);
+	ValueSeq flovecs = make_vectors (oclno, dim);
 	ValuePtr args = createLinkValue(flovecs);
-	Handle kh = createNode(PREDICATE_NODE, kname);
+	AtomSpace* as = oclno->getAtomSpace();
+	Handle kh = as->add_node(PREDICATE_NODE, std::move(kname));
 	ValuePtr jobvec = createLinkValue(OPENCL_JOB_VALUE, ValueSeq{kh, args});
 
 #if 0
