@@ -163,7 +163,7 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp)
 	// We created a new createOpenclFloatValue and we know that
 	// the kernel will use it as input. So upload the data now.
 	ofv->set_context(oclno);
-	ofv->send_buffer();
+	ofv->send_buffer(oclno);
 	return ofv;
 }
 

@@ -68,7 +68,10 @@ protected:
 	// Async I/O queue to the execution context.
 	// (TODO: I guess we could have several of these per context!?)
 	cl::CommandQueue _queue;
-	const cl::CommandQueue& get_queue(void) { return _queue; }
+	cl::CommandQueue& get_queue(void) { return _queue; }
+
+	cl::Event _event_handler;
+	cl::Event& get_handler(void) { return _event_handler; }
 
 	// Kernel compilation
 	void build_kernel(void);

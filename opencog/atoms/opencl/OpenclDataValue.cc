@@ -28,8 +28,9 @@ using namespace opencog;
 
 OpenclDataValue::OpenclDataValue(void) :
 	_have_buff(false),
-	_queue{},
-	_buffer{}
+	_buffer{},
+	_read_queue{},
+	_read_event{}
 {
 }
 
@@ -45,35 +46,33 @@ void OpenclDataValue::set_context(const Handle& oclno)
 
 	OpenclNodePtr onp = OpenclNodeCast(oclno);
 
-	// We use our own queue and event handler. This allows data to
-	// be up and downloaded asynchronously, in different threads,
-	// without accidentally getting blocked in some other queue
-	// doing something else (e.g. getting blocked in the main
-	// OpenclNode::_queue which is running kernels, and might
+	// We use two different queues. For reads, we used our own queue
+	// and event handler. This allows data to be read async from the
+	// writers, avoiding getting accidentally blocked on the main
+	// OpenclNode::_queue, which used for running kernels, and might
 	// be busy for a long time.
-#define LOCAL_QUEUE 1
-#if LOCAL_QUEUE
-	_queue = cl::CommandQueue(onp->get_context(), onp->get_device());
-#else
-	_queue = onp->get_queue();
-#endif
+	_read_queue = cl::CommandQueue(onp->get_context(), onp->get_device());
+	_read_event = cl::Event();
 
 	size_t nbytes = reserve_size();
 	_buffer = cl::Buffer(onp->get_context(), CL_MEM_READ_WRITE, nbytes);
 }
 
 /// Synchronously send data to the GPU
-void OpenclDataValue::send_buffer(void) const
+void OpenclDataValue::send_buffer(const Handle& oclno) const
 {
 	if (not _have_buff)
 		throw RuntimeException(TRACE_INFO,
 			"No buffer!");
 
-	cl::Event event_handler;
+	OpenclNodePtr onp = OpenclNodeCast(oclno);
+	cl::CommandQueue& queue = onp->get_queue();
+	cl::Event& event_handler = onp->get_handler();
+
 	size_t nbytes = reserve_size();
 	const void* bytes = data();
 
-	_queue.enqueueWriteBuffer(_buffer, CL_TRUE, 0,
+	queue.enqueueWriteBuffer(_buffer, CL_TRUE, 0,
 		nbytes, bytes, nullptr, &event_handler);
 	event_handler.wait();
 }
@@ -84,13 +83,12 @@ void OpenclDataValue::fetch_buffer(void) const
 	// No-op if not yet tied to GPU.
 	if (not _have_buff) return;
 
-	cl::Event event_handler;
 	size_t nbytes = reserve_size();
 	void* bytes = data();
 
-	_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
-		nbytes, bytes, nullptr, &event_handler);
-	event_handler.wait();
+	_read_queue.enqueueReadBuffer(_buffer, CL_TRUE, 0,
+		nbytes, bytes, nullptr, &_read_event);
+	_read_event.wait();
 }
 
 // ==============================================================

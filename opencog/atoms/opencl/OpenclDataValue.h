@@ -48,14 +48,16 @@ protected:
 	OpenclDataValue(void);
 	bool _have_buff;
 
-	mutable cl::CommandQueue _queue;
 	mutable cl::Buffer _buffer;
 	const cl::Buffer& get_buffer(void) { return _buffer; }
+
+	mutable cl::CommandQueue _read_queue;
+	mutable cl::Event _read_event;
 
 	void set_context(const Handle&);
 	virtual size_t reserve_size(void) const = 0;
 	virtual void* data(void) const = 0;
-	void send_buffer(void) const;
+	void send_buffer(const Handle&) const;
 	void fetch_buffer(void) const;
 
 public:
