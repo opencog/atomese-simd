@@ -78,6 +78,7 @@ OpenclJobValue::get_kern_name (void) const
 bool
 OpenclJobValue::get_vec_len(const ValueSeq& vsq)
 {
+	bool have_length_spec = false;
 	_dim = UINT_MAX;
 	for (const ValuePtr& vp : vsq)
 	{
@@ -102,6 +103,7 @@ OpenclJobValue::get_vec_len(const ValueSeq& vsq)
 		// XXX FIXME check for insane structures here.
 		if (vp->is_type(CONNECTOR))
 		{
+			have_length_spec = true;
 			const Handle& h = HandleCast(vp)->getOutgoingAtom(0);
 			double sz = NumberNodeCast(h)->get_value();
 			if (sz < 0.0) continue;
@@ -112,8 +114,8 @@ OpenclJobValue::get_vec_len(const ValueSeq& vsq)
 		}
 	}
 
-	// We had to guess the size.
-	return false;
+	// We got a length spec; maybe we had to guess the size.
+	return have_length_spec;
 }
 
 /// Unwrap vector.
