@@ -289,11 +289,17 @@ A different issue is that the the `OpenclNode` could be sent the
 and notify each of the `OpenclKernelLink` in it's incoming set that they
 should close as well. Kind of icky, but it works.
 
-I don't see any other ways that are reasonable and consistent.
-
 What should `OpenclKernelLink` inherit from? It could inherit from
 `Connector` (gasp!) but that seems to muddle what a `Connector` is
 suppose to be. Perhaps `TagLink` ...
+
+I don't see any other ways that are reasonable and consistent.
+
+(Update: Above was a bad idea and it was removed. The kernel needs to
+be bound up with the arguments that it takes. A new instance of
+`cl::Kernel` needs to be created for each compute job, as otherwise
+we risk clobbering the `cl::Kernel::setArg()` as we move along. See
+proposed solution immediately below.)
 
 Bug/Issue: Actions/Operations
 -----------------------------
@@ -317,6 +323,10 @@ or "perform action", so maybe `OpenclActionValue` ...
 * Sending `*-write-*` `OpenclJobValue` runs it. No return value.
 * Drop support for `SectionValue`.
 * Git rid of `OpenclKernelLink`.
+
+Update: Above is implemented. Writes always return the `OpenclJobValue`
+as a status indicator. This seems unaboidable, if we want to block and
+wait for a job to be done.
 
 Open Discussion
 ---------------
