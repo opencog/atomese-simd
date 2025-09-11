@@ -39,6 +39,7 @@
 #include <opencog/opencl/types/atom_types.h>
 #include <opencog/sensory/types/atom_types.h>
 #include "OpenclFloatValue.h"
+#include "OpenclJobValue.h"
 #include "OpenclKernelLink.h"
 #include "OpenclNode.h"
 
@@ -272,7 +273,7 @@ OpenclNode::get_kernel (ValuePtr kvec) const
 	if (kvec->is_type(SECTION))
 		hkl = HandleCast(kvec)->getOutgoingAtom(0);
 	else
-	if (kvec->is_type(SECTION_VALUE))
+	if (kvec->is_type(OPENCL_JOB_VALUE))
 	{
 		const ValueSeq& vsq = LinkValueCast(kvec)->value();
 		hkl = HandleCast(vsq[0]);
@@ -419,19 +420,6 @@ OpenclNode::make_vectors(ValuePtr kvec, size_t& dim) const
 		}
 	}
 	else
-	if (kvec->is_type(SECTION_VALUE))
-	{
-		const ValueSeq& sex = LinkValueCast(kvec)->value();
-		const ValueSeq& vsx = LinkValueCast(sex[1])->value();
-		for (const ValuePtr& v: vsx)
-		{
-			if (v->is_atom() and HandleCast(v)->is_executable())
-				vsq.emplace_back(HandleCast(v)->execute());
-			else
-				vsq.push_back(v);
-		}
-	}
-	else
 		throw RuntimeException(TRACE_INFO,
 			"Unknown data type: got %s\n", kvec->to_string().c_str());
 
@@ -463,7 +451,7 @@ OpenclNode::make_vectors(ValuePtr kvec, size_t& dim) const
 // to the QueueValue, where main thread can find it.
 void OpenclNode::queue_job(const job_t& kjob)
 {
-	if (kjob._kvec->is_type(SECTION_VALUE))
+	if (kjob._kvec->is_type(OPENCL_JOB_VALUE))
 	{
 		// Launch kernel
 		cl::Event event_handler;
@@ -526,7 +514,7 @@ void OpenclNode::do_write(const ValuePtr& kvec)
 	size_t dim = 0;
 	ValueSeq flovecs = make_vectors (kvec, dim);
 	ValuePtr args = createLinkValue(flovecs);
-	ValuePtr jobvec = createLinkValue(SECTION_VALUE, ValueSeq{hkl, args});
+	ValuePtr jobvec = createOpenclJobValue(ValueSeq{hkl, args});
 
 	size_t pos = 0;
 	for (const ValuePtr& v: flovecs)
