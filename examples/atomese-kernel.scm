@@ -108,28 +108,47 @@
 ; Which is great, as usually there are lots of them.
 ; The trade-off is that the Values have to be put somewhere where they
 ; can be found. i.e. anchored "some where".
-;
+
+(cog-set-value!
+	(Anchor "some place") (Predicate "first vector")
+	(FloatValue 0 10 20 30 40 50 60 70 80 90))
+
+(define first-vec-location
+	(ValueOf (Anchor "some place") (Predicate "first vector")))
+
 ; (RandomStream N) creates a vector of N random numbers. These numbers
 ; change with every access (which is why it is called a "stream" instead
 ; of a "vector".)
-;
+
 (cog-set-value!
-	(Anchor "some data") (Predicate "some stream")
-	(SectionValue
-		(Predicate "vec_add")
-		LinkValue
-			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
-			(FloatValue 0 0 0 0 0 0 0 0 0 0 0 0)
-			(RandomStream 3)))
+	(Anchor "some place") (Predicate "second vector")
+	(RandomStream 10)))
+
+(define second-vec-location
+	(ValueOf (Anchor "some place") (Predicate "second vector")))
+
+(cog-set-value!
+	(Anchor "some place") (Predicate "result vector")
+	(OpenclFloatValue 0 0 0 0 0 0 0 0 0 0))
+
+(define result-location
+	(ValueOf (Anchor "some place") (Predicate "result vector")))
 
 ; Define Atomse that will send data to GPUs.
 (define vector-stream
 	(SetValue clnode (Predicate "*-write-*")
-		(ValueOf (Anchor "some data") (Predicate "some stream"))))
+		(Section
+			(Predicate "vec_add")
+			(ConnectorSeq
+				result-location
+				first-vec-location
+				second-vec-location))))
 
 ; Run it once ...
 (cog-execute! vector-stream)
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+
+(cog-execute! result-location)
 
 ; Run it again ...
 (cog-execute! vector-stream)

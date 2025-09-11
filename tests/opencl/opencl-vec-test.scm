@@ -123,21 +123,20 @@
 (define accum-location
 	(ValueOf (Anchor "some data") (Predicate "accumulator")))
 
-; Send the zeroed-out accumulator up to the GPU.
-(cog-set-value! clnode (Predicate "*-write-*") accum-location)
-(cog-execute! (ValueOf clnode (Predicate "*-read-*")))
-
 (cog-set-value!
-	(Anchor "some data") (Predicate "accum task")
-	(SectionValue
-		(Predicate "vec_add")
-		(LinkValue accum-location
-			accum-location (RandomStream vec-size))))
+	(Anchor "some data") (Predicate "data source")
+	(RandomStream vec-size))
+
+(define source-location
+	(ValueOf (Anchor "some data") (Predicate "data source")))
 
 ; Define a feedback loop.
 (define run-kernel
 	(SetValue clnode (Predicate "*-write-*")
-		(ValueOf (Anchor "some data") (Predicate "accum task"))))
+	(Section
+		(Predicate "vec_add")
+		(ConnectorSeq accum-location
+			accum-location source-location))))
 
 (define get-result
 	(ValueOf clnode (Predicate "*-read-*")))
