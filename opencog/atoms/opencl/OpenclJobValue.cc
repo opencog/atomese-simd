@@ -21,9 +21,13 @@
  */
 
 #include <opencog/util/exceptions.h>
+#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/core/NumberNode.h>
 #include <opencog/atoms/value/ValueFactory.h>
-#include <opencog/atoms/opencl/OpenclJobValue.h>
 #include <opencog/opencl/types/atom_types.h>
+
+#include "OpenclFloatValue.h"
+#include "OpenclJobValue.h"
 
 using namespace opencog;
 
@@ -56,12 +60,6 @@ OpenclJobValue::get_kernel (ValuePtr kvec) const
 	if (nullptr == hkl or not hkl->is_type(OPENCL_KERNEL_LINK))
 		throw RuntimeException(TRACE_INFO,
 			"Expecting an OpenclKernelLink: got %s\n", kvec->to_string().c_str());
-
-	// Bofus should be bof be me.
-	if (this != hkl->getOutgoingAtom(0).get())
-		throw RuntimeException(TRACE_INFO,
-			"Cross-site scripting!: this %s\nthat: %s",
-			to_string().c_str(), hkl->to_string().c_str());
 
 	return hkl;
 }
@@ -138,17 +136,17 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 #endif
 
 		Handle hd = HandleCast(createNumberNode(dim));
-		return _atom_space->add_link(CONNECTOR, hd);
+		return createLink(CONNECTOR, hd);
 	}
 
 	// XXX For now, we ignore the type. FIXME
-	// XXX this API is a bad API. Neds rethinking.
+	// XXX this API is a bad API. Needs rethinking.
 	if (vp->is_type(TYPE_NODE))
 	{
 		std::vector<double> zero;
 		zero.resize(dim);
 		OpenclFloatValuePtr ofv = createOpenclFloatValue(zero);
-		ofv->set_context(_device, _context);
+		// ofv->set_context(_device, _context);
 		return ofv;
 	}
 
@@ -169,8 +167,8 @@ OpenclJobValue::get_floats(ValuePtr vp, size_t dim) const
 	else
 		ofv = createOpenclFloatValue(*vals);
 
-	ofv->set_context(_device, _context);
-	ofv->send_buffer();
+	// ofv->set_context(_device, _context);
+	// ofv->send_buffer();
 	return ofv;
 }
 
@@ -210,7 +208,7 @@ OpenclJobValue::make_vectors(ValuePtr kvec, size_t& dim) const
 	if (not have_size_spec)
 	{
 		Handle hd = HandleCast(createNumberNode(dim));
-		flovec.emplace_back(_atom_space->add_link(CONNECTOR, hd));
+		flovec.emplace_back(createLink(CONNECTOR, hd));
 	}
 
 	return flovec;

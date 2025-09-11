@@ -27,13 +27,7 @@
 #include <opencog/util/Logger.h>
 #include <opencog/util/oc_assert.h>
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/atoms/core/NumberNode.h>
-#include <opencog/atoms/value/FloatValue.h>
-#include <opencog/atoms/value/LinkValue.h>
-#include <opencog/atoms/value/StringValue.h>
-#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 
 #include <opencog/opencl/types/atom_types.h>

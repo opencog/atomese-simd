@@ -41,6 +41,7 @@ namespace opencog
  */
 class OpenclDataValue
 {
+	friend class OpenclJobValue;
 	friend class OpenclNode;
 protected:
 	OpenclDataValue(void);
