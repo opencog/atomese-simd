@@ -341,12 +341,33 @@ OpenclNode::get_vec_len(const ValueSeq& vsq, bool& have_size_spec) const
 ValuePtr
 OpenclNode::get_floats(ValuePtr vp, size_t dim) const
 {
+	// If we're already the right format, we're done. Do nothing.
+	if (vp->is_type(OPENCL_VALUE))
+		return vp;
+
 	bool from_gpu = false;
 	const std::vector<double>* vals = nullptr;
 
 	// Special-case location of the vector length specification.
 	if (vp->is_type(CONNECTOR))
-		return vp;
+	{
+#if NOT_NOW
+		// dim should match specified dim...
+		// Why bother checking? I dunno.
+		Handle hc = HandleCast(vp);
+		if (1 != hc.size())
+			throw RuntimeException(TRACE_INFO,
+				"Expecting dimension, got %s", hc->to_string().c_str();
+
+		Handle hd = HandleCast(vp)->getOutgoingAtom(0);
+		if (not hd->is_type(NUMBER_NODE))
+			throw RuntimeException(TRACE_INFO,
+				"Expecting number, got %s", hc->to_string().c_str();
+#endif
+
+		Handle hd = HandleCast(createNumberNode(dim));
+		return _atom_space->add_link(CONNECTOR, hd);
+	}
 
 	if (vp->is_type(NUMBER_NODE))
 		vals = &(NumberNodeCast(vp)->value());
