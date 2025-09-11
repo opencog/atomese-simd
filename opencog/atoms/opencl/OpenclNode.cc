@@ -260,15 +260,17 @@ ValuePtr OpenclNode::read(void) const
 // ==============================================================
 
 // This job handler runs in a different thread than the main thread.
-// It finishes the setup of the assorted buffers that OpenCL expects,
-// sends things to the GPU, and then waits for a reply. When a reply
-// is received, its turned into a FloatValue or NumberNode and handed
-// to the QueueValue, where main thread can find it.
+// It uploads vectors to the GPU, and uploads and runs kernels.
+// Status results are placed on the QueueValue, where the main thread
+// can get at it.
+//
+// There are some open design questions about the sharing of queues
+// and events. it might be wise to share a single `cl::Event` event
+// handler, just to serialize things. If nothing else, then at least
+// save to overhead of running the ctors and dtors. Same consideration
+// for the queue.
 void OpenclNode::queue_job(const ValuePtr& vp)
 {
-	// XXX TODO All of these should probably share the same
-	// cl::Event (even though they can run on different queues.)
-	// Or maybe one Queue would be better ...
 	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
 		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
