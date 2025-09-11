@@ -117,11 +117,11 @@
 (define vec-size 130)
 
 (cog-set-value!
-	(Anchor "some data") (Predicate "accumulator")
+	(Anchor "some place") (Predicate "accumulator")
 	(OpenclFloatValue (make-list vec-size 0)))
 
 (define accum-location
-	(ValueOf (Anchor "some data") (Predicate "accumulator")))
+	(ValueOf (Anchor "some place") (Predicate "accumulator")))
 
 ; Upload the accumulator to the GPU.
 (cog-set-value! clnode (Predicate "*-write-*") accum-location)
@@ -130,11 +130,11 @@
 ; ---------------------------------------------------------------
 ; Set the data source.
 (cog-set-value!
-	(Anchor "some data") (Predicate "data source")
+	(Anchor "some place") (Predicate "data source")
 	(RandomStream vec-size))
 
 (define source-location
-	(ValueOf (Anchor "some data") (Predicate "data source")))
+	(ValueOf (Anchor "some place") (Predicate "data source")))
 
 ; Define a feedback loop.
 (define run-kernel
@@ -144,12 +144,12 @@
 		(ConnectorSeq accum-location
 			accum-location source-location))))
 
-(define get-result
+(define get-status
 	(ValueOf clnode (Predicate "*-read-*")))
 
 ; Run it once ...
 (cog-execute! run-kernel)
-(define acc1 (cog-execute! get-result))
+(define acc1 (cog-execute! get-status))
 (test-assert "acc1 type" (cog-subtype? 'SectionValue (cog-type acc1)))
 (define args1 (cog-value-ref acc1 1))
 (test-assert "args1 type" (cog-subtype? 'LinkValue (cog-type args1)))
@@ -161,14 +161,14 @@
 ; Run it lots ...
 (define (loopy N)
    (cog-execute! run-kernel)
-   (cog-execute! get-result)
+   (cog-execute! get-status)
    (if (< 0 N) (loopy (- N 1))))
 
 (define run-len 5123)
 (loopy run-len)
 
 (cog-execute! run-kernel)
-(define accn (cog-execute!  get-result))
+(define accn (cog-execute!  get-status))
 (test-assert "accn type" (cog-subtype? 'SectionValue (cog-type accn)))
 (define argsn (cog-value-ref accn 1))
 (test-assert "argsn type" (cog-subtype? 'LinkValue (cog-type argsn)))
