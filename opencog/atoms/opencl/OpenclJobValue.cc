@@ -235,7 +235,7 @@ void OpenclJobValue::build(const Handle& oclno)
 	ValueSeq flovecs = make_vectors (oclno);
 	ValuePtr args = createLinkValue(flovecs);
 	AtomSpace* as = oclno->getAtomSpace();
-	Handle kh = as->add_node(PREDICATE_NODE, std::move(kname));
+	Handle kh = as->add_node(ITEM_NODE, std::move(kname));
 	_value = ValueSeq{kh, args};
 
 	// Bind the kernel to the kernel arguments
