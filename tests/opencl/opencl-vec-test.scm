@@ -55,7 +55,7 @@
 (define kernel-runner
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_mult")
+			(Item "vec_mult")
 			(ConnectorSeq
 				(Number 0 0 0 0 0)
 				(Number 1 2 3 4 5)
@@ -75,7 +75,7 @@
 (define krun-2
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_mult")
+			(Item "vec_mult")
 			(ConnectorSeq
 				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -96,7 +96,7 @@
 (define krun-3
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_add")
+			(Item "vec_add")
 			(ConnectorSeq
 				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -140,7 +140,7 @@
 (define run-kernel
 	(SetValue clnode (Predicate "*-write-*")
 	(Section
-		(Predicate "vec_add")
+		(Item "vec_add")
 		(ConnectorSeq accum-location
 			accum-location source-location))))
 
