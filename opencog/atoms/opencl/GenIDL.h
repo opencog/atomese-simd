@@ -42,7 +42,28 @@ namespace opencog
  *
  * At this time, this handles only the simplest kernel interfaes.
  * This will need to be extended as experience grows.
+ *
+ * The code here takes OpenCL function declaration prototypes of the form
+ *
+ *     kernel void vec_add(global double *sum,
+ *                         global const double *a,
+ *                         global const double *b,
+ *                         const unsigned long sz)
+ *
+ * and converts them to the Atomese expressions
+ *
+ *     (Section
+ *         (ItemNode "vec_add")
+ *         (ConnectorSeq
+ *             (Connector (Type 'FloatValue) (Sex "output"))
+ *             (Connector (Type 'FloatValue) (Sex "input"))
+ *             (Connector (Type 'FloatValue) (Sex "input"))
+ *             (Connector (Type 'FloatValue) (Sex "scalar"))))
+ *
+ * See the notes in Design-C.md on why this is a good idea, and
+ * Design-E.md as to why this is a bad idea.
  */
+
 class GenIDL
 {
 protected:
