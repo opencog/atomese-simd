@@ -109,6 +109,14 @@ GenIDL::parse_parameters(const std::string& kernel_decl) const
 		if (last_space != std::string::npos)
 		{
 			std::string param_type = param.substr(0, last_space);
+			std::string param_name = param.substr(last_space + 1);
+
+			// If the parameter name starts with *, the * belongs to the type
+			if (!param_name.empty() && param_name[0] == '*')
+			{
+				param_type += " *";
+			}
+
 			param_types.push_back(trim(param_type));
 		}
 	}
