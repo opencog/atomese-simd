@@ -1,0 +1,418 @@
+/*
+ * tests/opencl/GenIDLUTest.cxxtest
+ *
+ * Copyright (C) 2025 Linas Vepstas
+ * All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/atoms/opencl/GenIDL.h>
+
+#include <cxxtest/TestSuite.h>
+
+using namespace opencog;
+
+// Test the GenIDL interface definition generator
+class GenIDLUTest: public CxxTest::TestSuite
+{
+private:
+	AtomSpacePtr _asp;
+
+public:
+	GenIDLUTest() : _asp(createAtomSpace())
+	{
+		logger().set_print_to_stdout_flag(true);
+		logger().set_level(Logger::INFO);
+		logger().set_timestamp_flag(false);
+		logger().set_sync_flag(true);
+	}
+
+	void setUp() {}
+
+	void tearDown()
+	{
+		_asp->clear();
+	}
+
+	void test_empty_source();
+	void test_single_kernel();
+	void test_multiple_kernels();
+	void test_const_pointers();
+	void test_scalar_params();
+	void test_mixed_params();
+	void test_no_params();
+	void test_extract_kernel_names();
+	void test_complex_types();
+};
+
+// Test empty OpenCL source
+void GenIDLUTest::test_empty_source()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string empty_src = "";
+	HandleSeq result = gen_idl.gen_idl(empty_src);
+
+	TS_ASSERT_EQUALS(result.size(), 0);
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test single kernel with basic parameters
+void GenIDLUTest::test_single_kernel()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void vec_add(global double *sum,
+		                    global const double *a,
+		                    global const double *b,
+		                    const unsigned long sz)
+		{
+			size_t i = get_global_id(0);
+			if (i < sz)
+				sum[i] = a[i] + b[i];
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	// Should have one Section
+	TS_ASSERT_EQUALS(result.size(), 1);
+
+	if (result.size() == 1)
+	{
+		Handle section = result[0];
+		TS_ASSERT_EQUALS(section->get_type(), SECTION);
+
+		// Check the Section has exactly 2 elements: ItemNode and ConnectorSeq
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		// First part should be ItemNode with name "vec_add"
+		Handle name_node = section_parts[0];
+		TS_ASSERT_EQUALS(name_node->get_type(), ITEM_NODE);
+		TS_ASSERT_EQUALS(name_node->get_name(), "vec_add");
+
+		// Second part should be ConnectorSeq with 4 connectors
+		Handle connector_seq = section_parts[1];
+		TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+		const HandleSeq& connectors = connector_seq->getOutgoingSet();
+		// 4 parameters: output, input, input, scalar
+		TS_ASSERT_EQUALS(connectors.size(), 4);
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test multiple kernels
+void GenIDLUTest::test_multiple_kernels()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void vec_add(global double *sum,
+		                    global const double *a,
+		                    global const double *b,
+		                    const unsigned long sz)
+		{
+			sum[0] = a[0] + b[0];
+		}
+
+		kernel void vec_mult(global double *prod,
+		                     global const double *a,
+		                     global const double *b,
+		                     const unsigned long sz)
+		{
+			prod[0] = a[0] * b[0];
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	// Should have two Sections
+	TS_ASSERT_EQUALS(result.size(), 2);
+
+	// Check kernel names
+	if (result.size() == 2)
+	{
+		for (size_t i = 0; i < 2; i++)
+		{
+			Handle section = result[i];
+			TS_ASSERT_EQUALS(section->get_type(), SECTION);
+			const HandleSeq& section_parts = section->getOutgoingSet();
+			TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+			Handle name_node = section_parts[0];
+			TS_ASSERT_EQUALS(name_node->get_type(), ITEM_NODE);
+			std::string name = name_node->get_name();
+			TS_ASSERT(name == "vec_add" || name == "vec_mult");
+
+			Handle connector_seq = section_parts[1];
+			TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+			const HandleSeq& connectors = connector_seq->getOutgoingSet();
+			// Each kernel has 4 parameters
+			TS_ASSERT_EQUALS(connectors.size(), 4);
+		}
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test const pointer parameters (should be input)
+void GenIDLUTest::test_const_pointers()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void read_only(global const float *input1,
+		                      global const int *input2,
+		                      constant double *input3)
+		{
+			// all are const pointers, should be input
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	TS_ASSERT_EQUALS(result.size(), 1);
+
+	if (result.size() == 1)
+	{
+		Handle section = result[0];
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		Handle connector_seq = section_parts[1];
+		TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+		const HandleSeq& connectors = connector_seq->getOutgoingSet();
+		// All 3 parameters should be input connectors
+		TS_ASSERT_EQUALS(connectors.size(), 3);
+
+		// All connectors should be the same (input connector)
+		if (connectors.size() == 3)
+		{
+			Handle first = connectors[0];
+			TS_ASSERT(connectors[1] == first);
+			TS_ASSERT(connectors[2] == first);
+		}
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test scalar parameters (non-pointers should be scalar)
+void GenIDLUTest::test_scalar_params()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void scalars_only(int count,
+		                         float scale,
+		                         unsigned long size,
+		                         double threshold)
+		{
+			// all are scalars
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	TS_ASSERT_EQUALS(result.size(), 1);
+
+	if (result.size() == 1)
+	{
+		Handle section = result[0];
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		Handle connector_seq = section_parts[1];
+		TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+		const HandleSeq& connectors = connector_seq->getOutgoingSet();
+		// All 4 parameters should be scalar connectors
+		TS_ASSERT_EQUALS(connectors.size(), 4);
+
+		// All connectors should be the same (scalar connector)
+		if (connectors.size() == 4)
+		{
+			Handle first = connectors[0];
+			for (size_t i = 1; i < 4; i++)
+			{
+				TS_ASSERT(connectors[i] == first);
+			}
+		}
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test mixed parameter types
+void GenIDLUTest::test_mixed_params()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void mixed_params(global float *output,
+		                        global const double *input,
+		                        int count,
+		                        unsigned long size)
+		{
+			// mix of output, input, and scalar
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	TS_ASSERT_EQUALS(result.size(), 1);
+
+	if (result.size() == 1)
+	{
+		Handle section = result[0];
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		Handle connector_seq = section_parts[1];
+		TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+		const HandleSeq& connectors = connector_seq->getOutgoingSet();
+		// 4 parameters: output, input, scalar, scalar
+		TS_ASSERT_EQUALS(connectors.size(), 4);
+
+		if (connectors.size() == 4)
+		{
+			// First should be output (different from others)
+			// Second should be input
+			// Third and fourth should be scalar (same as each other)
+			TS_ASSERT(connectors[2] == connectors[3]); // both scalar
+			TS_ASSERT(connectors[0] != connectors[1]); // output != input
+			TS_ASSERT(connectors[0] != connectors[2]); // output != scalar
+			TS_ASSERT(connectors[1] != connectors[2]); // input != scalar
+		}
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test kernel with no parameters
+void GenIDLUTest::test_no_params()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void no_params()
+		{
+			// kernel with no parameters
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	TS_ASSERT_EQUALS(result.size(), 1);
+
+	if (result.size() == 1)
+	{
+		Handle section = result[0];
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		Handle connector_seq = section_parts[1];
+		TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+		const HandleSeq& connectors = connector_seq->getOutgoingSet();
+		// No parameters
+		TS_ASSERT_EQUALS(connectors.size(), 0);
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test extraction of kernel names
+void GenIDLUTest::test_extract_kernel_names()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void first_kernel(int x) {}
+		kernel void second_kernel(float y) {}
+		kernel void third_kernel(double z) {}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	TS_ASSERT_EQUALS(result.size(), 3);
+
+	std::set<std::string> expected_names = {"first_kernel", "second_kernel", "third_kernel"};
+	std::set<std::string> found_names;
+
+	for (const Handle& section : result)
+	{
+		TS_ASSERT_EQUALS(section->get_type(), SECTION);
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		Handle name_node = section_parts[0];
+		TS_ASSERT_EQUALS(name_node->get_type(), ITEM_NODE);
+		found_names.insert(name_node->get_name());
+	}
+
+	TS_ASSERT_EQUALS(found_names, expected_names);
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// Test complex OpenCL types
+void GenIDLUTest::test_complex_types()
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	GenIDL gen_idl;
+	std::string opencl_src = R"(
+		kernel void complex_types(global float2 *vec2_out,
+		                         global const float4 *vec4_in,
+		                         local double *local_buf,
+		                         size_t work_size)
+		{
+			// various OpenCL types
+		}
+	)";
+
+	HandleSeq result = gen_idl.gen_idl(opencl_src);
+
+	TS_ASSERT_EQUALS(result.size(), 1);
+
+	if (result.size() == 1)
+	{
+		Handle section = result[0];
+		const HandleSeq& section_parts = section->getOutgoingSet();
+		TS_ASSERT_EQUALS(section_parts.size(), 2);
+
+		Handle connector_seq = section_parts[1];
+		TS_ASSERT_EQUALS(connector_seq->get_type(), CONNECTOR_SEQ);
+		const HandleSeq& connectors = connector_seq->getOutgoingSet();
+		// 4 parameters: output, input, output (local is non-const pointer), scalar
+		TS_ASSERT_EQUALS(connectors.size(), 4);
+	}
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
