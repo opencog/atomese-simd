@@ -53,7 +53,8 @@ void GenIDL::init_common_connectors()
 }
 
 
-std::string GenIDL::trim(const std::string& str) const
+std::string
+GenIDL::trim(const std::string& str) const
 {
 	size_t first = str.find_first_not_of(" \t\n\r");
 	if (first == std::string::npos)
@@ -62,7 +63,8 @@ std::string GenIDL::trim(const std::string& str) const
 	return str.substr(first, (last - first + 1));
 }
 
-std::string GenIDL::determine_sex(const std::string& param_type) const
+std::string
+GenIDL::determine_sex(const std::string& param_type) const
 {
 	// Check if this is a pointer type
 	if (param_type.find("*") != std::string::npos)
@@ -79,7 +81,8 @@ std::string GenIDL::determine_sex(const std::string& param_type) const
 	return "scalar";
 }
 
-std::vector<std::string> GenIDL::parse_parameters(const std::string& kernel_decl) const
+std::vector<std::string>
+GenIDL::parse_parameters(const std::string& kernel_decl) const
 {
 	std::vector<std::string> param_types;
 
@@ -113,7 +116,8 @@ std::vector<std::string> GenIDL::parse_parameters(const std::string& kernel_decl
 	return param_types;
 }
 
-std::string GenIDL::extract_kernel_name(const std::string& kernel_decl) const
+std::string
+GenIDL::extract_kernel_name(const std::string& kernel_decl) const
 {
 	// Find the function name between "kernel void" and "("
 	size_t void_pos = kernel_decl.find("void");
@@ -129,7 +133,8 @@ std::string GenIDL::extract_kernel_name(const std::string& kernel_decl) const
 	return trim(kernel_decl.substr(name_start, name_end - name_start));
 }
 
-std::vector<std::string> GenIDL::extract_kernels(const std::string& opencl_src) const
+std::vector<std::string>
+GenIDL::extract_kernels(const std::string& opencl_src) const
 {
 	std::vector<std::string> kernels;
 
@@ -149,7 +154,8 @@ std::vector<std::string> GenIDL::extract_kernels(const std::string& opencl_src) 
 	return kernels;
 }
 
-Handle GenIDL::generate_kernel_section(const std::string& kernel_decl)
+Handle
+GenIDL::generate_kernel_section(const std::string& kernel_decl)
 {
 	// Extract kernel name
 	std::string kernel_name = extract_kernel_name(kernel_decl);
@@ -182,7 +188,8 @@ Handle GenIDL::generate_kernel_section(const std::string& kernel_decl)
 		createLink(connectors, CONNECTOR_SEQ));
 }
 
-HandleSeq GenIDL::gen_idl(const std::string& opencl_src)
+HandleSeq
+GenIDL::gen_idl(const std::string& opencl_src)
 {
 	HandleSeq sections;
 
