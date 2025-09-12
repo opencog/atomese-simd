@@ -24,6 +24,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/core/NumberNode.h>
+#include <opencog/atoms/core/TypeNode.h>
 #include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 #include <opencog/opencl/types/atom_types.h>
@@ -207,6 +208,41 @@ OpenclJobValue::make_vectors(const Handle& oclno)
 
 // ==============================================================
 
+void
+OpenclJobValue::check_signature(const Handle& kern, const Handle& iface,
+                                const ValueSeq& flovecs)
+{
+	// iface is a ConnectorSeq oc Connectors
+	if (flovecs.size() != iface->size())
+		throw RuntimeException(TRACE_INFO,
+			"Expected %zu arguments, got %zu for %s",
+			iface->size(), flovecs.size(), kern->to_string().c_str());
+
+	// Each Connector has the form
+	//    (Connector (Type 'FloatValue) (Sex "input"))
+	// or similar.
+	// Each item in the flovecs array is going to either be
+	//    (OpenclFloatValue ...)
+	// or, for scalars,
+	//    (Connector (Number 42))
+	// We're going to blow off scalar checking, for now.
+	const HandleSeq& cons = iface->getOutgoingSet();
+	for (size_t i = 0; i < cons.size(); i++)
+	{
+		TypeNodePtr typ = TypeNodeCast(cons[i]->getOutgoingAtom(0));
+
+		if (not flovecs[i]->is_type(typ->get_kind()) and
+		    not flovecs[i]->is_type(CONNECTOR))
+		{
+			throw RuntimeException(TRACE_INFO,
+				"Argument type mismatch at %zu: expected type %s for %s",
+				i, typ->to_string().c_str(), kern->to_string().c_str());
+		}
+	}
+}
+
+// ==============================================================
+
 void OpenclJobValue::build(const Handle& oclno)
 {
 	if (not oclno->is_type(OPENCL_NODE))
@@ -222,7 +258,8 @@ void OpenclJobValue::build(const Handle& oclno)
 	AtomSpace* as = ocn->getAtomSpace();
 	Handle kit = as->add_node(ITEM_NODE, std::string(kname));
 	const HandleMap& ifmap = ocn->_kernel_interfaces;
-	if (ifmap.find(kit) == ifmap.end())
+	const auto& descr = ifmap.find(kit);
+	if (descr == ifmap.end())
 		throw RuntimeException(TRACE_INFO,
 			"This OpenclNode does not know about the kernel \"%s\"\n",
 			 kname.c_str());
@@ -233,6 +270,7 @@ void OpenclJobValue::build(const Handle& oclno)
 
 	// Build the OpenclJobValue itself.
 	ValueSeq flovecs = make_vectors (oclno);
+	check_signature(descr->first, descr->second, flovecs);
 	ValuePtr args = createLinkValue(flovecs);
 	_value = ValueSeq{kit, args};
 

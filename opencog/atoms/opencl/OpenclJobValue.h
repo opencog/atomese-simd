@@ -50,6 +50,7 @@ protected:
 
 	void build(const Handle&);
 	void run(const Handle&);
+	void check_signature(const Handle&, const Handle&, const ValueSeq&);
 
 	const std::string& get_kern_name (void) const;
 	bool get_vec_len(const ValueSeq&);
