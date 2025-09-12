@@ -60,7 +60,7 @@ that accepts (recognizes) `(Plus a b)` and turns it into
    (Section (Item "vec_add")
       (FloatValue rslt) (FloatValue a) (FloatValue b))
 ----
-Well, not that literally, because we'd have to wire `rslt` into
+Well, not quite that literally, because we'd have to wire `rslt` into
 something; its more complicated. Also `Plus` is unbounded, so it would
 need to be some arithmetic fold. But you get the idea...
 
@@ -122,3 +122,7 @@ bottom (i.e. depth-first), are some multi-pass width-first appreach.
 Width-first is a bit more compatible with lazy evaluation. But
 width-first algos are notoriously more complicated than
 recursive-descent, depth-first algos. Hmmm.
+
+Realistic Examples
+------------------
+Some realistic examples, illustrating the problems above, are needed...
