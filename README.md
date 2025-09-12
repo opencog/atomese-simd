@@ -1,6 +1,6 @@
 
 Atomese SIMD (OpenCL/CUDA) Interfaces
-====================================
+=====================================
 Experimental effort to enable I/O between Atomese and SIMD compute
 resources. The primary target is commodity GPUs, running either OpenCL
 or CUDA. The current prototype accesses the hardware at a low level,
@@ -63,7 +63,7 @@ hypergraph database. It has a variety of different ways of talking to
 external subsystems. These were developed to solve various practical
 application issues that arose in the use of Atomese. These subsystem
 interfaces are "well designed" in that they solve the particular issue
-that arose. They are not, however, explictly agentic or sensori-motoin
+that arose. They are not, however, explicitly agentic or sensori-motoin
 their design. Some shadows and hints of this can be seen, however.
 
 These external subsystem interfaces include:
@@ -91,8 +91,16 @@ These external subsystem interfaces include:
   [github repos](https://github.com/opencog/), scrolling down to
   the oldest repos having no activity.
 
-The above "work", but lack an agentic sensori-motor design interface.
-To use these interfaces
+The above "work", and provide Atomese interfaces to the described
+systems.  However, they all lack an Atomese interface description,
+that is, the needed IDL that would allow for reflection and
+introspection (in the conventional software sense of "reflection" and
+"introspection"). Thus, they cannot be targets of Atomese graph
+rewrites, because the target description is not available in
+machine-readable form.
+
+Several efforts are underway to provide and understand such reflective,
+introspective interface definition systems. These include:
 
 * The [Sensory](https://github.com/opencog/sensory) system, which is
   an experimental effort to understand the generic mathematical theory
@@ -104,6 +112,9 @@ To use these interfaces
 * The [Motor](https://github.com/opencog/motor) system, which attempts
   to define a simpler, more practical and mundane way of using Atomese
   to work with external devices.
+
+This project uses the [Sensory](https://github.com/opencog/sensory)
+system to provide the underlysing framework.
 
 Status
 ------
