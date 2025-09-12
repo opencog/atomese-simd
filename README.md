@@ -5,13 +5,13 @@ Experimental effort to enable I/O between Atomese and SIMD compute
 resources. The primary target is commodity GPUs, running either OpenCL
 or CUDA. The current prototype accesses the hardware at a low level,
 working with individual vectors. High-level API's, such as commonly
-used in deep learning, are not supported in this interface layer.
+used in deep learning, are not yet supported in this interface layer.
 
 The Experiment
 --------------
 The experiment, as it is currently evolving, is to understand graph
 rewriting between "natural" descriptions of compute systems. For
-example, the "natural" description of a deep learning transformer is
+example, the "natural" description of a deep learning transformer is as
 a kind of wiring diagram, indicating where data flows. By contrast, the
 "natural" description of GPU compute kernels are C/C++ function
 prototypes. How can one perform the rewrite from the high-level
@@ -26,18 +26,18 @@ accepts C++ code and issues machine assembly code. A Java compiler
 accepts Java and issues Java bytecode. The goal here is to accept
 high-level functional descriptions, such as that of a transformer, and
 to generate low-level invocations of GPU kernels. However, the project
-here is not meant to be a "compiler" per se; if that is what one really
-wanted, one could just brute-force write one (or use PyTorch,
+here is not meant to just be a "compiler" per se; if that is what one
+really wanted, one could just brute-force write one (or use PyTorch,
 TensorFlow, ...) Instead, this is meant to be an exploration of graph
-rewriting in general, and the GPU target just happens to be a realistic
-and suitably complicated example target.
+rewriting in general, and it uses the GPU target as a realistic and
+suitably complicated example system.
 
 A different way of thinking of this experiment is as an exploration of
 the agency of sensori-motor systems. The GPU is a "thing out there" that
 can be manipulated by an agent to "do things". How does an agent
 perceive the "thing out there", and "understand" it's properties?
 How can the agent control the "thing out there", and perform actions
-on it? To extert motor control on that "thing out there"? How does
+on it? To exert motor control on that "thing out there"? How does
 the agent perceive the results of those motor actions?
 
 In the present experiment, the "agent" is is a collection of graphs
@@ -45,17 +45,17 @@ In the present experiment, the "agent" is is a collection of graphs
 [Atomese](https://wiki.opencog.org/w/Atomese),
 and "living" in the OpenCog
 [AtomSpace](https://github.com/opencog/atomspace).
-Thhe subjective inner form of the agent is a world-model, consisting of
+The subjective inner form of the agent is a world-model, consisting of
 abstractions derived from sensory perceptions of the external world, and
 the knowledge of a set of motor actions that can be performed to alter
 the state of the external world.  The agent itself is represented in
 Atomese; the GPU is a part of the external world, to be manipulated.
 
 An important part of the challenge is understanding how assembly, and
-sepcifically, how self-assembly works.  That is, the agent is meant to
+specifically, how self-assembly works.  That is, the agent is meant to
 be a collection of pieces-parts, a collection of transformation rules.
 These rules are to be assembled to "get things done". The assembly is
-meant to be self-assembly, and is preseumed to live at the edge of a
+meant to be self-assembly, and is presumed to live at the edge of a
 critical phase transition. The phrase "critical phase transition" is
 meant to invoke the conventional idea of a critical phase transition,
 such as that seen in Per Bak's critical sandpile. The difference here
@@ -75,9 +75,9 @@ hypergraph database. It has a variety of different ways of talking to
 external subsystems. These were developed to solve various practical
 application issues that arose in the use of Atomese. These subsystem
 interfaces are "well designed", in that they solve the particular issue
-that arose. Human progammers have used them to construct various kinds
+that arose. Human programmers have used them to construct various kinds
 of systems. However, these interfaces lack what is needed for a
-dyanmical, sensori-motor, agential point of view.
+dynamical, sensori-motor, agential point of view.
 
 These external subsystem interfaces include:
 
@@ -103,8 +103,8 @@ These external subsystem interfaces include:
   These can be found in old, archived
   [github repos](https://github.com/opencog/), scrolling down to
   the oldest repos having no activity. There's also a collection
-  of youtube videos showing these in operation; seee e.g. the
-  [Virtual Dog](https://www.youtube.com/watch?v=FEmpGRLwbqE) demo,
+  of youtube videos showing these in operation; see e.g. the
+  [Virtual AI Dog](https://www.youtube.com/watch?v=FEmpGRLwbqE) demo,
   and, of course, the Hanson Robotics Sophia demos.
 
 The above "work", and provide Atomese interfaces to the described
@@ -130,7 +130,7 @@ introspective interface definition systems. These include:
   to work with external devices.
 
 This project uses the [Sensory](https://github.com/opencog/sensory)
-system to provide the underlysing framework.
+system to provide the underlying framework.
 
 Status
 ------
@@ -217,3 +217,5 @@ similar to above; it performs a simple vector multiply.
 
 The `run-flow-vec` executable is a rework of above, to more clearly
 define and prototype the distinct steps needed to flow data.
+
+----
