@@ -45,4 +45,59 @@ implementing a library for the core AtomSpace arithmetic functions is
 a reasonable next step: so, having `PlusLink` and `TimesLink run on the
 GPU.
 
+Rewriting
+---------
+Consider the task of mapping the Atomese `PlusLink` so that, when
+invoked/executed in the right way, it runs on the GPU. There are several
+ways to implement this. The knee-jerk, brute-force but stupid way is to
+write a bunch of C++ code that intercepts the attempt to execute
+`PlusLink`, dependent on the context, and re-route it to the GPU.
+Of course this can be made to work; its brute-forcing the solution.
+
+The other way is to treat it as a re-write. That is, create a `RuleLink`
+that accepts (recognizes) `(Plus a b)` and turns it into
+```
+   (Section (Item "vec_add")
+      (FloatValue rslt) (FloatValue a) (FloatValue b))
 ----
+Well, not that literally, because we'd have to wire `rslt` into
+something; its more complicated. Also `Plus` is unbounded, so it would
+need to be some arithmetic fold. But you get the idea...
+
+So this becomes a graph-rewrite problem: Accept as input functional
+expressions involving `PlusLink` etc and rewrite thehm into Opencl
+Atomese. Once rewritten, they can be executed.
+
+Perhaps easier to map are `LambdaLink` because they have explicit
+`VariableList` declarations, with each being a `TypedVariable`, and so
+this maps more smoothly and easily to the OpenCL C/C++ style interfaces.
+
+GenIDL
+------
+The above thoughts also suggest that the implementation of GenIDL is
+wrong. The original vision (described in [Design-C](./Design-C.md)) was
+to convert OpenCL function prototype declarations like
+```
+    kernel void vec_mult(global double *prod,
+                         global const double *a,
+                         global const double *b,
+                         const unsigned long sz)
+```
+into Atomese
+```
+    (Section
+        (ItemNode "vec_mult")
+        (ConnectorSeq
+            (Connector (Type 'FloatValue) (Sex "output"))
+            (Connector (Type 'FloatValue) (Sex "input"))
+            (Connector (Type 'FloatValue) (Sex "input"))
+            (Connector (Type 'FloatValue) (Sex "size"))))
+```
+And that's what it does.  However, it might be better to convert the
+OpenCL declaration into Atomese that is much much more faithful to
+it's original form, and then rewrite *that* (using `RuleLink`) into
+the atomese-simd interfaces.
+
+Malleability
+------------
+What's the point of doing this? Its to
