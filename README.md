@@ -73,11 +73,16 @@ thought of what it means "to perceive and move".
 
 Status
 -----
-***Version 0.0.9.*** --
+***Version 0.1.0*** --
 Basic proof-of-concept, showing how to use Atomese to open a connection
 to an OpenCL compute device (i.e. a GPU), load and invoke compute
 kernels, and have those kernels work with floating-point vector data
 residing in the AtomSpace.
+
+New in this version: Atomese interface descriptions are now generated
+for OpenCL kernel interfaces. This should allow introspection of the
+interfaces, and their manipulation in Atomese. Well see how that goes.
+The groundwork is there.
 
 The demo is minimal, but it works.  Tested on both AMD Radeon R9 and
 Nvidia RTX cards.

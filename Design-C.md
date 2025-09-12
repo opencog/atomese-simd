@@ -196,7 +196,7 @@ Where is this API description kept? Well, the `*-description-*` message
 sent to the `(OpenclKernelNode "vec_add")` node should return this.
 I guess this is hand-coded, for now.
 
-TODO: Should this be published as
+TODO: ?? Should this be published as ??
 ```
    (Section (OpenclNode "...") (ChoiceLink (Section ...)))
 ```
@@ -207,6 +207,21 @@ available as `*-description-*`, it might be nice to make them available
 could be ambiguous in general, as other `Section` might pop up.
 By contrast, `*-description-*` is unambiguous and is a reserved keyword.
 So OK, leave as-is.
+
+Update 11 Sept 2025: The OpenCL program code is now parsed to extract
+function signatures, and these signatures are converted to Atomese.
+See `genIDL.cc` for that code.  The Atomese signatures are now published
+in `*-description-*`. When user code attempts to invoke a kernel, the
+arguments created by the user are checked against the kernel interface.
+An error is thrown, if they don't match up.
+
+The current implementation is rudimentary; only the simplest kernels are
+handled. But its a proof of concept. Seems to work, and seems not to be
+horrible.
+
+At any rate, this is a win: having the `*-description-*` available
+should allow the introspection that we've long been dreaming of and
+blabbering about. We'll see how that works out.
 
 Open Discussion
 ---------------
