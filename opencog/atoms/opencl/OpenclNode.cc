@@ -35,6 +35,7 @@
 #include "OpenclFloatValue.h"
 #include "OpenclJobValue.h"
 #include "OpenclNode.h"
+#include "GenIDL.h"
 
 using namespace opencog;
 
@@ -172,10 +173,30 @@ void OpenclNode::build_program(void)
 			"Unable to compile source file in URL \"%s\"\n",
 				get_name().c_str());
 	}
+
+	// Build the interface definitions for the kernels.
+	GenIDL gidl;
+	HandleSeq ifcs = gidl.gen_idl(src);
+	AtomSpace *as = getAtomSpace();
+	for (const Handle& h : ifcs)
+		_kernel_interfaces.emplace_back(as->add_atom(h));
+
+	// Also publish them. Per sensory spec, (Predicate "*-description-*")
+	// is the right place. For now, stuff them into a ChoiceLink,
+	// because that seems to be the right thing to do. (you can only
+	// chose one.) They appear in the AtomSpace grouped together.
+	// XXX FIXME. This might need to be of the form
+	// (Section (OpenclNode ...) (Choice ...))
+	Handle descr = as->add_node(PREDICATE_NODE, "*-description-*");
+	Handle choice = as->add_link(CHOICE_LINK, HandleSeq(_kernel_interfaces));
+	setValue(descr, choice);
 }
 
 // ==============================================================
 
+/// Load an SPV file.
+// XXX TODO: we need some way of extracting the programming
+// interfaces; not sure how to do this right now.
 void OpenclNode::load_program(void)
 {
 	// Copy in SPV file. Must be a better way!?

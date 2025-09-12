@@ -60,6 +60,16 @@ protected:
 	cl::Device _device;
 	const cl::Device& get_device(void) { return _device; }
 
+	// Program loading and compilation.
+	void build_program(void);
+	void load_program(void);
+	cl::Program _program;
+	const cl::Program& get_program(void) { return _program; }
+
+	// List of interfaces provided by the program.
+	// Its a bunch of kernels, described in Atomese.
+	HandleSeq _kernel_interfaces;
+
 	// Execution context.
 	// (TODO: I guess we could have several of these per device!?)
 	cl::Context _context;
@@ -72,12 +82,6 @@ protected:
 
 	cl::Event _event_handler;
 	cl::Event& get_handler(void) { return _event_handler; }
-
-	// Program loading and compilation.
-	void build_program(void);
-	void load_program(void);
-	cl::Program _program;
-	const cl::Program& get_program(void) { return _program; }
 
 	// Jobs run in their own thread, so that the GPU doesn't block us.
 	void queue_job(const ValuePtr&);
