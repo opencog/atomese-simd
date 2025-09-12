@@ -227,7 +227,7 @@ Open Discussion
 ---------------
 Some philosophical questions remain as to "object permanence". Vectors
 and the `cl::Buffer` that wrap them disappear when the last reference to
-the enclosing `OpenclFloatValue` disappears. Thus, such storage locatins
+the enclosing `OpenclFloatValue` disappears. Thus, such storage locations
 were impermanent: at play for the duration of the duration of the
 calculation, and then gone. This is analogous to both the CPU hardware
 and compiler ideas of "register retirement": they're gone, once the

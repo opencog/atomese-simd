@@ -1,16 +1,62 @@
 
-Atomse SIMD (OpenCL/CUDA) Interfaces
+Atomese SIMD (OpenCL/CUDA) Interfaces
 ====================================
 Experimental effort to enable I/O between Atomese and SIMD compute
-resouces. The primary target is commodity GPUs, running either OpenCL
+resources. The primary target is commodity GPUs, running either OpenCL
 or CUDA. The current prototype accesses the hardware at a low level,
 working with individual vectors. High-level API's, such as commonly
 used in deep learning, are not supported in this interface layer.
 
-[Atomese](https://wiki.opencog.org/w/Atomese), the interface language for
-the OpenCog [AtomSpace](https://github.com/opencog/atomspace) hypergraph
-database, has a variety of different ways of talking to external
-subsystems. These include:
+The experiment, as it is currently evolving, is to understand graph
+rewriting between "natural" descriptions of compute systems. For
+example, the "natural" description of a deep learning transformer is
+a kind of wiring diagram, indicating where data flows. By contrast, the
+"natural" description of GPU compute kernels are C/C++ function
+prototypes. How can one perform the rewrite from the high-level
+description to the low-level description? Normally, this is done "brute
+force": a human programmer sits down and writes a large pile of GPU
+code, creating systems like PyTorch or TensorFlow. The experiment here
+is to automate the glueing together from high-level to low-level
+descriptions.
+
+Such automation resembles what compilers do. For example, a C++ compiler
+accepts C++ code and issues machine assembly code. A Java compiler
+accepts Java and issues Java bytecode. The goal here is to accept
+high-level functional descriptions, such as that of a transformer, and
+to generate low-level invocations of GPU kernels. However, the project
+here is not meant to be a "compiler" per se; if that is what one really
+wanted, one could just brute-force write one (or use PyTorch,
+TensorFlow, ...) Instead, this is meant to be an exploration of graph
+rewriting in general, and the GPU target just happens to be a realistic
+and suitably complicated example target.
+
+A different way of thinking of this experiment is as an exploration of
+the agency of sensori-motor systems. The GPU is a "thing out there" that
+can be manipulated by an agent to "do things". How does one perceive the
+"thing out there", and describe it's properties? How can one control it
+and perform actions on it? To extert motor control on that "thing out
+there"? How does one perceive the results of those motor actions?
+
+In the present experiment, the "agent" is is a collection of graphs
+(properly, hypergraphs), represented using
+[Atomese](https://wiki.opencog.org/w/Atomese),
+and "living" in the OpenCog
+[AtomSpace](https://github.com/opencog/atomspace).
+That is, the subjective inner form of the agent is a world-model,
+consisting of abstractions derived from sensory perceptions of the
+external world, and a set of motor actions that can be performed to
+alter the state of the external world.  The agent itself is constructed
+from Atomese; the GPU is a part of the external world, to be manipulated.
+
+The abvoe description might feel like excessive anthropomorphising of
+a mechanical system. But that's kind of the point: to force the issue,
+and explore what happens, when an agentic viewpoint is explicitly
+forced.
+
+[Atomese](https://wiki.opencog.org/w/Atomese) is the interface language
+for the OpenCog [AtomSpace](https://github.com/opencog/atomspace)
+hypergraph database. It has a variety of different ways of talking to
+external subsystems. These include:
 
 * The [GroundedSchemaNode](https://wiki.opencog.org/w/GroundedSchemaNode)
   allows external python, scheme and shared-library functions to be
@@ -81,8 +127,8 @@ residing in the AtomSpace.
 
 New in this version: Atomese interface descriptions are now generated
 for OpenCL kernel interfaces. This should allow introspection of the
-interfaces, and their manipulation in Atomese. Well see how that goes.
-The groundwork is there.
+interfaces, and their manipulation in Atomese. We'll see how that goes.
+Some problems are already visible. But some groundwork is there.
 
 The demo is minimal, but it works.  Tested on both AMD Radeon R9 and
 Nvidia RTX cards.
@@ -127,7 +173,7 @@ Steps:
 * Build and install cogutils, the AtomSpace, sensory and then the code
   here.  This uses the same build style as all other OpenCog projects:
   `mkdir build; cd build; cmake ..; make; sudo make install`
-* Run unit tests: `make check`.  If the unit tests fail, that's proably
+* Run unit tests: `make check`.  If the unit tests fail, that's probably
   because they could not find and GPU hardware. See below.
 * Look over the examples. Run them
   `cd examples; guile -s atomese-kernel.scm`
