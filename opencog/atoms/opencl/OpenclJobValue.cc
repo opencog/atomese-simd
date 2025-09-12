@@ -243,7 +243,7 @@ void OpenclJobValue::check_signature(const Handle& kern,
                                      const Handle& iface,
                                      const ValueSeq& flovecs)
 {
-	// iface is a ConnectorSeq oc Connectors
+	// iface is a ConnectorSeq of Connectors
 	if (flovecs.size() != iface->size())
 		throw RuntimeException(TRACE_INFO,
 			"Expected %zu arguments, got %zu for %s",
@@ -254,13 +254,21 @@ void OpenclJobValue::check_signature(const Handle& kern,
 	{
 		TypeNodePtr typ = TypeNodeCast(cons[i]->getOutgoingAtom(0));
 
-		if (not flovecs[i]->is_type(typ->get_kind()) and
-		    not flovecs[i]->is_type(CONNECTOR))
+		// Is it a FloatValue?
+		bool is_ok = flovecs[i]->is_type(typ->get_kind());
+
+		// If not, is it a scalar?
+		if (not is_ok)
 		{
+			Handle sex = cons[i]->getOutgoingAtom(1);
+			is_ok = flovecs[i]->is_type(CONNECTOR) and
+				(0 == sex->get_name().compare("scalar"));
+		}
+
+		if (not is_ok)
 			throw RuntimeException(TRACE_INFO,
 				"Argument type mismatch at %zu: expected type %s for %s",
 				i, typ->to_string().c_str(), kern->to_string().c_str());
-		}
 	}
 }
 
