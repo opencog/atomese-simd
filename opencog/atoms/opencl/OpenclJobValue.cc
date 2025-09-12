@@ -215,28 +215,26 @@ void OpenclJobValue::build(const Handle& oclno)
 
 	std::string kname = get_kern_name();
 
-	// Get our program from the OpenclNode.
-	const cl::Program& proggy = OpenclNodeCast(oclno)->get_program();
-
-	// If the user mistyped the kernel name, the `cl:Kernel` will
-	// throw an exception that is not meaningful to most users.
-	// Rewrite it to Atomese standard.
-	try
-	{
-		_kernel = cl::Kernel(proggy, kname.c_str());
-	}
-	catch (const std::exception& ex)
-	{
+	// See if its a kernel that we know.
+	// XXX FIXME this will fail for SPV files, because we don't
+	// (yet) generate signatures for them.
+	OpenclNodePtr ocn = OpenclNodeCast(oclno);
+	AtomSpace* as = ocn->getAtomSpace();
+	Handle kit = as->add_node(ITEM_NODE, std::string(kname));
+	const HandleMap& ifmap = ocn->_kernel_interfaces;
+	if (ifmap.find(kit) == ifmap.end())
 		throw RuntimeException(TRACE_INFO,
-			"Unknown kernel name \"%s\" given to %s\n", kname.c_str(), ex.what());
-	}
+			"This OpenclNode does not know about the kernel \"%s\"\n",
+			 kname.c_str());
+
+	// Get our kernel from the program from the OpenclNode.
+	const cl::Program& proggy = ocn->get_program();
+	_kernel = cl::Kernel(proggy, kname.c_str());
 
 	// Build the OpenclJobValue itself.
 	ValueSeq flovecs = make_vectors (oclno);
 	ValuePtr args = createLinkValue(flovecs);
-	AtomSpace* as = oclno->getAtomSpace();
-	Handle kh = as->add_node(ITEM_NODE, std::move(kname));
-	_value = ValueSeq{kh, args};
+	_value = ValueSeq{kit, args};
 
 	// Bind the kernel to the kernel arguments
 	size_t pos = 0;
