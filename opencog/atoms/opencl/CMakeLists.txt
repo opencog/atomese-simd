@@ -3,6 +3,7 @@
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 ADD_LIBRARY (opencl-atoms SHARED
+	GenIDL.cc
 	OpenclDataValue.cc
 	OpenclFloatValue.cc
 	OpenclJobValue.cc
