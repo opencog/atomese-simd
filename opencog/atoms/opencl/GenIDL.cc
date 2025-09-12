@@ -177,11 +177,9 @@ Handle GenIDL::generate_kernel_section(const std::string& kernel_decl)
 		connectors.push_back(connector);
 	}
 
-	// Create the Section
-	Handle name_node = createNode(ITEM_NODE, kernel_name);
-	Handle connector_seq = createLink(connectors, CONNECTOR_SEQ);
-
-	return createLink(SECTION, name_node, connector_seq);
+	return createLink(SECTION,
+		createNode(ITEM_NODE, kernel_name),
+		createLink(connectors, CONNECTOR_SEQ));
 }
 
 HandleSeq GenIDL::gen_idl(const std::string& opencl_src)
@@ -196,7 +194,7 @@ HandleSeq GenIDL::gen_idl(const std::string& opencl_src)
 	{
 		Handle section = generate_kernel_section(kernel);
 		if (section != Handle::UNDEFINED)
-			sections.push_back(section);
+			sections.emplace_back(section);
 	}
 
 	return sections;

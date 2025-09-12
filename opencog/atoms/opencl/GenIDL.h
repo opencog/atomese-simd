@@ -35,10 +35,13 @@ namespace opencog
  */
 
 /**
- * GenIDL - Generate Interface Definition Language (IDL) for OpenCL kernels
+ * GenIDL - Generate Atomese Interface Definitions for OpenCL kernels
  *
  * This class parses OpenCL kernel function declarations and generates
  * Atomese representation of their interfaces.
+ *
+ * At this time, this handles only the simplest kernel interfaes.
+ * This will need to be extended as experience grows.
  */
 class GenIDL
 {
