@@ -100,4 +100,25 @@ the atomese-simd interfaces.
 
 Malleability
 ------------
-What's the point of doing this? Its to
+What's the point of doing this? It's to explore the malleability of
+interfaces. None of these interfaces are ideal, or even very good. it
+would be nice to be able to morph and refactor them, but to do this
+morphing and refactoring in Atomese, rather than in C++.  So the dream
+is to have structures, written in Atomese, and morphisms (rewrite rules)
+that map between them.
+
+In principle, the combo of `FilterLink` plus `RuleLink` provide
+everything needed to define a morphism.  In practice, this seems to turn
+into a train-wreck of complexity, as the `RuleLink`s promptly get
+complicated and unreadable when given some practical task, such as the
+two outlined above.
+
+Perhaps careful modular design can avoid issues. But compositionality of
+`RuleLink`s then arises as an issue. So, if I have `(Plus a (Times b c))`
+then the first rule to run unwraps the outside `Plus` but leaves the
+inside `Times` untouched. We'd need a rule chainer at this point: either
+chain the `Times` rule next, via recursive descent, till getting to the
+bottom (i.e. depth-first), are some multi-pass width-first appreach.
+Width-first is a bit more compatible with lazy evaluation. But
+width-first algos are notoriously more complicated than
+recursive-descent, depth-first algos. Hmmm.
