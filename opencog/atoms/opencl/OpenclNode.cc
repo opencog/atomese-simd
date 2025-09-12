@@ -177,16 +177,23 @@ void OpenclNode::build_program(void)
 	// Build the interface definitions for the kernels.
 	GenIDL gidl;
 	HandleSeq ifcs = gidl.gen_idl(src);
+	HandleSeq asif;
 	AtomSpace *as = getAtomSpace();
 	for (const Handle& h : ifcs)
-		_kernel_interfaces.emplace_back(as->add_atom(h));
+	{
+		Handle has = as->add_atom(h);
+		_kernel_interfaces.insert({
+			has->getOutgoingAtom(0),
+			has->getOutgoingAtom(1)});
+		asif.emplace_back(has);
+	}
 
 	// Also publish them. Per sensory spec, (Predicate "*-description-*")
 	// is the right place. For now, stuff them into a ChoiceLink,
 	// because that seems to be the right thing to do. (you can only
 	// chose one.) They appear in the AtomSpace grouped together.
 	Handle descr = as->add_node(PREDICATE_NODE, "*-description-*");
-	Handle choice = as->add_link(CHOICE_LINK, HandleSeq(_kernel_interfaces));
+	Handle choice = as->add_link(CHOICE_LINK, std::move(asif));
 	setValue(descr, choice);
 }
 

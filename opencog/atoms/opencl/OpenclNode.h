@@ -68,7 +68,7 @@ protected:
 
 	// List of interfaces provided by the program.
 	// Its a bunch of kernels, described in Atomese.
-	HandleSeq _kernel_interfaces;
+	HandleMap _kernel_interfaces;
 
 	// Execution context.
 	// (TODO: I guess we could have several of these per device!?)
