@@ -7,6 +7,8 @@ or CUDA. The current prototype accesses the hardware at a low level,
 working with individual vectors. High-level API's, such as commonly
 used in deep learning, are not supported in this interface layer.
 
+The Experiment
+--------------
 The experiment, as it is currently evolving, is to understand graph
 rewriting between "natural" descriptions of compute systems. For
 example, the "natural" description of a deep learning transformer is
@@ -48,15 +50,23 @@ external world, and a set of motor actions that can be performed to
 alter the state of the external world.  The agent itself is constructed
 from Atomese; the GPU is a part of the external world, to be manipulated.
 
-The abvoe description might feel like excessive anthropomorphising of
+The above description might feel like excessive anthropomorphising of
 a mechanical system. But that's kind of the point: to force the issue,
 and explore what happens, when an agentic viewpoint is explicitly
 forced.
 
+External Subsystems
+-------------------
 [Atomese](https://wiki.opencog.org/w/Atomese) is the interface language
 for the OpenCog [AtomSpace](https://github.com/opencog/atomspace)
 hypergraph database. It has a variety of different ways of talking to
-external subsystems. These include:
+external subsystems. These were developed to solve various practical
+application issues that arose in the use of Atomese. These subsystem
+interfaces are "well designed" in that they solve the particular issue
+that arose. They are not, however, explictly agentic or sensori-motoin
+their design. Some shadows and hints of this can be seen, however.
+
+These external subsystem interfaces include:
 
 * The [GroundedSchemaNode](https://wiki.opencog.org/w/GroundedSchemaNode)
   allows external python, scheme and shared-library functions to be
@@ -75,6 +85,15 @@ external subsystems. These include:
 * The [SQL Bridge](https://github.com/opencog/sql-bridge) allows
   SQL Tables to be mapped into AtomSpace structures, so that updates
   to one are reflected as updates to the other.
+* Obsolete gateways to ROS, the Robot Operating System, to Minecraft
+  (via MineRL & Malmo), to Unity, the game engine, and many more.
+  These can be found in old, archived
+  [github repos](https://github.com/opencog/), scrolling down to
+  the oldest repos having no activity.
+
+The above "work", but lack an agentic sensori-motor design interface.
+To use these interfaces
+
 * The [Sensory](https://github.com/opencog/sensory) system, which is
   an experimental effort to understand the generic mathematical theory
   of interfacing Atomese to arbitrary unknown sensory devices, and to
@@ -85,45 +104,14 @@ external subsystems. These include:
 * The [Motor](https://github.com/opencog/motor) system, which attempts
   to define a simpler, more practical and mundane way of using Atomese
   to work with external devices.
-* Obsolete gateways to ROS, the Robot Operating System, to Minecraft
-  (via MineRL & Malmo), to Unity, the game engine, and many more.
-
-Interfacing to GPU subsystems, such as CUDA or OpenCL, or any of a large
-variety of systems built on these, such as TensorFlow, offer a
-non-trivial exercise for testing and guiding the Atomese sensori-motor
-interfaces.
-
-The interfaces here simply move vectors to and from GPUs and invoke GPU
-kernels to perform processing on them. Perhaps high-level interfaces
-will be added in the future; they're not here in this prototype.
-
-The main effort is to find a balance between abstract mathematical
-theory and a practical, usable interface. The generic Atomese
-sensorimotor research is being done in the hopes of discovering
-generic abstractions that symbolic (and neuro-symbolic) AI subsystems
-can use. If you are a human programmer, you have a zillion-and-one
-choices for programming languages and APIs that allow you to hack up
-almost anything. If you are a symbolic AI agent, or a DL/NN transformer,
-you do not have this richness of tools. You mostly don't even have much
-of a clue of what "reality" is. In part, that's because you don't have
-a sensori-motor system, beyond some hacked-up robots and in-game avatars
-created for you by *human* engineers. Perhaps with a proper theory, some
-of the hackiness can be refined.
-
-The need for a general sensori-motor theory is underscored by the
-failure of earlier OpenCog projects that attempted create "embodied
-OpenCog agents". These are the systems listed above: interfaces into
-ROS, Unity and Minecraft, to name some of the more advanced efforts.
-These were all sensori-motor "hack jobs", built without giving any
-thought of what it means "to perceive and move".
 
 Status
------
+------
 ***Version 0.1.0*** --
 Basic proof-of-concept, showing how to use Atomese to open a connection
-to an OpenCL compute device (i.e. a GPU), load and invoke compute
+to an OpenCL compute device (i.e. a GPU), load and invoke GPU compute
 kernels, and have those kernels work with floating-point vector data
-residing in the AtomSpace.
+that is moved between the AtomSpace and the GPU.
 
 New in this version: Atomese interface descriptions are now generated
 for OpenCL kernel interfaces. This should allow introspection of the
