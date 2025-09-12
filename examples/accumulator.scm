@@ -84,7 +84,7 @@
 ; and the data source.
 (define kerny
 	(Section
-		(Predicate "vec_add")
+		(Item "vec_add")
 		(ConnectorSeq accum-location accum-location source-location)))
 
 ; Define a pair of functions. The first runs the kernel, defined above,

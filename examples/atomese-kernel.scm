@@ -59,7 +59,7 @@
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
 			; Must be name of kernel defined inside of the clnode.
-			(Predicate "vec_mult")
+			(Item "vec_mult")
 			(ConnectorSeq
 				(Number 0 0 0 0 0)
 				(Number 1 2 3 4 5)
@@ -84,7 +84,7 @@
 (cog-execute!
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_mult")
+			(Item "vec_mult")
 			(ConnectorSeq
 				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -99,7 +99,7 @@
 (cog-execute!
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_add")
+			(Item "vec_add")
 			(ConnectorSeq
 				(Number 0 0 0 0 0 0 0 0 0 0 0)
 				(Number 1 2 3 4 5 6 7 8 9 10 11)
@@ -107,6 +107,18 @@
 
 ; Get the result.
 (cog-execute! (ValueOf clnode (Predicate "*-read-*")))
+
+; ---------------------------------------------------------------
+; After the OpenclNode is opened, a list of kernel interfaces
+; provided by the OpenCL program there is published. It can be
+; viewed as follows:
+
+(cog-value clnode (Predicate "*-description-*"))
+
+; This interface description is used to check the validity of
+; kernel arguments used above. It is provided to enable the
+; introspection of the OpenCl program kernel API by Atomese
+; agents.
 
 ; ---------------------------------------------------------------
 ; Instead of using NumberNodes, use FloatValues.
@@ -145,7 +157,7 @@
 (define vector-stream
 	(SetValue clnode (Predicate "*-write-*")
 		(Section
-			(Predicate "vec_add")
+			(Item "vec_add")
 			(ConnectorSeq
 				result-location
 				first-vec-location
