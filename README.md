@@ -17,8 +17,8 @@ a kind of wiring diagram, indicating where data flows. By contrast, the
 prototypes. How can one perform the rewrite from the high-level
 description to the low-level description? Normally, this is done "brute
 force": a human programmer sits down and writes a large pile of GPU
-code, creating systems like PyTorch or TensorFlow. The experiment here
-is to automate the glueing together from high-level to low-level
+code, creating systems such as PyTorch or TensorFlow. The experiment
+here is to automate the conversion from high-level to low-level
 descriptions.
 
 Such automation resembles what compilers do. For example, a C++ compiler
@@ -34,26 +34,38 @@ and suitably complicated example target.
 
 A different way of thinking of this experiment is as an exploration of
 the agency of sensori-motor systems. The GPU is a "thing out there" that
-can be manipulated by an agent to "do things". How does one perceive the
-"thing out there", and describe it's properties? How can one control it
-and perform actions on it? To extert motor control on that "thing out
-there"? How does one perceive the results of those motor actions?
+can be manipulated by an agent to "do things". How does an agent
+perceive the "thing out there", and "understand" it's properties?
+How can the agent control the "thing out there", and perform actions
+on it? To extert motor control on that "thing out there"? How does
+the agent perceive the results of those motor actions?
 
 In the present experiment, the "agent" is is a collection of graphs
 (properly, hypergraphs), represented using
 [Atomese](https://wiki.opencog.org/w/Atomese),
 and "living" in the OpenCog
 [AtomSpace](https://github.com/opencog/atomspace).
-That is, the subjective inner form of the agent is a world-model,
-consisting of abstractions derived from sensory perceptions of the
-external world, and a set of motor actions that can be performed to
-alter the state of the external world.  The agent itself is constructed
-from Atomese; the GPU is a part of the external world, to be manipulated.
+Thhe subjective inner form of the agent is a world-model, consisting of
+abstractions derived from sensory perceptions of the external world, and
+the knowledge of a set of motor actions that can be performed to alter
+the state of the external world.  The agent itself is represented in
+Atomese; the GPU is a part of the external world, to be manipulated.
+
+An important part of the challenge is understanding how assembly, and
+sepcifically, how self-assembly works.  That is, the agent is meant to
+be a collection of pieces-parts, a collection of transformation rules.
+These rules are to be assembled to "get things done". The assembly is
+meant to be self-assembly, and is preseumed to live at the edge of a
+critical phase transition. The phrase "critical phase transition" is
+meant to invoke the conventional idea of a critical phase transition,
+such as that seen in Per Bak's critical sandpile. The difference here
+is that the dynamical system consists of a collection of rewrite rules,
+instead of abstract sand-grains.
 
 The above description might feel like excessive anthropomorphising of
 a mechanical system. But that's kind of the point: to force the issue,
 and explore what happens, when an agentic viewpoint is explicitly
-forced.
+forced, and given the attributes of a dynamical system.
 
 External Subsystems
 -------------------
@@ -62,9 +74,10 @@ for the OpenCog [AtomSpace](https://github.com/opencog/atomspace)
 hypergraph database. It has a variety of different ways of talking to
 external subsystems. These were developed to solve various practical
 application issues that arose in the use of Atomese. These subsystem
-interfaces are "well designed" in that they solve the particular issue
-that arose. They are not, however, explicitly agentic or sensori-motoin
-their design. Some shadows and hints of this can be seen, however.
+interfaces are "well designed", in that they solve the particular issue
+that arose. Human progammers have used them to construct various kinds
+of systems. However, these interfaces lack what is needed for a
+dyanmical, sensori-motor, agential point of view.
 
 These external subsystem interfaces include:
 
@@ -86,10 +99,13 @@ These external subsystem interfaces include:
   SQL Tables to be mapped into AtomSpace structures, so that updates
   to one are reflected as updates to the other.
 * Obsolete gateways to ROS, the Robot Operating System, to Minecraft
-  (via MineRL & Malmo), to Unity, the game engine, and many more.
+  (via MineRL & Malmo), to Unity, the game engine, and more.
   These can be found in old, archived
   [github repos](https://github.com/opencog/), scrolling down to
-  the oldest repos having no activity.
+  the oldest repos having no activity. There's also a collection
+  of youtube videos showing these in operation; seee e.g. the
+  [Virtual Dog](https://www.youtube.com/watch?v=FEmpGRLwbqE) demo,
+  and, of course, the Hanson Robotics Sophia demos.
 
 The above "work", and provide Atomese interfaces to the described
 systems.  However, they all lack an Atomese interface description,
