@@ -196,6 +196,18 @@ Where is this API description kept? Well, the `*-description-*` message
 sent to the `(OpenclKernelNode "vec_add")` node should return this.
 I guess this is hand-coded, for now.
 
+TODO: Should this be published as
+```
+   (Section (OpenclNode "...") (ChoiceLink (Section ...)))
+```
+The rational is that the `ChoiceLink` gives a choice of kernels
+available for this particular `OpenclNode` and although they're
+available as `*-description-*`, it might be nice to make them available
+"directly"? Or maybe not ... the `(Section (OpenclNode "...") ...)`
+could be ambiguous in general, as other `Section` might pop up.
+By contrast, `*-description-*` is unambiguous and is a reserved keyword.
+So OK, leave as-is.
+
 Open Discussion
 ---------------
 Some philosophical questions remain as to "object permanence". Vectors

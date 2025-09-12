@@ -185,8 +185,6 @@ void OpenclNode::build_program(void)
 	// is the right place. For now, stuff them into a ChoiceLink,
 	// because that seems to be the right thing to do. (you can only
 	// chose one.) They appear in the AtomSpace grouped together.
-	// XXX FIXME. This might need to be of the form
-	// (Section (OpenclNode ...) (Choice ...))
 	Handle descr = as->add_node(PREDICATE_NODE, "*-description-*");
 	Handle choice = as->add_link(CHOICE_LINK, HandleSeq(_kernel_interfaces));
 	setValue(descr, choice);
