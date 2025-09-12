@@ -15,6 +15,9 @@ actual design.
   composability and flow and how they might get solved. These remain
   as major TODO issues.
 * [Design-D](./Design-D.md) catalogs some minor design issues, all solved.
+* [Design-E](./Design-E.md) recaps the main design goals that remain
+  unimplemented. Next step should be `PlusLink` and `TimesLink` running
+  on the GPU.
 
 Structuralism Overview
 ----------------------
