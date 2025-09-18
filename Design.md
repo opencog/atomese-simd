@@ -18,6 +18,7 @@ actual design.
 * [Design-E](./Design-E.md) recaps the main design goals that remain
   unimplemented. Next step should be `PlusLink` and `TimesLink` running
   on the GPU.
+* [Design-F](./Design-F.md) ponders RNN/LTSM embeddings of the AtomSpace.
 
 Structuralism Overview
 ----------------------

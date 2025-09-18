@@ -17,8 +17,8 @@
 
 (cog-execute! (Plus pair-location))
 
-(cog-execute! (ElementOf (Number 0) pair-location)))
-(cog-execute! (ElementOf (Number 1) pair-location)))
+(cog-execute! (ElementOf (Number 0) pair-location))
+(cog-execute! (ElementOf (Number 1) pair-location))
 
 (cog-execute! (Plus
 	(ElementOf (Number 0) pair-location)
