@@ -153,3 +153,8 @@ Then write to where the embedding will be stored:
 			(Anchor "some place") (Predicate "some embedding key")
 			(VectorEmbedLink ...)))
 ```
+
+Result of Training
+------------------
+The original LSTM's were designed for sequence prediction (of text
+tokens). Here, we are not interested in that. Instead, we want ...!???
