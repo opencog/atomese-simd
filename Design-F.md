@@ -74,6 +74,8 @@ which would return the desired initial embedding. This works. Some
 problems:
 * Requires actually creating the Link. But this link is not really
   needed for any kind of long-term use/re-use.
+* But this is not really a problem, after all. Just use `ValueOf` or
+  `PureExec` to pipe Atoms into this. See hand-wringing agonizing below.
 
 A new-style OO API could be
 ```
@@ -98,3 +100,56 @@ But this is terrible, because the URL is ugly.
 
 Overall: the OO API seems pointless and useless.
 
+### Stateless Executation
+A meta-problem might be that we needs something in between `cog-execute!`
+and `cog-set-value!`.  The problem with `cog-execute!` is it takes just
+one argument: the Atom to execute.  Thus, a Link must be created to wrap
+arguments (e.g. `ExecutionOutputLink` as the prototypical, canonical
+example.)  The `cog-set-value!` avoids this, as it specifies keys and
+arguments. The problem with it is that it is completely async: it has no
+return value; useing `cog-value` to read the result forces it to be
+stateful.  Thus, a completely stateless intermediate form between
+`cog-execute!` and `cog-set-value!` is desirable. Or so it would seem.
+
+The backwards compat solution would be to change `Atom::setValue()` to
+not return void, and so on down the line. So `(cog-exeucte! (SetValue...))`
+would then return not VoidValue, but something meaningful...
+
+It seems like having this might make it easier to specify flows. For
+example, this would allow us to ditch things like `ExecutionOutputLink`.
+But is anything really gained, here? Analysis of the flow of control
+seems to get ... more complicated. Hmm. All this is very unclear.
+
+Conclusion: This is some kind og agony hand-wringing. We already have
+everything needed with things like `ValueOf` link, and the executable
+atoms that return `QueueValue` and whatnot. We can just pipe things.
+So the answer is: don't change anything. What we have already is just
+fine...
+
+### Embedding Flow.
+
+Another "fix" for the flow situation is to write
+```
+	(cog-execute!
+		(VectorEmbedLink
+			(ValueOf (Anchor "somewhere") (Predicate "some key"))
+			(NumberNode 768)
+			(TypeNode 'Float32Value)))
+```
+and so the generation of the initial embeddings becomes a flow.
+If its a query, then
+```
+	(cog-execute!
+		(VectorEmbedLink
+			(PureExec (QueryLink ...))
+			(NumberNode 768)
+			(TypeNode 'Float32Value)))
+```
+
+Then write to where the embedding will be stored:
+```
+	(cog-execute!
+		(SetValueLink
+			(Anchor "some place") (Predicate "some embedding key")
+			(VectorEmbedLink ...)))
+```
