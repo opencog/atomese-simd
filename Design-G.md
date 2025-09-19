@@ -57,9 +57,19 @@ be redesigned as described below.
 
 Since the initial idea of `PureExec` was purity, it could not be used
 for tail-recursive, serialized execution in the current AtomSpace: so an
-argument is added: which AtomSpace the execution
+argument is added: which AtomSpace the execution.  The proposal here is
+to generalize this to allow a GPU to be specified, or more generally an
+external object.
+
+But first, a distraction:
+The `ExecutThreadedLink` gathers results into a QueueValue.  There needs
+to be a `NullLink` which says "execute me but discard the return value".
+But such a `NullLink` could naturally do serial execution. So ... it
+suggests that we need a "serial exec and gather the return values" as
+well as a "serial exec and discard the return values" link types. What
+names should they be given?
 
 TODO List
 ---------
 Writiing the above, the TODO list expands:
-*
+* The ThreadJoinLink should be removed from Atomese.
