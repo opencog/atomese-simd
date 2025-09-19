@@ -100,7 +100,7 @@ But this is terrible, because the URL is ugly.
 
 Overall: the OO API seems pointless and useless.
 
-### Stateless Executation
+### Stateless Execution
 A meta-problem might be that we needs something in between `cog-execute!`
 and `cog-set-value!`.  The problem with `cog-execute!` is it takes just
 one argument: the Atom to execute.  Thus, a Link must be created to wrap

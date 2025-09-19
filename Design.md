@@ -19,6 +19,7 @@ actual design.
   unimplemented. Next step should be `PlusLink` and `TimesLink` running
   on the GPU.
 * [Design-F](./Design-F.md) ponders RNN/LTSM embeddings of the AtomSpace.
+* [Design-G](./Design-G.md) ponders mechanics of running AST's on GPU's.
 
 Structuralism Overview
 ----------------------
