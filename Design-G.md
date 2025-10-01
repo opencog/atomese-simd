@@ -92,6 +92,15 @@ The above questions envision an extension/mutation of the current
 StorageNode concepts to be Frame-like. Which seems like an awesome
 idea, as I write this.
 
+### Are SensoryNode's Frames?
+By logical extension of the above thoughts, SensoryNodes should be
+Frames too ... I guess? But "remote" AtomSpaces are "remote", whereas
+SensoryNodes are local interfaces to that "remoteness".
+
+The inheritance hierarchy gets a bit messy; not all remote things
+have to form of AtomSpaces ... or do they? It's always Values that
+come back from remote sensing...
+
 
 
 TODO List
