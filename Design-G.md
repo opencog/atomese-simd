@@ -123,14 +123,21 @@ a more flexible system:
 * Read priority and caching are possible.
 * Write mirroring and write sharding are possible.
 
+Some aspects are missing: ProxyNodes can only supplement AtomSpace
+contents; they do not provide any ability to hide existing Atoms,
+or to present an alternate view of an Atom, in the way that the layers
+do. The layering system provides a "view" of the AtomSpace. It has
+many of the same problematic issues that OverlayFS does, namely,
+complexity and performance.
+
 This suggests that Frames should be replaced by ProxyNodes. Which again
 elevates a StorageNode (this time, in the form of a Proxy) to be at the
 same conceptual level as the AtomSpace.  So we now have three distinct
 "remote" operations: read, write and execute.
 
 ### Reinventing Cmputing?
-The rwx certainly make it feel like we're re-inventing computing. Lets
-take a closer look and make sure we are not missing anything.
+The `rwx` certainly make it feel like we're re-inventing computing.
+Lets take a closer look and make sure we are not missing anything.
 
 * The `rwx` perms on i370/s390 mainframes came with a storage key,
   granting specific access to different memory regions. Do we have
@@ -184,6 +191,7 @@ How can we leverage the above for the next-gen design?
 So we're effectively going for version 3, here; lets get it right,
 instead of being half-assed about it.
 
+### Redesigning layering
 
 ### Are SensoryNode's AtomSpaces?
 By logical extension of the above thoughts, SensoryNodes should be
