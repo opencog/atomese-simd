@@ -192,6 +192,35 @@ So we're effectively going for version 3, here; lets get it right,
 instead of being half-assed about it.
 
 ### Redesigning layering
+So what are the design requirements?
+
+* We want "views", in that the current AtomSpace is authoritative in
+  it's contents, hiding/modifying/updating contents that might be in
+  other remote, attached AtomSpaces.
+* So this is not really a "view", per se; it seems to be saying "get rid
+  of the OverlayFS-like behavior, and provide it in some other way."
+* `ProxyNodes` are passive, not active in thier update of AtomSpace
+  contents. One has to explicitly fetch Atoms, Keys. This prevents the
+  naive usage of Proxy infrastructure for the hiding/modifying behavior.
+* Active updates is not the same as "push notifications". More on this
+  later.
+
+Layering has conflicting view/remove semantics. Lets review this:
+* The "view" aspect is that everything visible in the current AtomSpace
+  must actually be in the current AtomSpace, or is visible in a space
+  below.
+* Viewership could be accomplished by copy-in, except that this is
+  wasteful when a lower layer is in the same RAM. Thus, COW was used.
+* Remote proxy viewership has to be implemented as copy-in. This seems
+  entirely doable with the current BackingStore API.
+* The COW implementation also requires hiding, so that a deleted Atom
+  is marked hidden.
+* Local deletion does not create any difficulties when the proxy is
+  remote.
+
+The current layering implementation has COW in the current AtomSpace.
+Can we push the COW into the proxy, instead?
+
 
 ### Are SensoryNode's AtomSpaces?
 By logical extension of the above thoughts, SensoryNodes should be
