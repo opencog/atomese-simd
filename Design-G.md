@@ -102,6 +102,14 @@ reads and writes are described by this graph: an AtomSpace accessible
 for reading is also accessible for writing (unless it is marked
 read-only.)
 
+The current implementation of layered AtomSpaces has some strong
+negative performance reprecussions. This is because the layers are
+envisioned as being OverlayFS-like: Atoms in lower layers can be masked
+or hidden in higher layers, so that it looks like they are absent.
+Atoms in higher layers can have different key-value store contents
+than lower layers.  The lookup has fairly strongly noticable performance
+impacts, even though this is not benchmarked at this time.
+
 This directed graph is represented with a Frame, which is an Atom that
 is both like a Node and like a Link, having both a (singular) name and
 an outgoing set.
@@ -167,8 +175,14 @@ take a closer look and make sure we are not missing anything.
   multiple parties can engage in coopertive actions by authenticating
   with crypto keys.
 
-How can we leverage the above for the next-gen design? The
-implementation of AtomSpace layers
+How can we leverage the above for the next-gen design?
+* The implementation of AtomSpace layers was challenging.
+* The current implementation has an underwhelming performance profile.
+* The current ProxyNode implementation is already version 2;
+  the version 1 variant had proxies, but not ProxyNodes.
+
+So we're effectively going for version 3, here; lets get it right,
+instead of being half-assed about it.
 
 
 ### Are SensoryNode's AtomSpaces?
@@ -186,3 +200,6 @@ TODO List
 ---------
 Writiing the above, the TODO list expands:
 * The ThreadJoinLink should be removed from Atomese. DONE.
+* Benchmark the Atompsace layers/frame performance. Maybe with a variant
+  of the `LargeZipfUTest` layout, but this time with different count
+  data at each layer.
