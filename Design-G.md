@@ -33,7 +33,7 @@ discarded when execution completes. Thus, the execution is "pure".
 Next `PureExec` got used to define tail-recursive loops. The structure
 here is
 ```
-   (DefineLink (DefinedProcedutre "foo")
+   (DefineLink (DefinedProcedure "foo")
       (PureExec AST (DefinedProcedutre "foo")))
 ```
 so the AST performs a single-step of the loop, and the
@@ -51,9 +51,7 @@ Until `PureExec` was introduced, there wasn't anything analogous for
 execution. The `ParallelLink` and cousins run threads, but there was no
 `SerialLink` mostly because step-wise execution was not needed.
 
-The whole Threaded/Serial Atomese toolset needs to be revised to be
-cleaner. ThreadJoinLink should be marked obsolete. PureExec needs to
-be redesigned as described below.
+PureExec needs to be redesigned as described below.
 
 Since the initial idea of `PureExec` was purity, it could not be used
 for tail-recursive, serialized execution in the current AtomSpace: so an
@@ -62,14 +60,13 @@ to generalize this to allow a GPU to be specified, or more generally an
 external object.
 
 But first, a distraction:
-The `ExecutThreadedLink` gathers results into a QueueValue.  There needs
-to be a `NullLink` which says "execute me but discard the return value".
-But such a `NullLink` could naturally do serial execution. So ... it
-suggests that we need a "serial exec and gather the return values" as
-well as a "serial exec and discard the return values" link types. What
-names should they be given?
+The `ExecuteThreadedLink` gathers results into a QueueValue.  The
+`ParallelLink` fires and forgets: it runs threads, dettaches, does
+not wait for completion; does not collect results. Also does not specify
+max-threads to use (because doing so des not seem to make sense, if
+one is not going to wait?)
 
 TODO List
 ---------
 Writiing the above, the TODO list expands:
-* The ThreadJoinLink should be removed from Atomese.
+* The ThreadJoinLink should be removed from Atomese. DONE.
