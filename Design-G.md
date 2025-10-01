@@ -82,20 +82,50 @@ even mean to execute "somewhere else"?
   what is provided by `StorageNode`
 
 * Should remote AtomSpaces be a kind-of StorageNode? Conversely,
-  perhaps StorageNode should be a kind-of Frame?
+  perhaps StorageNode should be a kind-of AtomSpace?
 
 * Currently, remote execution is provided by `fetch-query` in the
   StorageNode; presumably this can/should be extended to be any
   kind of execution!?
 
 The above questions envision an extension/mutation of the current
-StorageNode concepts to be Frame-like. Which seems like an awesome
+StorageNode concepts to be AtomSpacee-like. Which seems like an awesome
 idea, as I write this.
 
-### Are SensoryNode's Frames?
+### Frames and Proxies
+The layering of AtomSpaces was inspired by `git` and was envisioned as
+a directed acyclic graph, with each AtomSpace above inheriting from the
+AtomSpaces below. The implicit, unspoken assumption was that all of
+these were local, on the same system/RAM, and thus directly accessible.
+Because everything is local, another implicit assumption is that both
+reads and writes are described by this graph: an AtomSpace accessible
+for reading is also accessible for writing (unless it is marked
+read-only.)
+
+This directed graph is represented with a Frame, which is an Atom that
+is both like a Node and like a Link, having both a (singular) name and
+an outgoing set.
+
+A completely different layering mechanism is that of the `ProxyNode`,
+which is a kind-of `StorageNode`. It replaces the idea of a DAG with
+a more flexible system:
+
+* Reads are distinct from writes; one can be handled, and the other not.
+* Dropping writes makes the proxy effectively read-only.
+* Read priority and caching are possible.
+* Write mirroring and write sharding are possible.
+
+This suggests that Frames should be replaced by ProxyNodes. Which again
+elevates a StorageNode (this time, in the form of a Proxy) to be at the
+same conceptual level as the AtomSpace.  So we now have three distinct
+"remote" operations: read, write and execute.
+
+
+
+### Are SensoryNode's AtomSpaces?
 By logical extension of the above thoughts, SensoryNodes should be
-Frames too ... I guess? But "remote" AtomSpaces are "remote", whereas
-SensoryNodes are local interfaces to that "remoteness".
+AtomSpaces too ... I guess? But "remote" AtomSpaces are "remote",
+whereas SensoryNodes are local interfaces to that "remoteness".
 
 The inheritance hierarchy gets a bit messy; not all remote things
 have to form of AtomSpaces ... or do they? It's always Values that
