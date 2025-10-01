@@ -221,6 +221,16 @@ Layering has conflicting view/remove semantics. Lets review this:
 The current layering implementation has COW in the current AtomSpace.
 Can we push the COW into the proxy, instead?
 
+The most obvious solution is to create a new type: `PROXY_ATOMSPACE`
+and this is implmeneted by delegating all access to the indicated
+StorageNode (which would typically be a ProxyNode, to avoid duplication
+of concepts and logic).  Questions:
+
+* Is it caching? E.g. does every request for `get-oncoming-set` go out
+  to the StorageNode, or do we attempt to fulfill that with what is
+  in RAM? This exposes the idea that maybe the current ProxyNode
+  design w.r.t. caching is incomplete!?
+
 
 ### Are SensoryNode's AtomSpaces?
 By logical extension of the above thoughts, SensoryNodes should be
