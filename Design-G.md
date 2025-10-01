@@ -120,6 +120,55 @@ elevates a StorageNode (this time, in the form of a Proxy) to be at the
 same conceptual level as the AtomSpace.  So we now have three distinct
 "remote" operations: read, write and execute.
 
+### Reinventing Cmputing?
+The rwx certainly make it feel like we're re-inventing computing. Lets
+take a closer look and make sure we are not missing anything.
+
+* The `rwx` perms on i370/s390 mainframes came with a storage key,
+  granting specific access to different memory regions. Do we have
+  something similar here? Of course: `StorageNode`s are all distinct.
+
+* The i370/s390 mainframes had a well-developed architecture of channels
+  and subchannels. These are explicitly configured using `schib`s and
+  `irb`s and whatnot. This resembles (even strongly?) the way in which
+  the `ProxyNode`s are configured. That is, a bare-bones, ad-hoc
+  structure is defined, at the same abstraction level as the thing
+  carrying out the operations (`STARTIO`).
+
+* Most other CPU complexes use PCIe as the networking fabric. This has
+  concepts that include root ports, channels, devices. These are
+  configured and controlled by PCI config registers at the hardware
+  layer. This does not elicit any notably different or inspiring
+  thoughts or suggestions for the design of the StorageNode.
+
+* The actual devices hanging off the end of channels are disk drives,
+  storage clusters, connected via fiber channel, ethernet, etc. The
+  notable difference here is that topology configuration happens at
+  a differrent software abstraction level then the hardware: The
+  sysadmin gets a GUI dashboard with blinkenlights and knopkes.
+  The programmer implementing the GUI gets a stack of libraries,
+  each working at different abstraction layers. At this time, there
+  is no comparable stack of interfaces for Atomese, so I don't extract
+  any wisdom, here.
+
+* The Ceph storage cluster offers several lessons. Formost is a negative
+  lesson: file ownership and uid/gid management is outside the scope
+  of CephFS. This is a holdover from Unix: uids and gids are numeric;
+  the correlation to actual user accounts in `/etc/passwd` and
+  `/etc/group` are decorellated. The correct long-term solution for
+  Unix is to replace uid's & gid's by URLs, so as to provide a more
+  global description of permissions.
+
+* On the topic of permissions, we have the Nick Szabo e-rights system.
+  The ability to accomplish something depended on having access to a
+  crypto key for the particular action to be taken.
+
+* On the topic of crypto, we have the idea of smart contracts, where
+  multiple parties can engage in coopertive actions by authenticating
+  with crypto keys.
+
+How can we leverage the above for the next-gen design? The
+implementation of AtomSpace layers
 
 
 ### Are SensoryNode's AtomSpaces?
