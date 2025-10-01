@@ -66,6 +66,34 @@ not wait for completion; does not collect results. Also does not specify
 max-threads to use (because doing so des not seem to make sense, if
 one is not going to wait?)
 
+### Execute ... where?
+What should the argument to `PureExec` be? Currently, it allows an
+AtomSpace to be specified. If none specfied, an anonymoous temporary
+child AtomSpace is used. Otherwise, it is implicitly assumed that
+the specified AtomSpace inherits from the current AtomSpace, as
+otherwise, bad things are likely to happen. Untested: what does it
+even mean to execute "somewhere else"?
+
+* The Atoms appearing directly in the PureExec would need to be
+  copied to the remote locaton. (This is not needed when the "remote"
+  location is a child of the current AtomSpace)
+
+* There is explicit mechanism for copying Atoms around, other than
+  what is provided by `StorageNode`
+
+* Should remote AtomSpaces be a kind-of StorageNode? Conversely,
+  perhaps StorageNode should be a kind-of Frame?
+
+* Currently, remote execution is provided by `fetch-query` in the
+  StorageNode; presumably this can/should be extended to be any
+  kind of execution!?
+
+The above questions envision an extension/mutation of the current
+StorageNode concepts to be Frame-like. Which seems like an awesome
+idea, as I write this.
+
+
+
 TODO List
 ---------
 Writiing the above, the TODO list expands:
