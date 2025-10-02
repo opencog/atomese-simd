@@ -222,14 +222,21 @@ The current layering implementation has COW in the current AtomSpace.
 Can we push the COW into the proxy, instead?
 
 The most obvious solution is to create a new type: `PROXY_ATOMSPACE`
-and this is implmeneted by delegating all access to the indicated
+and this is implemented by delegating all access to the indicated
 StorageNode (which would typically be a ProxyNode, to avoid duplication
 of concepts and logic).  Questions:
 
-* Is it caching? E.g. does every request for `get-oncoming-set` go out
+* Is it caching? E.g. does every request for `get-incoming-set` go out
   to the StorageNode, or do we attempt to fulfill that with what is
   in RAM? This exposes the idea that maybe the current ProxyNode
   design w.r.t. caching is incomplete!?
+
+Hmm. What are the differences between the AtomSpace C++ API, and the
+BackingStore API? Can we forward every (almost every) AtomSpace call
+to the BackingStore? As I currently imagine, the answer is yes.
+
+To what degree can the AtomSpace and the BackingStore API's be
+consolidated into one?
 
 
 ### Are SensoryNode's AtomSpaces?
