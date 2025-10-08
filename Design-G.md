@@ -61,21 +61,21 @@ external object.
 
 But first, a distraction:
 The `ExecuteThreadedLink` gathers results into a QueueValue.  The
-`ParallelLink` fires and forgets: it runs threads, dettaches, does
+`ParallelLink` fires and forgets: it runs threads, detaches, does
 not wait for completion; does not collect results. Also does not specify
-max-threads to use (because doing so des not seem to make sense, if
+max-threads to use (because doing so does not seem to make sense, if
 one is not going to wait?)
 
 ### Execute ... where?
 What should the argument to `PureExec` be? Currently, it allows an
-AtomSpace to be specified. If none specfied, an anonymoous temporary
+AtomSpace to be specified. If none specified, an anonymous temporary
 child AtomSpace is used. Otherwise, it is implicitly assumed that
 the specified AtomSpace inherits from the current AtomSpace, as
 otherwise, bad things are likely to happen. Untested: what does it
 even mean to execute "somewhere else"?
 
 * The Atoms appearing directly in the PureExec would need to be
-  copied to the remote locaton. (This is not needed when the "remote"
+  copied to the remote location. (This is not needed when the "remote"
   location is a child of the current AtomSpace)
 
 * There is explicit mechanism for copying Atoms around, other than
@@ -103,11 +103,11 @@ for reading is also accessible for writing (unless it is marked
 read-only.)
 
 The current implementation of layered AtomSpaces has some strong
-negative performance reprecussions. This is because the layers are
+negative performance repercussions. This is because the layers are
 envisioned as being OverlayFS-like: Atoms in lower layers can be masked
 or hidden in higher layers, so that it looks like they are absent.
 Atoms in higher layers can have different key-value store contents
-than lower layers.  The lookup has fairly strongly noticable performance
+than lower layers.  The lookup has fairly strongly noticeable performance
 impacts, even though this is not benchmarked at this time.
 
 This directed graph is represented with a Frame, which is an Atom that
@@ -135,7 +135,7 @@ elevates a StorageNode (this time, in the form of a Proxy) to be at the
 same conceptual level as the AtomSpace.  So we now have three distinct
 "remote" operations: read, write and execute.
 
-### Reinventing Cmputing?
+### Reinventing Computing?
 The `rwx` certainly make it feel like we're re-inventing computing.
 Lets take a closer look and make sure we are not missing anything.
 
@@ -159,14 +159,14 @@ Lets take a closer look and make sure we are not missing anything.
 * The actual devices hanging off the end of channels are disk drives,
   storage clusters, connected via fiber channel, ethernet, etc. The
   notable difference here is that topology configuration happens at
-  a differrent software abstraction level then the hardware: The
+  a different software abstraction level then the hardware: The
   sysadmin gets a GUI dashboard with blinkenlights and knopkes.
   The programmer implementing the GUI gets a stack of libraries,
   each working at different abstraction layers. At this time, there
   is no comparable stack of interfaces for Atomese, so I don't extract
   any wisdom, here.
 
-* The Ceph storage cluster offers several lessons. Formost is a negative
+* The Ceph storage cluster offers several lessons. Foremost is a negative
   lesson: file ownership and uid/gid management is outside the scope
   of CephFS. This is a holdover from Unix: uids and gids are numeric;
   the correlation to actual user accounts in `/etc/passwd` and
@@ -179,7 +179,7 @@ Lets take a closer look and make sure we are not missing anything.
   crypto key for the particular action to be taken.
 
 * On the topic of crypto, we have the idea of smart contracts, where
-  multiple parties can engage in coopertive actions by authenticating
+  multiple parties can engage in cooperative actions by authenticating
   with crypto keys.
 
 How can we leverage the above for the next-gen design?
@@ -199,7 +199,7 @@ So what are the design requirements?
   other remote, attached AtomSpaces.
 * So this is not really a "view", per se; it seems to be saying "get rid
   of the OverlayFS-like behavior, and provide it in some other way."
-* `ProxyNodes` are passive, not active in thier update of AtomSpace
+* `ProxyNodes` are passive, not active in their update of AtomSpace
   contents. One has to explicitly fetch Atoms, Keys. This prevents the
   naive usage of Proxy infrastructure for the hiding/modifying behavior.
 * Active updates is not the same as "push notifications". More on this
@@ -238,6 +238,8 @@ to the BackingStore? As I currently imagine, the answer is yes.
 To what degree can the AtomSpace and the BackingStore API's be
 consolidated into one?
 
+### Recap
+
 
 ### Are SensoryNode's AtomSpaces?
 By logical extension of the above thoughts, SensoryNodes should be
@@ -252,8 +254,8 @@ come back from remote sensing...
 
 TODO List
 ---------
-Writiing the above, the TODO list expands:
+Writhing the above, the TODO list expands:
 * The ThreadJoinLink should be removed from Atomese. DONE.
-* Benchmark the Atompsace layers/frame performance. Maybe with a variant
+* Benchmark the AtomSpace layers/frame performance. Maybe with a variant
   of the `LargeZipfUTest` layout, but this time with different count
   data at each layer.
