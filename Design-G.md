@@ -281,6 +281,14 @@ it's own merits. But does it solve the original issue, which was
 that of interfacing to GPU's, and specifically, being able to
 re-interpret and compile PlusLink, TimesLink in this new setting?
 
+Well, sort-of. The BackingStore does have a remote-execute ability.
+So requests to execute really do mean "recompile this expressino for
+your remote location so that it makes sense, there". So that really
+means that the GPU will be a kind-of StorageNode. The GpuStorageNode,
+I guess. Maybe the OpenclStorageNode and teh CudaStorageNode.
+
+OK, so that sounds like a plan. Time to unleash Claude on this mess.
+
 
 ### Are SensoryNode's AtomSpaces?
 By logical extension of the above thoughts, SensoryNodes should be
@@ -295,7 +303,7 @@ come back from remote sensing...
 
 TODO List
 ---------
-Writhing the above, the TODO list expands:
+Writing the above, the TODO list expands:
 * The ThreadJoinLink should be removed from Atomese. DONE.
 * Benchmark the AtomSpace layers/frame performance. Maybe with a variant
   of the `LargeZipfUTest` layout, but this time with different count
@@ -306,4 +314,6 @@ Spin-off TODO List
 Not immediately relevant, but tangled in:
 * Add MessagesOfLink support to StorageNode
 * Migrate examples and wiki pages away from cog-open, etc.
-* Migrate examples away from TV;
+* Migrate examples away from TV ... mostly DONE
+  (also: cog-evaluate! BindLink, GetLink)
+* Remove non-crisp evaluation
