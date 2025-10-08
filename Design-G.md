@@ -239,6 +239,47 @@ To what degree can the AtomSpace and the BackingStore API's be
 consolidated into one?
 
 ### Recap
+I've confused myself. There seems to be some interesting ideas above,
+but I'm failing to see the reprecussions. So lets review the main points
+again.
+
+* AtomSpaces contain data held in RAM.
+* By converting a handful of methods to virtual methods, the AtomSpace
+  API would allow subclassing, such that these other AtomSpaces have
+  more complex data control behaviors, possibly by working with disk
+  or network storage.
+* Such "more complex" behavior would be "under the covers", with the
+  atomspace user unaware of the underlying algorithms being employed.
+  The user would also lack control over these.
+* The user would have to pick one of these, before starting to use
+  it, and is commited to using it. The user could, of course, copy
+  between this and some other AtomSpace.
+
+This is in contrast to ProxyNodes (and StorageNodes) which can be
+connected (opened) and disconnected at any time. Atoms are individually
+fetched and stored, or done in bulk. So, in this sense, the ProxyNode
+interface is more flexible and genric. So what, exactly, are we trying
+to do here? There was some point, but what was the point?
+
+Well, two:
+* The AtomSpace API could be slapped onto any ProxyNode. This doesn't
+  "hurt anything", it just allows arbitrary proxies to be used as if
+  they were AtomSpaces.
+* The in-RAM code then becomes "yet another" StorageNode, the
+  RamStorageNode
+
+What are the downsides?
+* Cost of c++ method call increases, because it has to go through the
+  vtable for C++ calls, maybe trhashing the CPU insn cache. Whatever.
+* Or we could leave the AtomSpace API non-virtual, and instead have
+  it call directly into the StorageNode. So this is a re-invention
+  of virtuality in C++, badly. It may be unavoidable, during the
+  porting effort.
+
+Anyway, this sounds like a pretty slick idea, worth doing based on
+it's own merits. But does it solve the original issue, which was
+that of interfacing to GPU's, and specifically, being able to
+re-interpret and compile PlusLink, TimesLink in this new setting?
 
 
 ### Are SensoryNode's AtomSpaces?
@@ -259,3 +300,10 @@ Writhing the above, the TODO list expands:
 * Benchmark the AtomSpace layers/frame performance. Maybe with a variant
   of the `LargeZipfUTest` layout, but this time with different count
   data at each layer.
+
+Spin-off TODO List
+------------------
+Not immediately relevant, but tangled in:
+* Add MessagesOfLink support to StorageNode
+* Migrate examples and wiki pages away from cog-open, etc.
+* Migrate examples away from TV;
