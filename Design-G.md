@@ -288,6 +288,14 @@ means that the GPU will be a kind-of StorageNode. The GpuStorageNode,
 I guess. Maybe the OpenclStorageNode and teh CudaStorageNode.
 
 OK, so that sounds like a plan. Time to unleash Claude on this mess.
+Oh. Wait. There's a problem. Or two.
+
+* The definition of BackingStore is in a different git repo.
+  It needs to be moved to the core.
+* The type for StorageNode is there, too ...
+* Answer: copy all of persist/api back into main repo
+* Or ... OMG create a new repo for the RamStorageNode!? Yow!
+  There will be some messy code movement, I guess.
 
 
 ### Are SensoryNode's AtomSpaces?
