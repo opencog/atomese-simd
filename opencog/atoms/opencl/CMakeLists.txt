@@ -21,7 +21,7 @@ TARGET_LINK_LIBRARIES(opencl-atoms
 )
 
 INSTALL (TARGETS opencl-atoms EXPORT AtomSpaceTargets
-	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
+	DESTINATION "${CMAKE_INSTALL_LIBDIR}/opencog"
 )
 
 INSTALL (FILES
