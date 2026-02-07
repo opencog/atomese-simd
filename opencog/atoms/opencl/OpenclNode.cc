@@ -300,6 +300,15 @@ void OpenclNode::queue_job(const ValuePtr& vp)
 	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
 		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
+
+		// Build the kernel if not yet built. This is deferred from
+		// do_write() to ensure all OpenCL kernel object creation
+		// happens in this single dispatch thread, avoiding per-thread
+		// OpenCL initialization overhead.
+		if (not ojv->is_built())
+			ojv->build(ojv->get_opencl_node());
+
+		ojv->upload_inputs(get_handle());
 		ojv->run(get_handle());
 		_event_handler.wait();
 		_qvp->add(ojv);
@@ -352,8 +361,13 @@ void OpenclNode::do_write(const ValuePtr& vp)
 
 	if (vp->is_type(SECTION))
 	{
+		// Create the job but DON'T build it yet. Building creates
+		// cl::Kernel objects which triggers OpenCL per-thread initialization.
+		// By deferring build() to queue_job(), all OpenCL kernel object
+		// creation happens in the single dispatch thread, eliminating
+		// the per-thread initialization overhead in CogServer.
 		OpenclJobValuePtr kern = createOpenclJobValue(HandleCast(vp));
-		kern->build(get_handle());
+		kern->set_opencl_node(get_handle());
 		_dispatch_queue.enqueue(kern);
 		return;
 	}

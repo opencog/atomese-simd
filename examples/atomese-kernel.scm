@@ -141,7 +141,7 @@
 
 (cog-set-value!
 	(Anchor "some place") (Predicate "second vector")
-	(RandomStream 10)))
+	(RandomStream 10))
 
 (define second-vec-location
 	(ValueOf (Anchor "some place") (Predicate "second vector")))
