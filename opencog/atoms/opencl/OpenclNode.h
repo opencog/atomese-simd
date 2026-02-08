@@ -66,6 +66,13 @@ protected:
 	cl::Program _program;
 	const cl::Program& get_program(void) { return _program; }
 
+	// Binary caching for faster startup.
+	std::string get_cache_dir(void) const;
+	std::string get_cache_path(const std::string& src) const;
+	std::string compute_hash(const std::string& data) const;
+	bool load_cached_binary(const std::string& cache_path);
+	void save_binary_to_cache(const std::string& cache_path);
+
 	// List of interfaces provided by the program.
 	// Its a bunch of kernels, described in Atomese.
 	HandleMap _kernel_interfaces;

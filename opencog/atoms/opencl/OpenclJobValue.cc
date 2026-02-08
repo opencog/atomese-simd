@@ -24,7 +24,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/core/NumberNode.h>
-#include <opencog/atoms/core/TypeNode.h>
+#include <opencog/atoms/signature/TypeNode.h>
 #include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/value/ValueFactory.h>
 #include <opencog/opencl/types/atom_types.h>
@@ -37,7 +37,8 @@ using namespace opencog;
 
 OpenclJobValue::OpenclJobValue(Handle defn) :
 	LinkValue(OPENCL_JOB_VALUE),
-	_kernel{}
+	_kernel{},
+	_is_built(false)
 {
 	if (not defn->is_type(SECTION))
 		throw RuntimeException(TRACE_INFO,
@@ -161,10 +162,11 @@ OpenclJobValue::get_floats(const Handle& oclno, ValuePtr vp)
 	else
 		ofv = createOpenclFloatValue(*vals);
 
-	// We created a new createOpenclFloatValue and we know that
-	// the kernel will use it as input. So upload the data now.
+	// Allocate a GPU buffer but don't upload yet. The upload is
+	// deferred to upload_inputs() which runs on the dispatch thread,
+	// avoiding races on the shared OpenCL command queue and event.
 	ofv->set_context(oclno);
-	ofv->send_buffer(oclno);
+	_pending_uploads.push_back(ofv);
 	return ofv;
 }
 
@@ -274,6 +276,16 @@ void OpenclJobValue::check_signature(const Handle& kern,
 
 // ==============================================================
 
+/// Upload input buffers to the GPU. This is called on the dispatch
+/// thread (from OpenclNode::queue_job) so that all GPU I/O happens
+/// on one thread, avoiding races on the shared command queue.
+void OpenclJobValue::upload_inputs(const Handle& oclno)
+{
+	for (const OpenclFloatValuePtr& ofv : _pending_uploads)
+		ofv->send_buffer(oclno);
+	_pending_uploads.clear();
+}
+
 void OpenclJobValue::build(const Handle& oclno)
 {
 	if (not oclno->is_type(OPENCL_NODE))
@@ -315,6 +327,8 @@ void OpenclJobValue::build(const Handle& oclno)
 			_kernel.setArg(pos, _dim);
 		pos++;
 	}
+
+	_is_built = true;
 }
 
 void OpenclJobValue::run(const Handle& oclno)

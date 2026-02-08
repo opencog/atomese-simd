@@ -22,6 +22,11 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <sys/stat.h>
+#include <cstdlib>
+#include <functional>
 
 #include <opencog/util/exceptions.h>
 #include <opencog/util/Logger.h>
@@ -140,6 +145,154 @@ void OpenclNode::find_device(void)
 }
 
 // ==============================================================
+// Binary caching implementation.
+// Caches compiled OpenCL programs to disk to avoid expensive JIT
+// compilation on subsequent runs. Cache files are stored in
+// ~/.cache/opencog/opencl/<device_hash>/<source_hash>.bin
+//
+// This follows the pattern used by hashcat, PyOpenCL, and game engines
+// to dramatically reduce startup time (from seconds to milliseconds).
+
+/// Compute a simple hash of a string using std::hash.
+/// Returns a hex string representation.
+std::string OpenclNode::compute_hash(const std::string& data) const
+{
+	std::hash<std::string> hasher;
+	size_t hash = hasher(data);
+
+	std::ostringstream oss;
+	oss << std::hex << std::setfill('0') << std::setw(16) << hash;
+	return oss.str();
+}
+
+/// Get the cache directory path.
+/// Creates ~/.cache/opencog/opencl/<device_hash>/ if it doesn't exist.
+std::string OpenclNode::get_cache_dir(void) const
+{
+	// Get home directory
+	const char* home = std::getenv("HOME");
+	if (nullptr == home) home = "/tmp";
+
+	// Build device identifier for cache directory
+	std::string device_id = _platform.getInfo<CL_PLATFORM_NAME>() + "_" +
+	                        _device.getInfo<CL_DEVICE_NAME>() + "_" +
+	                        _device.getInfo<CL_DRIVER_VERSION>();
+	std::string device_hash = compute_hash(device_id);
+
+	std::string cache_dir = std::string(home) + "/.cache/opencog/opencl/" + device_hash;
+
+	// Create directories if they don't exist (mkdir -p equivalent)
+	std::string path = std::string(home) + "/.cache";
+	mkdir(path.c_str(), 0755);
+	path += "/opencog";
+	mkdir(path.c_str(), 0755);
+	path += "/opencl";
+	mkdir(path.c_str(), 0755);
+	path += "/" + device_hash;
+	mkdir(path.c_str(), 0755);
+
+	return cache_dir;
+}
+
+/// Get the full cache file path for a given source.
+std::string OpenclNode::get_cache_path(const std::string& src) const
+{
+	std::string source_hash = compute_hash(src);
+	return get_cache_dir() + "/" + source_hash + ".bin";
+}
+
+/// Try to load a cached binary. Returns true if successful.
+bool OpenclNode::load_cached_binary(const std::string& cache_path)
+{
+	std::ifstream binfile(cache_path, std::ios::binary);
+	if (!binfile.is_open())
+		return false;
+
+	// Read the entire binary file
+	std::vector<char> binary((std::istreambuf_iterator<char>(binfile)),
+	                          std::istreambuf_iterator<char>());
+	binfile.close();
+
+	if (binary.empty())
+		return false;
+
+	try
+	{
+		// Create program from binary
+		cl::Program::Binaries binaries;
+		binaries.push_back(std::vector<unsigned char>(binary.begin(), binary.end()));
+
+		std::vector<cl::Device> devices = {_device};
+		std::vector<cl_int> binary_status;
+
+		_program = cl::Program(_context, devices, binaries, &binary_status);
+
+		// Check if binary was valid for this device
+		if (binary_status[0] != CL_SUCCESS)
+		{
+			logger().info("OpenclNode: Cached binary invalid for device, will recompile\n");
+			return false;
+		}
+
+		// Build the program (links the binary, much faster than JIT compile)
+		_program.build("");
+
+		logger().info("OpenclNode: Loaded cached binary from %s\n", cache_path.c_str());
+		return true;
+	}
+	catch (const cl::Error& e)
+	{
+		logger().info("OpenclNode: Failed to load cached binary: %s\n", e.what());
+		return false;
+	}
+}
+
+/// Save the compiled program binary to cache.
+void OpenclNode::save_binary_to_cache(const std::string& cache_path)
+{
+	try
+	{
+		// Get the binary sizes
+		std::vector<size_t> binary_sizes = _program.getInfo<CL_PROGRAM_BINARY_SIZES>();
+		if (binary_sizes.empty() || binary_sizes[0] == 0)
+		{
+			logger().info("OpenclNode: No binary available to cache\n");
+			return;
+		}
+
+		// Get the binaries
+		std::vector<std::vector<unsigned char>> binaries;
+		binaries.resize(binary_sizes.size());
+		for (size_t i = 0; i < binary_sizes.size(); i++)
+			binaries[i].resize(binary_sizes[i]);
+
+		// Use raw pointers for the API
+		std::vector<unsigned char*> binary_ptrs;
+		for (auto& b : binaries)
+			binary_ptrs.push_back(b.data());
+
+		clGetProgramInfo(_program(), CL_PROGRAM_BINARIES,
+		                 binary_ptrs.size() * sizeof(unsigned char*),
+		                 binary_ptrs.data(), nullptr);
+
+		// Write to cache file
+		std::ofstream binfile(cache_path, std::ios::binary);
+		if (binfile.is_open())
+		{
+			binfile.write(reinterpret_cast<const char*>(binaries[0].data()),
+			              binaries[0].size());
+			binfile.close();
+			logger().info("OpenclNode: Saved binary to cache: %s (%zu bytes)\n",
+			              cache_path.c_str(), binaries[0].size());
+		}
+	}
+	catch (const cl::Error& e)
+	{
+		logger().info("OpenclNode: Failed to save binary to cache: %s\n", e.what());
+	}
+}
+
+// ==============================================================
 
 void OpenclNode::build_program(void)
 {
@@ -153,28 +306,44 @@ void OpenclNode::build_program(void)
 			"Unable to find source file in URL \"%s\"\n",
 			get_name().c_str());
 
-	cl::Program::Sources sources;
-	sources.push_back(src);
+	// Try to load from binary cache first.
+	// This can reduce startup time from seconds to milliseconds.
+	std::string cache_path = get_cache_path(src);
+	bool loaded_from_cache = load_cached_binary(cache_path);
 
-	_program = cl::Program(_context, sources);
+	if (not loaded_from_cache)
+	{
+		// No cache hit - compile from source
+		logger().info("OpenclNode: Compiling kernel from source (this may take a while)...\n");
 
-	// Compile
-	try
-	{
-		// Specifying flags causes exception.
-		// program.build("-cl-std=CL1.2");
-		_program.build("");
-	}
-	catch (const cl::Error& e)
-	{
-		logger().info("OpenclNode failed compile >>%s<<\n",
-			_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
-		throw RuntimeException(TRACE_INFO,
-			"Unable to compile source file in URL \"%s\"\n",
-				get_name().c_str());
+		cl::Program::Sources sources;
+		sources.push_back(src);
+
+		_program = cl::Program(_context, sources);
+
+		// Compile
+		try
+		{
+			// Specifying flags causes exception.
+			// program.build("-cl-std=CL1.2");
+			_program.build("");
+		}
+		catch (const cl::Error& e)
+		{
+			logger().info("OpenclNode failed compile >>%s<<\n",
+				_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device).c_str());
+			throw RuntimeException(TRACE_INFO,
+				"Unable to compile source file in URL \"%s\"\n",
+					get_name().c_str());
+		}
+
+		// Save to cache for next time
+		save_binary_to_cache(cache_path);
 	}
 
 	// Build the interface definitions for the kernels.
+	// This must be done regardless of cache hit, as it creates Atomese
+	// for the kernel signatures.
 	GenIDL gidl;
 	HandleSeq ifcs = gidl.gen_idl(src);
 	HandleSeq asif;
@@ -300,6 +469,15 @@ void OpenclNode::queue_job(const ValuePtr& vp)
 	if (vp->is_type(OPENCL_JOB_VALUE))
 	{
 		OpenclJobValuePtr ojv = OpenclJobValueCast(vp);
+
+		// Build the kernel if not yet built. This is deferred from
+		// do_write() to ensure all OpenCL kernel object creation
+		// happens in this single dispatch thread, avoiding per-thread
+		// OpenCL initialization overhead.
+		if (not ojv->is_built())
+			ojv->build(ojv->get_opencl_node());
+
+		ojv->upload_inputs(get_handle());
 		ojv->run(get_handle());
 		_event_handler.wait();
 		_qvp->add(ojv);
@@ -352,8 +530,13 @@ void OpenclNode::do_write(const ValuePtr& vp)
 
 	if (vp->is_type(SECTION))
 	{
+		// Create the job but DON'T build it yet. Building creates
+		// cl::Kernel objects which triggers OpenCL per-thread initialization.
+		// By deferring build() to queue_job(), all OpenCL kernel object
+		// creation happens in the single dispatch thread, eliminating
+		// the per-thread initialization overhead in CogServer.
 		OpenclJobValuePtr kern = createOpenclJobValue(HandleCast(vp));
-		kern->build(get_handle());
+		kern->set_opencl_node(get_handle());
 		_dispatch_queue.enqueue(kern);
 		return;
 	}
