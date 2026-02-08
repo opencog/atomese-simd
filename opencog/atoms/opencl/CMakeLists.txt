@@ -8,6 +8,7 @@ ADD_LIBRARY (opencl-atoms SHARED
 	OpenclFloatValue.cc
 	OpenclJobValue.cc
 	OpenclNode.cc
+	OpenclNode-cache.cc
 )
 
 # Without this, parallel make will race and crap up the generated files.
