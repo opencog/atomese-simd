@@ -42,6 +42,20 @@ using namespace opencog;
 // This follows the pattern used by hashcat, PyOpenCL, and game engines
 // to dramatically reduce startup time (from seconds to milliseconds).
 
+// XXX FIXME (Actually, delete me!?)
+// This code was dreamed up by Claude, but it is not at all clear that
+// it is a good idea ... in fact, it smells like a terrible idea, and
+// a total misunderstanding of what Atomese is, and how it works. The
+// core issue is that all sorts of Atomese will be flying in and out of
+// of the system, doing god-knows-what; this Atomese will change from
+// second to second, session-to-session. It's kind of fundamentally
+// uncachable, because you don't know what it is, where it came from,
+// whether it will ever be used again. So at best, this cache can hold
+// maybe some basic startup stuffs ... but I dunno. Just even the idea
+// of writing some garbage into the file system is ... a bad idea.
+// These not what Atomese is or how its supposed to work.
+// So XXX FIXME, review me, and maybe trash this code. The future is cloudy.
+
 /// Compute a simple hash of a string using std::hash.
 /// Returns a hex string representation.
 std::string OpenclNode::compute_hash(const std::string& data) const
