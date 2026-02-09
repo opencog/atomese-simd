@@ -1,0 +1,8 @@
+# Compiled test binaries
+test-hashtable
+test-atomspace
+test-counting
+test-mi
+test-sections
+test-cosine
+test-substitute
